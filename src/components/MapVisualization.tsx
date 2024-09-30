@@ -5,6 +5,7 @@ import * as d3 from 'd3';
 
 interface ParsedSpec {
   geojsonPath: string;
+  method: string;
   fillAttribute: string;
   strokeColor: string;
   strokeWidth: number;
@@ -31,10 +32,7 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ parsedSpec }) => {
 
   useEffect(() => {
     if (mapInstanceRef.current && parsedSpec.geojsonPath) {
-      console.log("Parsed GeoJSON Path:", parsedSpec.geojsonPath);
-      console.log("Parsed Fill Attribute:", parsedSpec.fillAttribute);
-      console.log("Parsed Stroke Color:", parsedSpec.strokeColor);
-      console.log("Parsed Stroke Width:", parsedSpec.strokeWidth);
+      console.log("Parsed Spec:", parsedSpec);
 
       // Load the specified GeoJSON data and update the map
       d3.json(parsedSpec.geojsonPath).then(function (geojsonData) {
@@ -48,26 +46,40 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ parsedSpec }) => {
             }
           });
 
-          // Create a color scale based on the specified fill attribute
-          const colorScale = d3.scaleSequential(d3.interpolateBlues)
-            .domain(d3.extent(geojsonData.features, function (d: any) { 
-              return d.properties[parsedSpec.fillAttribute]; 
-            }));
+          // Handle different methods dynamically
+          switch (parsedSpec.method) {
+            case 'fill':
+              // Create a color scale based on the specified fill attribute
+              const colorScale = d3.scaleSequential(d3.interpolateBlues)
+                .domain(d3.extent(geojsonData.features, function (d: any) {
+                  return d.properties[parsedSpec.fillAttribute];
+                }));
 
-          console.log("Color Scale Domain:", colorScale.domain());
+              console.log("Color Scale Domain:", colorScale.domain());
 
-          // Define a style function for each feature (zipcode)
-          function style(feature: any) {
-            return {
-              fillColor: colorScale(feature.properties[parsedSpec.fillAttribute]),
-              weight: parsedSpec.strokeWidth,
-              color: parsedSpec.strokeColor,
-              fillOpacity: 0.7
-            };
+              // Define a style function for each feature (zipcode)
+              function style(feature: any) {
+                return {
+                  fillColor: colorScale(feature.properties[parsedSpec.fillAttribute]),
+                  weight: parsedSpec.strokeWidth,
+                  color: parsedSpec.strokeColor,
+                  fillOpacity: 0.7
+                };
+              }
+
+              // Add the GeoJSON layer to the map
+              L.geoJSON(geojsonData, { style: style }).addTo(mapInstanceRef.current);
+              break;
+
+            case 'otherMethod':
+              // Handle other methods here
+              console.log("Other method not yet implemented");
+              break;
+
+            default:
+              console.error("Unknown method:", parsedSpec.method);
+              break;
           }
-
-          // Add the GeoJSON layer to the map
-          L.geoJSON(geojsonData, { style: style }).addTo(mapInstanceRef.current);
         } else {
           console.error("GeoJSON data is missing features or is invalid.");
         }

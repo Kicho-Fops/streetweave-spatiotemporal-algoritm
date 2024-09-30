@@ -5,6 +5,7 @@ import MapVisualization from './components/MapVisualization';
 
 interface ParsedSpec {
   geojsonPath: string;
+  method: string;
   fillAttribute: string;
   strokeColor: string;
   strokeWidth: number;
@@ -17,11 +18,15 @@ const App: React.FC = () => {
   const parseSpecification = (spec: string): ParsedSpec | null => {
     try {
       // Parse geojson path
-      const dataMatch = spec.match(/data\(([^)]+)\)/);  // Match inside data(...)
-      const geojsonPath = dataMatch ? `/${dataMatch[1]}`.trim() : ''; // Prepend with '/' and trim
+      const dataMatch = spec.match(/data\(([^)]+)\)/);
+      const geojsonPath = dataMatch ? `/${dataMatch[1]}`.trim() : '';
+
+      // Parse method (e.g., fill or other)
+      const methodMatch = spec.match(/method\s*=\s*(\w+)/);
+      const method = methodMatch ? methodMatch[1] : '';
 
       // Parse fill attribute (e.g., totalPopulation)
-      const fillMatch = spec.match(/Fill\(.*attribute\s*=\s*(\w+)\)/);
+      const fillMatch = spec.match(/color\((\w+)\)/);
       const fillAttribute = fillMatch ? fillMatch[1] : '';
 
       // Parse stroke color
@@ -35,6 +40,7 @@ const App: React.FC = () => {
       // Return the parsed specification
       return {
         geojsonPath,
+        method,
         fillAttribute,
         strokeColor,
         strokeWidth,
