@@ -7,6 +7,7 @@ interface ParsedSpec {
   geojsonPath: string;
   method: string;
   unit: string;
+  zoom: number;
   fillAttribute?: string;
   strokeColor?: string;
   strokeWidth?: number;
@@ -37,31 +38,27 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec }> = ({ parsedSpec }) 
   useEffect(() => {
     if (mapRef.current) {
       let Lat, Lon;
-        let initialZoom;
-        if(parsedSpec.unit=="segment"){
-          initialZoom = 19;
-          Lat = 41.80159035804221, Lon = -87.64538029790135;
-        } else if(parsedSpec.unit=="area"){
-          initialZoom = 10;
-          Lat = 41.8781, Lon = -87.6298;
-        } else{
-          initialZoom = 19;
-          Lat = 41.80159035804221, Lon = -87.64538029790135;
-        }
+      if (parsedSpec.unit === 'segment') {
+        Lat = 41.80159035804221;
+        Lon = -87.64538029790135;
+      } else if (parsedSpec.unit === 'area') {
+        Lat = 41.8781;
+        Lon = -87.6298;
+      }
+
       if (!mapInstanceRef.current) {
-        // Initial map creation with default or initial zoom level
-        mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], initialZoom); // Chicago coordinates
+        // Initial map creation
+        mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec.zoom); // Use parsed zoom level
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          attribution: '© OpenStreetMap contributors'
+          attribution: '© OpenStreetMap contributors',
         }).addTo(mapInstanceRef.current);
       } else {
-        // Update zoom level dynamically when the unit changes
-        const newZoom = parsedSpec.unit === 'segment' ? 19 : 10;
-        mapInstanceRef.current.setView([Lat, Lon], newZoom);
+        // Update zoom level dynamically when the unit or zoom level changes
+        mapInstanceRef.current.setView([Lat, Lon], parsedSpec.zoom);
       }
     }
-  }, [parsedSpec.unit]); // Depend on the unit so zoom level updates when unit changes
+  }, [parsedSpec.zoom, parsedSpec.unit]); // Depend on zoom and unit to update map view when these change
 
   const applyOpacity = (type: 'fill' | 'stroke' | 'line'): number => {
     if (type === 'line' && parsedSpec.strokeOpacity === undefined) {

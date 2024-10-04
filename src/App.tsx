@@ -6,6 +6,7 @@ import MapVisualization from './components/MapVisualization';
 interface ParsedSpec {
   geojsonPath: string;
   unit: string; // Added for unit parsing
+  zoom: number;
   method: string;
   fillAttribute?: string;
   strokeColor?: string;
@@ -33,6 +34,12 @@ const App: React.FC = () => {
       // Parse geojson path
       const dataMatch = spec.match(/data\(([^)]+)\)/);
       const geojsonPath = dataMatch ? `/${dataMatch[1]}`.trim() : '';
+
+      // Parse zoom level, if provided, otherwise default based on unit
+      const zoomMatch = spec.match(/zoom\((\d+)\)/);
+      const zoom = zoomMatch
+        ? parseInt(zoomMatch[1], 10)
+        : unit === 'segment' ? 19 : 10; // Default zoom: 19 for segment, 10 for area
 
       // Parse method (e.g., fill or line)
       const methodMatch = spec.match(/method\s*=\s*(\w+)/);
@@ -117,6 +124,7 @@ const App: React.FC = () => {
         geojsonPath,
         method,
         unit, // Include the parsed unit
+        zoom,
         fillAttribute,
         strokeColor,
         strokeWidth,
