@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 interface ParsedSpec {
   geojsonPath: string;
   method: string;
+  unit: string;
   fillAttribute?: string;
   strokeColor?: string;
   strokeWidth?: number;
@@ -34,14 +35,33 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec }> = ({ parsedSpec }) 
   const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
-    if (mapRef.current && !mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([41.8781, -87.6298], 10); // Chicago coordinates
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(mapInstanceRef.current);
+    if (mapRef.current) {
+      let Lat, Lon;
+        let initialZoom;
+        if(parsedSpec.unit=="segment"){
+          initialZoom = 19;
+          Lat = 41.80159035804221, Lon = -87.64538029790135;
+        } else if(parsedSpec.unit=="area"){
+          initialZoom = 10;
+          Lat = 41.8781, Lon = -87.6298;
+        } else{
+          initialZoom = 19;
+          Lat = 41.80159035804221, Lon = -87.64538029790135;
+        }
+      if (!mapInstanceRef.current) {
+        // Initial map creation with default or initial zoom level
+        mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], initialZoom); // Chicago coordinates
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(mapInstanceRef.current);
+      } else {
+        // Update zoom level dynamically when the unit changes
+        const newZoom = parsedSpec.unit === 'segment' ? 19 : 10;
+        mapInstanceRef.current.setView([Lat, Lon], newZoom);
+      }
     }
-  }, []);
+  }, [parsedSpec.unit]); // Depend on the unit so zoom level updates when unit changes
 
   const applyOpacity = (type: 'fill' | 'stroke' | 'line'): number => {
     if (type === 'line' && parsedSpec.strokeOpacity === undefined) {
@@ -179,3 +199,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec }> = ({ parsedSpec }) 
 };
 
 export default MapVisualization;
+
+
+//LAST THAT WORK!!

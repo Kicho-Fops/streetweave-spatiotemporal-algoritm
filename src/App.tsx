@@ -5,6 +5,7 @@ import MapVisualization from './components/MapVisualization';
 
 interface ParsedSpec {
   geojsonPath: string;
+  unit: string; // Added for unit parsing
   method: string;
   fillAttribute?: string;
   strokeColor?: string;
@@ -24,6 +25,11 @@ const App: React.FC = () => {
   // Function to parse the custom syntax from the text editor
   const parseSpecification = (spec: string): ParsedSpec | null => {
     try {
+
+      // Parse unit (either area or segment)
+      const unitMatch = spec.match(/unit\s*==\s*(\w+)/);
+      const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
+
       // Parse geojson path
       const dataMatch = spec.match(/data\(([^)]+)\)/);
       const geojsonPath = dataMatch ? `/${dataMatch[1]}`.trim() : '';
@@ -110,6 +116,7 @@ const App: React.FC = () => {
       return {
         geojsonPath,
         method,
+        unit, // Include the parsed unit
         fillAttribute,
         strokeColor,
         strokeWidth,
@@ -148,3 +155,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+//LAST THAT WORK!!
