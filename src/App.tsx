@@ -4,6 +4,7 @@ import TextEditor from './components/TextEditor';
 import MapVisualization from './components/MapVisualization';
 
 interface ParsedSpec {
+  name: string;
   geojsonPath: string;
   unit: string; // Added for unit parsing
   zoom: number;
@@ -18,6 +19,8 @@ interface ParsedSpec {
   lineColor?: string; // Line color for line method
   lineType?: string;  // Line type (e.g., dashed)
   lineTypeVal?: string; // Value for line type, e.g., rand[0,10]
+  radius?: number; // For heatmap radius parsing
+  blur?: number;
 }
 
 const App: React.FC = () => {
@@ -44,6 +47,19 @@ const App: React.FC = () => {
       // Parse method (e.g., fill or line)
       const methodMatch = spec.match(/method\s*=\s*(\w+)/);
       const method = methodMatch ? methodMatch[1] : '';
+
+
+      let radius: number | undefined;
+      let blur: number | undefined;
+
+      // Parse for `heatmap` method with fixed radius and blur values
+      if (method === 'heatmap') {
+        const radiusMatch = spec.match(/radius\s*=\s*(\d+)/);
+        radius = radiusMatch ? parseInt(radiusMatch[1], 10) : 25; // Default to 25 if not provided
+
+        const blurMatch = spec.match(/blur\s*=\s*(\d+)/);
+        blur = blurMatch ? parseInt(blurMatch[1], 10) : 15; // Default blur is 15
+      }
 
       let fillAttribute = '';
       let strokeColor = 'black'; // Default stroke color
@@ -125,6 +141,8 @@ const App: React.FC = () => {
         method,
         unit, // Include the parsed unit
         zoom,
+        radius, // Based on the syntax provided attribute
+        blur,
         fillAttribute,
         strokeColor,
         strokeWidth,

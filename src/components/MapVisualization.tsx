@@ -2,12 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
+import 'leaflet.heat'; // Import the heatmap plugin
 
 interface ParsedSpec {
   geojsonPath: string;
   method: string;
   unit: string;
   zoom: number;
+  radius?: number;
+  blur?: number;
   fillAttribute?: string;
   strokeColor?: string;
   strokeWidth?: number;
@@ -189,8 +192,38 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec }> = ({ parsedSpec }) 
           console.error("Failed to load GeoJSON data:", error);
         });
       }
+
+      else if (parsedSpec.method === 'heatmap') {
+        // Use d3.json to load the data file
+        d3.json(parsedSpec.geojsonPath).then((data: any) => {
+          if (data && Array.isArray(data)) {
+            const heatData = data.map((point: any) => [
+              point.lat, point.lon, point.value
+            ]);
+
+            const heatmapLayer = (L as any).heatLayer(heatData, {
+              radius: parsedSpec.radius || 25, // Use the fixed radius
+              blur: parsedSpec.blur || 15, // Use the fixed blur
+              maxZoom: 17, 
+            });
+
+            mapInstanceRef.current?.eachLayer((layer) => {
+              if (!(layer instanceof L.TileLayer)) {
+                mapInstanceRef.current?.removeLayer(layer);
+              }
+            });
+
+            heatmapLayer.addTo(mapInstanceRef.current);
+          } else {
+            console.error('Data is missing or not in the expected format.');
+          }
+        }).catch(error => {
+          console.error('Failed to load heatmap data:', error);
+        });
+      }
     }
   }, [parsedSpec]);
+
 
   return <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }}></div>;
 };
