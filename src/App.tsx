@@ -6,7 +6,7 @@ import MapVisualization from './components/MapVisualization';
 interface ParsedSpec {
   name: string;
   geojsonPath: string;
-  unit: string; // Added for unit parsing
+  unit: string;
   zoom: number;
   method: string;
   fillAttribute?: string;
@@ -14,22 +14,21 @@ interface ParsedSpec {
   strokeWidth?: number;
   fillOpacity?: number;
   strokeOpacity?: number;
-  domain?: number[]; // Added for domain parsing
-  range?: string[];  // Added for range parsing
-  lineColor?: string; // Line color for line method
-  lineType?: string;  // Line type (e.g., dashed)
-  lineTypeVal?: string; // Value for line type, e.g., rand[0,10]
-  radius?: number; // For heatmap radius parsing
+  domain?: number[]; 
+  range?: string[];  
+  lineColor?: string; 
+  lineType?: string;  
+  lineTypeVal?: string; 
+  radius?: number; 
   blur?: number;
 }
 
 const App: React.FC = () => {
-  const [parsedSpec, setParsedSpec] = useState<ParsedSpec | null>(null);
+  const [parsedSpec, setParsedSpec] = useState<ParsedSpec[]>([]); // Support for multiple layers
 
-  // Function to parse the custom syntax from the text editor
-  const parseSpecification = (spec: string): ParsedSpec | null => {
+  // Function to parse a single layer specification
+  const parseSingleLayer = (spec: string): ParsedSpec | null => {
     try {
-
       // Parse unit (either area or segment)
       const unitMatch = spec.match(/unit\s*==\s*(\w+)/);
       const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
@@ -47,7 +46,6 @@ const App: React.FC = () => {
       // Parse method (e.g., fill or line)
       const methodMatch = spec.match(/method\s*=\s*(\w+)/);
       const method = methodMatch ? methodMatch[1] : '';
-
 
       let radius: number | undefined;
       let blur: number | undefined;
@@ -118,38 +116,21 @@ const App: React.FC = () => {
         strokeOpacity = lineOpacityMatch ? parseFloat(lineOpacityMatch[1]) : undefined;
       }
 
-      console.log('Parsed GeoJSON Path:', geojsonPath);
-      console.log('Parsed Method:', method);
-      if (method === 'fill') {
-        console.log('Parsed Fill Attribute:', fillAttribute);
-        console.log('Parsed Stroke Color:', strokeColor);
-        console.log('Parsed Stroke Width:', strokeWidth);
-        console.log('Parsed Fill Opacity:', fillOpacity);
-        console.log('Parsed Stroke Opacity:', strokeOpacity);
-        console.log('Parsed Domain:', domain);
-        console.log('Parsed Range:', range);
-      } else if (method === 'line') {
-        console.log('Parsed Line Color:', lineColor);
-        console.log('Parsed Line Type:', lineType);
-        console.log('Parsed Line Type Value:', lineTypeVal);
-        console.log('Parsed Stroke Opacity for line:', strokeOpacity);
-      }
-
-      // Return the parsed specification
+      // Return the parsed specification for this layer
       return {
         geojsonPath,
         method,
-        unit, // Include the parsed unit
+        unit, 
         zoom,
-        radius, // Based on the syntax provided attribute
+        radius,
         blur,
         fillAttribute,
         strokeColor,
         strokeWidth,
         fillOpacity,
         strokeOpacity,
-        domain, // Include parsed domain
-        range,  // Include parsed range
+        domain,
+        range,
         lineColor,
         lineType,
         lineTypeVal
@@ -160,11 +141,17 @@ const App: React.FC = () => {
     }
   };
 
+  // Function to parse multiple layers
+  const parseSpecification = (spec: string): ParsedSpec[] => {
+    const layers = spec.split(/Layer\d+\s*=\s*/).filter(Boolean); // Split by "LayerX ="
+    return layers.map(layerSpec => parseSingleLayer(layerSpec)).filter(Boolean) as ParsedSpec[];
+  };
+
   // Function to handle applying the spec from the text editor
   const applySpec = (spec: string) => {
-    const parsed = parseSpecification(spec);
-    if (parsed) {
-      setParsedSpec(parsed); // Pass the parsed spec to MapVisualization
+    const parsedLayers = parseSpecification(spec);
+    if (parsedLayers.length > 0) {
+      setParsedSpec(parsedLayers); // Set the parsed layers
     }
   };
 
@@ -174,7 +161,7 @@ const App: React.FC = () => {
         <TextEditor onApply={applySpec} />
       </div>
       <div className="grid-item visualization">
-        {parsedSpec && <MapVisualization parsedSpec={parsedSpec} />}
+        {parsedSpec.length > 0 && <MapVisualization parsedSpec={parsedSpec} />}
       </div>
     </div>
   );
@@ -182,4 +169,4 @@ const App: React.FC = () => {
 
 export default App;
 
-//LAST THAT WORK!!
+//That works Last
