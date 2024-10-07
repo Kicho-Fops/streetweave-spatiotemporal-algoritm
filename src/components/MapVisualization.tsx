@@ -21,6 +21,9 @@ interface ParsedSpec {
   lineColor?: string;
   lineType?: string;
   lineTypeVal?: string;
+  xField?: string;
+  yField?: string;
+  pointColor?: string;
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -206,6 +209,37 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             console.error('Failed to load heatmap data:', error);
           });
         }
+
+        // Handle the `point` method
+        else if (layerSpec.method === 'point') {
+          d3.json(layerSpec.geojsonPath).then(function (data: any) {
+            if (data && Array.isArray(data)) {
+              // Parse the x and y fields (Lat and Lon)
+              const xField = layerSpec.xField;
+              const yField = layerSpec.yField;
+              const pointColor = layerSpec.pointColor || 'red'; // Default to red if color is not specified
+
+              data.forEach((d: any) => {
+                const lat = d[xField!]; // Assuming the xField is the latitude field
+                const lon = d[yField!]; // Assuming the yField is the longitude field
+
+                if (lat && lon) {
+                  const marker = L.circleMarker([lat, lon], {
+                    color: pointColor,
+                    radius: 5, // Fixed radius for points
+                  }).addTo(mapInstanceRef.current!);
+
+                  // Add the point marker to the reference list for later removal
+                  currentLayersRef.current.push(marker);
+                }
+              });
+            } else {
+              console.error('Data is missing or not in the expected format.');
+            }
+          }).catch(error => {
+            console.error("Failed to load point data:", error);
+          });
+        }
       });
     }
   }, [parsedSpec]);
@@ -214,5 +248,3 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 };
 
 export default MapVisualization;
-
-//That works Last

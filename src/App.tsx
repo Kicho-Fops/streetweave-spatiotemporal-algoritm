@@ -21,6 +21,9 @@ interface ParsedSpec {
   lineTypeVal?: string; 
   radius?: number; 
   blur?: number;
+  xField?: string;
+  yField?: string;
+  pointColor?: string;
 }
 
 const App: React.FC = () => {
@@ -69,6 +72,9 @@ const App: React.FC = () => {
       let lineTypeVal: string | undefined;
       let domain: number[] | undefined; // Added for domain
       let range: string[] | undefined;  // Added for range
+      let xField: string | undefined;
+      let yField: string | undefined;
+      let pointColor: string | undefined;
 
       // Parse for `fill` method
       if (method === 'fill') {
@@ -116,6 +122,21 @@ const App: React.FC = () => {
         strokeOpacity = lineOpacityMatch ? parseFloat(lineOpacityMatch[1]) : undefined;
       }
 
+       // Parse for `point` method
+      if (method === 'point') {
+        // Parse x and y positions for point data
+        const xMatch = spec.match(/x\s*=\s*"([^"]+)"/);
+        xField = xMatch ? xMatch[1] : '';
+
+        const yMatch = spec.match(/y\s*=\s*"([^"]+)"/);
+        yField = yMatch ? yMatch[1] : '';
+
+        // Parse color for point
+        const colorMatch = spec.match(/color\s*=\s*"([^"]+)"/);
+        pointColor = colorMatch ? colorMatch[1] : 'red'; // Default to red
+      }
+    
+
       // Return the parsed specification for this layer
       return {
         geojsonPath,
@@ -133,7 +154,10 @@ const App: React.FC = () => {
         range,
         lineColor,
         lineType,
-        lineTypeVal
+        lineTypeVal,
+        xField, 
+        yField, 
+        pointColor
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);
