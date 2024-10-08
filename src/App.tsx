@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import './App.css';
 import TextEditor from './components/TextEditor';
@@ -24,6 +25,9 @@ interface ParsedSpec {
   xField?: string;
   yField?: string;
   pointColor?: string;
+  chart?: any;
+  orientation?: string;
+  alignment?: string;
 }
 
 const App: React.FC = () => {
@@ -135,6 +139,33 @@ const App: React.FC = () => {
         const colorMatch = spec.match(/color\s*=\s*"([^"]+)"/);
         pointColor = colorMatch ? colorMatch[1] : 'red'; // Default to red
       }
+
+      //chart spec
+      let chart: any | undefined;
+      const chartMatch = spec.match(/\.chart\(([\s\S]*?)\)\s*\.orientation/); // Match everything inside `.chart()` and before `.orientation`
+
+      if (chartMatch) {
+        try {
+          const chartContent = chartMatch[1];
+          chart = JSON.parse(chartContent); // Parse the JSON as Vega-Lite spec
+        } catch (error) {
+          console.error('Failed to parse Vega-Lite spec inside `.chart()`: ', error);
+        }
+      }
+
+
+      // Parse orientation and alignment
+      let orientation: string | undefined;
+      const orientationMatch = spec.match(/\.orientation\(['"]([^'"]+)['"]\)/);
+      if (orientationMatch) {
+        orientation = orientationMatch[1];
+      }
+
+      let alignment: string | undefined;
+      const alignmentMatch = spec.match(/\.alignment\(['"]([^'"]+)['"]\)/);
+      if (alignmentMatch) {
+        alignment = alignmentMatch[1];
+      }
     
 
       // Return the parsed specification for this layer
@@ -157,7 +188,10 @@ const App: React.FC = () => {
         lineTypeVal,
         xField, 
         yField, 
-        pointColor
+        pointColor,
+        chart,      // Parsed Vega-Lite spec
+        orientation, // Parsed orientation
+        alignment 
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);

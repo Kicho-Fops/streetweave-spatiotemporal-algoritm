@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
 import 'leaflet.heat'; // Import the heatmap plugin
+import vegaEmbed from 'vega-embed';
 
 interface ParsedSpec {
   geojsonPath: string;
@@ -24,6 +25,9 @@ interface ParsedSpec {
   xField?: string;
   yField?: string;
   pointColor?: string;
+  chart?: any;      // Vega-Lite spec
+  orientation?: string;  // Orientation of the chart
+  alignment?: string;    // Alignment of the chart
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -59,6 +63,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   
   // Store references to the current layers (for lines, fill, heatmap)
   const currentLayersRef = useRef<L.Layer[]>([]);
+  
 
   // Initialize the map on the first render
   useEffect(() => {
@@ -85,6 +90,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current = []; // Reset the layer reference
 
       parsedSpec.forEach((layerSpec, index) => {
+        console.log("Initial Checking", layerSpec)
+        d3.selectAll('.vega-lite-svg').remove();
+        // Remove 'move' and 'zoom' event listeners
+        mapInstanceRef.current.off('move zoom');
+
+
         if (layerSpec.method === 'line') {
           d3.json(layerSpec.geojsonPath).then(function (data: any) {
             if (data && data.edges) {
@@ -240,11 +251,74 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             console.error("Failed to load point data:", error);
           });
         }
+        else if(layerSpec.chart){
+          console.log(layerSpec)
+          d3.json(layerSpec.geojsonPath).then((data: any) => {
+            if (data && data.edges){
+              mapInstanceRef.current?.eachLayer((layer) => {
+                if (!(layer instanceof L.TileLayer)) {
+                  mapInstanceRef.current?.removeLayer(layer);
+                }
+              });
+
+              vegaEmbed('#vis', layerSpec.chart, {renderer: 'svg', actions: false}).then(result => {
+                const vegaSVG = result.view._el.querySelector('svg');
+                const svgWidth = 150;
+                const svgHeight = 120;
+
+                // console.log(vegaSVG)
+                data.edges.forEach(edge => {
+                  const start = edge[0];
+                  const end = edge[1];
+                  const angle = edge[2].Bearing;
+                  const midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+
+                  const updateSvgPosition = () => {
+                    const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                    // const tempID = `t${midpoint.lat}${midpoint.lon}`.replace('.', '').replace('-', '') + 'svg';
+                    const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
+                    // const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select(`#${tempID}`);
+                    const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
+                    console.log(temp)
+
+                    if (temp.empty()) {
+                      d3.select(mapInstanceRef.current!.getPanes().overlayPane)
+                        .append('svg')
+                        .attr('class', 'vega-lite-svg')
+                        .attr('id', tempID)
+                        .attr('width', svgWidth)
+                        .attr('height', svgHeight)
+                        .attr('transform', `translate(${point.x - svgWidth / 1.5}, ${point.y - svgHeight / 1.5}) rotate(${angle}, 0, 0)`)
+                        .node()
+                        .appendChild(vegaSVG.cloneNode(true));
+                    } else {
+                      temp.attr('transform', `translate(${point.x - svgWidth / 1.5}, ${point.y - svgHeight / 1.5}) rotate(${angle}, 0, 0)`);
+                    }
+                  };
+
+                  updateSvgPosition();
+                  mapInstanceRef.current!.on('move zoom', updateSvgPosition);
+                })
+              })
+            }
+          })
+        }
       });
     }
   }, [parsedSpec]);
 
-  return <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }}></div>;
+  // return <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }}></div>
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {/* Map container */}
+      <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }}></div>
+      
+      {/* Hidden Vega-Lite chart container */}
+      <div id="vis" style={{ visibility: 'hidden', position: 'absolute', top: 0, left: 0, zIndex: -1 }}></div>
+    </div>
+  );
+  
 };
 
 export default MapVisualization;
