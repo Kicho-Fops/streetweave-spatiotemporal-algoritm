@@ -264,14 +264,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               vegaEmbed('#vis', layerSpec.chart, {renderer: 'svg', actions: false}).then(result => {
                 const vegaSVG = result.view._el.querySelector('svg');
                 const svgWidth = 150;
-                const svgHeight = 120;
+                const svgHeight = 70;
 
                 // console.log(vegaSVG)
                 data.edges.forEach(edge => {
                   const start = edge[0];
                   const end = edge[1];
-                  const angle = edge[2].Bearing;
+                  let angle = edge[2].Bearing + 90;
                   const midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+                  if(layerSpec.orientation=='perpendicular'){
+                    angle = angle + 90;
+                  }
 
                   const updateSvgPosition = () => {
                     const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
@@ -279,7 +282,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
                     // const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select(`#${tempID}`);
                     const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
-                    console.log(temp)
+                    // console.log(temp)
 
                     if (temp.empty()) {
                       d3.select(mapInstanceRef.current!.getPanes().overlayPane)
@@ -288,11 +291,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                         .attr('id', tempID)
                         .attr('width', svgWidth)
                         .attr('height', svgHeight)
-                        .attr('transform', `translate(${point.x - svgWidth / 1.5}, ${point.y - svgHeight / 1.5}) rotate(${angle}, 0, 0)`)
+                        .attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2}) rotate(${angle}, -5, -5)`)
                         .node()
                         .appendChild(vegaSVG.cloneNode(true));
                     } else {
-                      temp.attr('transform', `translate(${point.x - svgWidth / 1.5}, ${point.y - svgHeight / 1.5}) rotate(${angle}, 0, 0)`);
+                      temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2}) rotate(${angle}, -5, -5)`);
                     }
                   };
 
