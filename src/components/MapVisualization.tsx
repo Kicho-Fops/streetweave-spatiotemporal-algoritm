@@ -28,6 +28,8 @@ interface ParsedSpec {
   chart?: any;      // Vega-Lite spec
   orientation?: string;  // Orientation of the chart
   alignment?: string;    // Alignment of the chart
+  physicalLayerPath?: string;
+  thematicLayerPath?: string;
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -40,25 +42,6 @@ const getRandomValueFromRange = (expression: string): number | null => {
   }
   return null;
 };
-
-function removeDuplicateSets(arr) {
-  const uniqueArrays = [];
-  const seen = new Map();
-
-  for (let i = 0; i < arr.length; i++) {
-      // Convert the current array to a string for comparison
-      const key = JSON.stringify(arr[i].sort());
-
-      // Check if this stringified array has already been encountered
-      if (!seen.has(key)) {
-          // If not, add it to the results and mark it as seen
-          uniqueArrays.push(arr[i]);
-          seen.set(key, true);
-      }
-  }
-
-  return uniqueArrays;
-}
 
 // Apply opacity based on the type (fill, stroke, line) and layer specification
 const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: ParsedSpec): number => {
@@ -75,6 +58,51 @@ const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: ParsedSpec): 
   }
   return type === 'fill' ? 0.7 : 1; // Default opacities
 };
+
+
+/////// Here the Aggregation Function Implementation-->>>
+
+// 1. CONTAINS FILL METHOD-->
+function aggregationContains(geojsonData, thematicData, aggregationType, parsedSpec) {
+  geojsonData.features.forEach(function (feature) {
+    const polygon = feature.geometry;
+
+    // Find all points that fall within the current MultiPolygon
+    const pointsInPolygon = thematicData.filter(function (point) {
+      const [lon, lat] = [point.Lon, point.Lat];
+      const pointCoordinates = [lon, lat];
+      return d3.polygonContains(polygon.coordinates[0][0], pointCoordinates);
+    });
+
+    // Initialize aggregation results for each attribute
+    const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+    let aggregatedValues = {};
+
+    attributes.forEach((attr) => {
+      const values = pointsInPolygon.map((point) => point[attr]);
+
+      if (aggregationType === 'sum') {
+        aggregatedValues[attr] = d3.sum(values);
+      } else if (aggregationType === 'mean') {
+        aggregatedValues[attr] = d3.mean(values);
+      } else if (aggregationType === 'min') {
+        aggregatedValues[attr] = d3.min(values);
+      } else if (aggregationType === 'max') {
+        aggregatedValues[attr] = d3.max(values);
+      }
+    });
+
+    // Add the aggregated values to the feature properties
+    feature.properties = {
+      ...feature.properties,
+      ...aggregatedValues
+    };
+  });
+  console.log("function data check: ", geojsonData)
+
+  return geojsonData;
+}
+/////////
 
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -319,35 +347,41 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         else if (layerSpec.unit === 'area'){
           // Handle the `fill` method
           if (layerSpec.method === 'fill') {
-            d3.json(layerSpec.geojsonPath).then(function (geojsonData) {
+            let updatedGeoJsonData;
+            d3.json(layerSpec.physicalLayerPath).then(function (geojsonData) {
               if (geojsonData && geojsonData.features) {
-                let colorScale;
+                d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                  updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, parsedSpec);
+                  console.log('updated Data Check: ', updatedGeoJsonData)
+                  let colorScale;
 
-                if (layerSpec.domain && layerSpec.range) {
-                  colorScale = d3.scaleThreshold()
-                    .domain(layerSpec.domain)
-                    .range(layerSpec.range);
-                } else {
-                  colorScale = d3.scaleSequential(d3.interpolateBlues)
-                    .domain(d3.extent(geojsonData.features, function (d: any) {
-                      return d.properties[layerSpec.fillAttribute];
-                    }));
-                }
+                  if (layerSpec.domain && layerSpec.range) {
+                    colorScale = d3.scaleThreshold()
+                      .domain(layerSpec.domain)
+                      .range(layerSpec.range);
+                  } else {
+                    colorScale = d3.scaleSequential(d3.interpolateBlues)
+                      .domain(d3.extent(updatedGeoJsonData.features, function (d: any) {
+                        return d.properties[layerSpec.fillAttribute];
+                      }));
+                  }
 
-                function style(feature: any) {
-                  return {
-                    fillColor: colorScale(feature.properties[layerSpec.fillAttribute]),
-                    fillOpacity: applyOpacity('fill', layerSpec),
-                    weight: layerSpec.strokeWidth,
-                    color: layerSpec.strokeColor || 'black',
-                    opacity: applyOpacity('stroke', layerSpec),
-                  };
-                }
+                  function style(feature: any) {
+                    console.log('checking if style get the right properties:', feature.properties)
+                    return {
+                      fillColor: colorScale(feature.properties[layerSpec.fillAttribute]),
+                      fillOpacity: applyOpacity('fill', layerSpec),
+                      weight: layerSpec.strokeWidth,
+                      color: layerSpec.strokeColor || 'black',
+                      opacity: applyOpacity('stroke', layerSpec),
+                    };
+                  }
 
-                const geoJsonLayer = L.geoJSON(geojsonData, { style: style }).addTo(mapInstanceRef.current!);
+                  const geoJsonLayer = L.geoJSON(updatedGeoJsonData, { style: style }).addTo(mapInstanceRef.current!);
 
-                // Add the geoJsonLayer to the reference list for later removal
-                currentLayersRef.current.push(geoJsonLayer);
+                  // Add the geoJsonLayer to the reference list for later removal
+                  currentLayersRef.current.push(geoJsonLayer);
+                })
               } else {
                 console.error("GeoJSON data is missing features or is invalid.");
               }
@@ -358,7 +392,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           // Handle the heatmap method
           else if (layerSpec.method === 'heatmap') {
-            d3.json(layerSpec.geojsonPath).then((data: any) => {
+            d3.json(layerSpec.thematicLayerPath).then((data: any) => {
               if (data && Array.isArray(data)) {
                 const heatData = data.map((point: any) => [
                   point.lat, point.lon, point.value
@@ -382,7 +416,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           // Handle the `point` method
           else if (layerSpec.method === 'point') {
-            d3.json(layerSpec.geojsonPath).then(function (data: any) {
+            d3.json(layerSpec.thematicLayerPath).then(function (data: any) {
               if (data && Array.isArray(data)) {
                 // Parse the x and y fields (Lat and Lon)
                 const xField = layerSpec.xField;

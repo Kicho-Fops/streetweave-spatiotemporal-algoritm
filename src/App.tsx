@@ -6,7 +6,7 @@ import MapVisualization from './components/MapVisualization';
 
 interface ParsedSpec {
   name: string;
-  geojsonPath: string;
+  // geojsonPath: string;
   unit: string;
   zoom: number;
   method: string;
@@ -28,6 +28,11 @@ interface ParsedSpec {
   chart?: any;
   orientation?: string;
   alignment?: string;
+  physicalLayerPath?: string;
+  thematicLayerPath?: string;
+  spatialRelation?: string;
+  operation?: string;
+  AggregationType?: string;
 }
 
 const App: React.FC = () => {
@@ -41,8 +46,49 @@ const App: React.FC = () => {
       const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
 
       // Parse geojson path
+      // const dataMatch = spec.match(/data\(([^)]+)\)/);
+      // const geojsonPath = dataMatch ? `/${dataMatch[1]}`.trim() : '';
+      // Parse physical and thematic layer paths
       const dataMatch = spec.match(/data\(([^)]+)\)/);
-      const geojsonPath = dataMatch ? `/${dataMatch[1]}`.trim() : '';
+      let physicalLayerPath: string | undefined;
+      let thematicLayerPath: string | undefined;
+
+      if (dataMatch) {
+        const dataContent = dataMatch[1].trim();
+        const dataParts = dataContent.split(',').map(part => part.trim());
+
+        dataParts.forEach(part => {
+          const [key, value] = part.split('=').map(p => p.trim());
+          if (key === 'physicalLayer') {
+            physicalLayerPath = value;
+          } else if (key === 'thematicLayer') {
+            thematicLayerPath = value;
+          }
+        });
+      }
+
+
+      // Parse for `relation`
+      let spatialRelation: string | undefined;
+      let operation: string | undefined;
+      let AggregationType: string | undefined;
+      const relationMatch = spec.match(/relation\(([^)]+)\)/);
+      if (relationMatch) {
+        const relationContent = relationMatch[1].trim();
+        const relationParts = relationContent.split(',').map(part => part.trim());
+
+        relationParts.forEach(part => {
+          const [key, value] = part.split('=').map(p => p.trim());
+          if (key === 'spatialRelation') {
+            spatialRelation = value;
+          } else if (key === 'operation') {
+            operation = value;
+          } else if (key === 'type') {
+            AggregationType = value;
+          }
+        });
+      }
+
 
       // Parse zoom level, if provided, otherwise default based on unit
       const zoomMatch = spec.match(/zoom\((\d+)\)/);
@@ -170,7 +216,7 @@ const App: React.FC = () => {
 
       // Return the parsed specification for this layer
       return {
-        geojsonPath,
+        // geojsonPath,
         method,
         unit, 
         zoom,
@@ -191,7 +237,12 @@ const App: React.FC = () => {
         pointColor,
         chart,      // Parsed Vega-Lite spec
         orientation, // Parsed orientation
-        alignment 
+        alignment,
+        physicalLayerPath,
+        thematicLayerPath,
+        spatialRelation,
+        operation,
+        AggregationType
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);
