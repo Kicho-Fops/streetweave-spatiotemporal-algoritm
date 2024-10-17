@@ -64,44 +64,109 @@ const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: ParsedSpec): 
 /////// Here the Aggregation Function Implementation-->>>
 
 // 1. CONTAINS FILL METHOD-->
-function aggregationContains(geojsonData, thematicData, aggregationType, parsedSpec) {
-  geojsonData.features.forEach(function (feature) {
-    const polygon = feature.geometry;
-
-    // Find all points that fall within the current MultiPolygon
-    const pointsInPolygon = thematicData.filter(function (point) {
-      const [lon, lat] = [point.Lon, point.Lat];
-      const pointCoordinates = [lon, lat];
-      return d3.polygonContains(polygon.coordinates[0][0], pointCoordinates);
+function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal) {
+  console.log(UnitVal)
+  if(UnitVal == 'area'){
+    geojsonData.features.forEach(function (feature) {
+      const polygon = feature.geometry;
+  
+      // Find all points that fall within the current MultiPolygon
+      const pointsInPolygon = thematicData.filter(function (point) {
+        const [lon, lat] = [point.Lon, point.Lat];
+        const pointCoordinates = [lon, lat];
+        return d3.polygonContains(polygon.coordinates[0][0], pointCoordinates);
+      });
+  
+      // Initialize aggregation results for each attribute
+      const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      let aggregatedValues = {};
+  
+      attributes.forEach((attr) => {
+        const values = pointsInPolygon.map((point) => point[attr]);
+  
+        if (aggregationType === 'sum') {
+          aggregatedValues[attr] = d3.sum(values);
+        } else if (aggregationType === 'mean') {
+          aggregatedValues[attr] = d3.mean(values);
+        } else if (aggregationType === 'min') {
+          aggregatedValues[attr] = d3.min(values);
+        } else if (aggregationType === 'max') {
+          aggregatedValues[attr] = d3.max(values);
+        }
+      });
+  
+      // Add the aggregated values to the feature properties
+      feature.properties = {
+        ...feature.properties,
+        ...aggregatedValues
+      };
     });
+    // console.log("function data check: ", geojsonData)
+    return geojsonData;
+  } else if(UnitVal == 'segment'){
+    // console.log('check if data is passed to the function:', geojsonData)
+    const bboxWidth = 5000;
+    const aggregatedEdges = geojsonData.edges.map( edge => {
+      const pointA = [edge[0].lon, edge[0].lat];
+      const pointB = [edge[1].lon, edge[1].lat];
 
-    // Initialize aggregation results for each attribute
-    const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-    let aggregatedValues = {};
+      // console.log('check point a b', pointA, pointB)
 
-    attributes.forEach((attr) => {
-      const values = pointsInPolygon.map((point) => point[attr]);
+      // Create a bounding box polygon around the edge with the given width
+      const line = turf.lineString([pointA, pointB]);
+      const bbox = turf.buffer(line, bboxWidth, { units: 'meters' });
 
-      if (aggregationType === 'sum') {
-        aggregatedValues[attr] = d3.sum(values);
-      } else if (aggregationType === 'mean') {
-        aggregatedValues[attr] = d3.mean(values);
-      } else if (aggregationType === 'min') {
-        aggregatedValues[attr] = d3.min(values);
-      } else if (aggregationType === 'max') {
-        aggregatedValues[attr] = d3.max(values);
-      }
-    });
+      // Collect all environmental points that fall within this bounding box
+      const pointsInBoundingBox = thematicData.filter(point => {
+          const thematicPoint = turf.point([point.Lon, point.Lat]);
+          return turf.booleanPointInPolygon(thematicPoint, bbox);
+      });
 
-    // Add the aggregated values to the feature properties
-    feature.properties = {
-      ...feature.properties,
-      ...aggregatedValues
-    };
-  });
-  // console.log("function data check: ", geojsonData)
+      // console.log('pointsInBoundingBox check:', pointsInBoundingBox)
 
-  return geojsonData;
+      // Perform aggregation for each environmental attribute
+      let aggregatedValues = [];
+      const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+
+      attributes.forEach(attr => {
+        const values = pointsInBoundingBox.map(point => point[attr]);
+        let aggregatedValue = 0;
+
+        if (aggregationType === 'sum') {
+          aggregatedValue = values.reduce((sum, val) => sum + val, 0);
+        } else if (aggregationType === 'mean') {
+          aggregatedValue = values.length ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
+        } else if (aggregationType === 'min') {
+          aggregatedValue = values.length ? Math.min(...values) : null;
+        } else if (aggregationType === 'max') {
+          aggregatedValue = values.length ? Math.max(...values) : null;
+        }
+
+        aggregatedValues.push({ [attr]: aggregatedValue });
+      });
+
+        // Construct the final data array for the edge
+        let updatedEdge = [];
+
+        // Add original edge properties as separate elements in the array
+        updatedEdge.push(edge[0]); // Point A (lat, lon)
+        updatedEdge.push(edge[1]); // Point B (lat, lon)
+        updatedEdge.push(edge[2]); // Bearing
+        updatedEdge.push(edge[3]); // Length
+
+        // Add aggregated values as separate elements in the array
+        aggregatedValues.forEach(value => {
+            updatedEdge.push(value);
+        });
+
+        return updatedEdge;
+
+
+    })
+    console.log('updated data befor return', aggregatedEdges)
+    
+    return aggregatedEdges;
+  }
 }
 /////////
 
@@ -145,122 +210,144 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
         if (layerSpec.unit === 'segment'){
           if (layerSpec.method === 'line') {
+            let updatedGeoJsonData;
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
-                mapInstanceRef.current?.eachLayer((layer) => {
-                  if (!(layer instanceof L.TileLayer)) {
-                    mapInstanceRef.current?.removeLayer(layer);
-                  }
-                });
-                // Create a new SVG layer for lines
-                const svgLayer = L.svg().addTo(mapInstanceRef.current!);
-                const svgGroup = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select("svg").append("g").attr("class", "leaflet-zoom-hide");
-  
-                const lineGenerator = d3.line<any>()
-                  .x((d: any) => mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).x)
-                  .y((d: any) => mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).y);
-  
-                data.edges.forEach((edge: any) => {
-                  const points = [
-                    { lat: edge[0].lat, lon: edge[0].lon },
-                    { lat: edge[1].lat, lon: edge[1].lon }
-                  ];
-  
-                  // Set line color based on attribute value or specific color
-                  let lineColor = layerSpec.lineColor || "red";
-                  const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineColor));
-                  if (attributeIndex !== -1) {
-                    const attributeValues = data.edges
-                      .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor]))
-                      .filter((v: any) => v !== undefined);
-                    const minValue = d3.min(attributeValues);
-                    const maxValue = d3.max(attributeValues);
-                    const attributeValue = edge[attributeIndex][lineColor];
-                    if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                      const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
-                      lineColor = colorScale(attributeValue);
+                console.log('data check before', data)
+                d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                  updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  console.log('check updatedGeoJsonData', updatedGeoJsonData)
+                  updatedGeoJsonData = {
+                    edges: updatedGeoJsonData
+                  };
+                  console.log('check updatedGeoJsonData with edge', updatedGeoJsonData)
+                  mapInstanceRef.current?.eachLayer((layer) => {
+                    if (!(layer instanceof L.TileLayer)) {
+                      mapInstanceRef.current?.removeLayer(layer);
                     }
-                  }
-
-                  ///line random color-->
-                  // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
-                  // if (randomValue !== null) {
-                  //   const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0, 10]);
-                  //   lineColor = colorScale(randomValue);
-                  // }
-
-
-                  // Set opacity based on attribute value or specific value
-                  let lineOpacity = layerSpec.strokeOpacity || 1;
-                  // console.log('lineOpacity check:', lineOpacity)
-                  if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
-                    // Directly use the specified opacity value if it's between 0 and 1
-                    lineOpacity = lineOpacity;
-                  } else if (typeof lineOpacity === "string") {
-                    // Treat lineOpacity as an attribute name and map its values from 0 to 1
-                    const opacityIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
-                    if (opacityIndex !== -1) {
-                      const attributeValues = data.edges
-                        .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
+                  });
+                  // Create a new SVG layer for lines
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  const svgGroup = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select("svg").append("g").attr("class", "leaflet-zoom-hide");
+    
+                  const lineGenerator = d3.line<any>()
+                    .x((d: any) => mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).x)
+                    .y((d: any) => mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).y);
+    
+                  updatedGeoJsonData.edges.forEach((edge: any) => {
+                    const points = [
+                      { lat: edge[0].lat, lon: edge[0].lon },
+                      { lat: edge[1].lat, lon: edge[1].lon }
+                    ];
+    
+                    // Set line color based on attribute value or specific color
+                    let lineColor = layerSpec.lineColor || "red";
+                    const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineColor));
+                    if (attributeIndex !== -1) {
+                      const attributeValues = updatedGeoJsonData.edges
+                        .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor]))
                         .filter((v: any) => v !== undefined);
                       const minValue = d3.min(attributeValues);
                       const maxValue = d3.max(attributeValues);
-                      const attributeValue = edge[opacityIndex][lineOpacity];
+                      const attributeValue = edge[attributeIndex][lineColor];
                       if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                        const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
-                        lineOpacity = opacityScale(attributeValue);
+                        const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
+                        lineColor = colorScale(attributeValue);
                       }
                     }
-                  }
-                  
   
-                  // let dashArray = null;
-                  // if (layerSpec.lineType === 'dashed') {
-                  //   const dashRandomValue = getRandomValueFromRange(layerSpec.lineTypeVal || '');
-                  //   dashArray = dashRandomValue !== null && dashRandomValue < 5 ? '5, 5' : '15, 10';
-                  // }
-
-                  // Set dashed line style based on attribute value
-                  let dashArray = null;
-                  if (layerSpec.lineType === "dashed" && layerSpec.lineTypeVal) {
-                    const dashIndex = edge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
-                    if (dashIndex !== -1) {
-                      const attributeValue = edge[dashIndex][layerSpec.lineTypeVal];
-                      if (attributeValue !== undefined) {
-                        const minValue = layerSpec.dashMin;
-                        const maxValue = layerSpec.dashMax;
-                        if (attributeValue < minValue + (maxValue - minValue) / 3) {
-                          dashArray = "5, 5";
-                        } else if (
-                          attributeValue >= minValue + (maxValue - minValue) / 3 &&
-                          attributeValue < minValue + (2 * (maxValue - minValue)) / 3
-                        ) {
-                          dashArray = "10, 10";
-                        } else {
-                          dashArray = "15, 10";
+  
+  
+  
+  
+  
+  
+                    ///line random color-->
+                    // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
+                    // if (randomValue !== null) {
+                    //   const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0, 10]);
+                    //   lineColor = colorScale(randomValue);
+                    // }
+  
+  
+                    // Set opacity based on attribute value or specific value
+                    let lineOpacity = layerSpec.strokeOpacity || 1;
+                    // console.log('lineOpacity check:', lineOpacity)
+                    if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                      // Directly use the specified opacity value if it's between 0 and 1
+                      lineOpacity = lineOpacity;
+                    } else if (typeof lineOpacity === "string") {
+                      // Treat lineOpacity as an attribute name and map its values from 0 to 1
+                      const opacityIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                      if (opacityIndex !== -1) {
+                        const attributeValues = updatedGeoJsonData.edges
+                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
+                          .filter((v: any) => v !== undefined);
+                        const minValue = d3.min(attributeValues);
+                        const maxValue = d3.max(attributeValues);
+                        const attributeValue = edge[opacityIndex][lineOpacity];
+                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                          const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                          lineOpacity = opacityScale(attributeValue);
                         }
                       }
                     }
-                  }
+                    
+    
+                    // let dashArray = null;
+                    // if (layerSpec.lineType === 'dashed') {
+                    //   const dashRandomValue = getRandomValueFromRange(layerSpec.lineTypeVal || '');
+                    //   dashArray = dashRandomValue !== null && dashRandomValue < 5 ? '5, 5' : '15, 10';
+                    // }
   
-                  svgGroup.append("path")
-                    .datum(points)
-                    .attr("d", lineGenerator)
-                    .style("stroke", lineColor)
-                    .style("stroke-width", 5)
-                    .style("stroke-opacity", lineOpacity)
-                    .style("stroke-dasharray", dashArray || null)
-                    .attr("fill", "none");
-  
-                  function updateLines() {
-                    svgGroup.selectAll("path")
-                      .attr("d", lineGenerator);
-                  }
-                  mapInstanceRef.current!.on("moveend", updateLines);
-                });
-  
-                // Add the SVG layer to the reference list for later removal
-                currentLayersRef.current.push(svgLayer);
+                    // Set dashed line style based on attribute value
+                    let dashArray = null;
+                    if (layerSpec.lineType === "dashed" && layerSpec.lineTypeVal) {
+                      const dashIndex = edge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
+                      if (dashIndex !== -1) {
+                        const attributeValue = edge[dashIndex][layerSpec.lineTypeVal];
+                        if (attributeValue !== undefined) {
+                          const minValue = layerSpec.dashMin;
+                          const maxValue = layerSpec.dashMax;
+                          if (attributeValue < minValue + (maxValue - minValue) / 3) {
+                            dashArray = "5, 5";
+                          } else if (
+                            attributeValue >= minValue + (maxValue - minValue) / 3 &&
+                            attributeValue < minValue + (2 * (maxValue - minValue)) / 3
+                          ) {
+                            dashArray = "10, 10";
+                          } else {
+                            dashArray = "15, 10";
+                          }
+                        }
+                      }
+                    }
+    
+                    svgGroup.append("path")
+                      .datum(points)
+                      .attr("d", lineGenerator)
+                      .style("stroke", lineColor)
+                      .style("stroke-width", 5)
+                      .style("stroke-opacity", lineOpacity)
+                      .style("stroke-dasharray", dashArray || null)
+                      .attr("fill", "none");
+    
+                    function updateLines() {
+                      svgGroup.selectAll("path")
+                        .attr("d", lineGenerator);
+                    }
+                    mapInstanceRef.current!.on("moveend", updateLines);
+                  });
+    
+                  // Add the SVG layer to the reference list for later removal
+                  currentLayersRef.current.push(svgLayer);
+
+                })
+
+
+
+
+
               } else {
                 console.error("Data is missing edges or is invalid.");
               }
@@ -415,7 +502,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             d3.json(layerSpec.physicalLayerPath).then(function (geojsonData) {
               if (geojsonData && geojsonData.features) {
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
-                  updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, parsedSpec);
+                  updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                   // console.log('updated Data Check: ', updatedGeoJsonData)
                   let colorScale;
 
