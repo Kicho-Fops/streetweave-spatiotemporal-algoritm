@@ -65,7 +65,6 @@ const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: ParsedSpec): 
 
 // 1. CONTAINS FILL METHOD-->
 function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal) {
-  console.log(UnitVal)
   if(UnitVal == 'area'){
     geojsonData.features.forEach(function (feature) {
       const polygon = feature.geometry;
@@ -163,11 +162,167 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
 
 
     })
-    console.log('updated data befor return', aggregatedEdges)
     
     return aggregatedEdges;
   }
 }
+
+
+
+
+// 2. Euclidian Distance METHOD-->
+// Function to calculate the centroid of a multipolygon using Turf.js
+const calculateCentroid = (geometry) => {
+  const multiPolygon = turf.multiPolygon(geometry.coordinates);
+  return turf.centroid(multiPolygon);
+};
+
+// Function to calculate the midpoint between two coordinates
+function calculateMidpoint(coord1, coord2) {
+  return {
+      lat: (coord1.lat + coord2.lat) / 2,
+      lon: (coord1.lon + coord2.lon) / 2
+  };
+}
+
+// Function to calculate Euclidean distance between two points using Turf.js
+const calculateDistance = (centroid, point) => {
+  return turf.distance(centroid, point, { units: 'kilometers' });
+};
+
+// Function to calculate distances to all points and return them
+const calculateDistances = (centroid, thematicData) => {
+  return thematicData.map((point, index) => {
+      const pointCoords = turf.point([point.Lon, point.Lat]);
+      const distance = calculateDistance(centroid, pointCoords);
+      return { index, distance };
+  });
+};
+
+// Function to find the closest points based on distance
+const findClosestPoints = (distances, thematicData, numberOfPoints = 100) => {
+  distances.sort((a, b) => a.distance - b.distance);
+  return distances.slice(0, numberOfPoints).map(d => thematicData[d.index]);
+};
+
+
+// Function to aggregate data based on type for area
+const aggregateData = (points, aggregationType) => {
+  const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  let aggregatedValues = {};
+
+  attributes.forEach(attr => {
+      const values = points.map(point => point[attr]);
+
+      if (aggregationType === 'sum') {
+          aggregatedValues[attr] = d3.sum(values);
+      } else if (aggregationType === 'mean') {
+          aggregatedValues[attr] = d3.mean(values);
+      } else if (aggregationType === 'min') {
+          aggregatedValues[attr] = d3.min(values);
+      } else if (aggregationType === 'max') {
+          aggregatedValues[attr] = d3.max(values);
+      } else {
+          aggregatedValues[attr] = 0; // Default case
+      }
+  });
+
+  return aggregatedValues;
+};
+
+
+// Main function to create the new dataset using the modular functions for area
+const createNewDataset = (geojsonData, thematicData, aggregationType) => {
+  geojsonData.features.forEach(function (feature) {
+      // Calculate centroid of the MultiPolygon
+      const centroid = calculateCentroid(feature.geometry);
+
+      // Calculate distances to all points in thematicData
+      const distances = calculateDistances(centroid, thematicData);
+
+      // Find the closest points based on distances
+      const closestPoints = findClosestPoints(distances, thematicData);
+
+      // Aggregate the data from the closest points
+      const aggregatedValues = aggregateData(closestPoints, aggregationType);
+
+      // Add the aggregated values to the feature properties
+      feature.properties = {
+          ...feature.properties,
+          ...aggregatedValues
+      };
+  });
+
+  return geojsonData; // Return the updated GeoJSON data
+};
+
+
+// Function to aggregate environmental data based on given points and aggregation type for segment line
+function aggregateAttributes(points, aggregationType) {
+  const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  let aggregatedValues = [];
+
+  attributes.forEach(attr => {
+      const values = points.map(point => point[attr]);
+      let aggregatedValue = 0;
+
+      if (aggregationType === 'sum') {
+          aggregatedValue = values.reduce((sum, val) => sum + val, 0);
+      } else if (aggregationType === 'mean') {
+          aggregatedValue = values.length ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
+      } else if (aggregationType === 'min') {
+          aggregatedValue = values.length ? Math.min(...values) : null;
+      } else if (aggregationType === 'max') {
+          aggregatedValue = values.length ? Math.max(...values) : null;
+      }
+
+      aggregatedValues.push({ [attr]: aggregatedValue });
+  });
+
+  return aggregatedValues;
+}
+
+// Main function to aggregate data for each edge segment lines
+function aggregateEdgeData(edgesData, environmentalData, aggregationType) {
+  return edgesData.map(edge => {
+      const [pointA, pointB] = [edge[0], edge[1]];
+
+      // Calculate midpoint of the edge
+      const midpointCoords = calculateMidpoint(pointA, pointB);
+      const centroid = turf.point([midpointCoords.lon, midpointCoords.lat]);
+
+      // Calculate distances from the centroid to all environmental points
+      const distances = calculateDistances(centroid, environmentalData);
+
+      // Find the 100 closest environmental points
+      const closestPoints = findClosestPoints(distances, environmentalData);
+
+      // Aggregate the environmental attributes based on the selected aggregation type
+      const aggregatedValues = aggregateAttributes(closestPoints, aggregationType);
+
+      // Construct the final data for the edge
+      let updatedEdge = [];
+
+      // Add original edge properties as separate elements in the array
+      updatedEdge.push(edge[0]); // Point A (lat, lon)
+      updatedEdge.push(edge[1]); // Point B (lat, lon)
+      updatedEdge.push(edge[2]); // Bearing
+      updatedEdge.push(edge[3]); // Length
+
+      // Add aggregated values as separate elements in the array
+      aggregatedValues.forEach(value => {
+          updatedEdge.push(value);
+      });
+
+      return updatedEdge;
+  });
+}
+
+
+
+
+
+
 /////////
 
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }) => {
@@ -213,14 +368,19 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             let updatedGeoJsonData;
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
-                console.log('data check before', data)
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
-                  updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                  console.log('check updatedGeoJsonData', updatedGeoJsonData)
+                  if(layerSpec.spatialRelation == 'contains'){
+                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  }else if(layerSpec.spatialRelation == 'nearest neighbor'){
+                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  }
+                  // updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  // const aggregatedEdges = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
                   updatedGeoJsonData = {
                     edges: updatedGeoJsonData
                   };
-                  console.log('check updatedGeoJsonData with edge', updatedGeoJsonData)
+
+                  console.log('check edges data for ED:', updatedGeoJsonData)
                   mapInstanceRef.current?.eachLayer((layer) => {
                     if (!(layer instanceof L.TileLayer)) {
                       mapInstanceRef.current?.removeLayer(layer);
@@ -255,13 +415,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                         lineColor = colorScale(attributeValue);
                       }
                     }
-  
-  
-  
-  
-  
-  
-  
+
                     ///line random color-->
                     // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
                     // if (randomValue !== null) {
@@ -502,8 +656,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             d3.json(layerSpec.physicalLayerPath).then(function (geojsonData) {
               if (geojsonData && geojsonData.features) {
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
-                  updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                  // console.log('updated Data Check: ', updatedGeoJsonData)
+                  if(layerSpec.spatialRelation == 'contains'){
+                    updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  }else if(layerSpec.spatialRelation == 'nearest neighbor'){
+                    updatedGeoJsonData = createNewDataset(geojsonData, thematicData, layerSpec.AggregationType);
+                  }
+                  // updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  // const newDataset = createNewDataset(geojsonData, thematicData, layerSpec.AggregationType);
+                  console.log('checking ED data: ', updatedGeoJsonData)
                   let colorScale;
 
                   if (layerSpec.domain && layerSpec.range) {
