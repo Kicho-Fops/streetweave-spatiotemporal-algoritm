@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
 import 'leaflet.heat'; // Import the heatmap plugin
 import vegaEmbed from 'vega-embed';
+import * as turf from '@turf/turf';
 
 interface ParsedSpec {
   geojsonPath: string;
@@ -98,7 +99,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, parsedS
       ...aggregatedValues
     };
   });
-  console.log("function data check: ", geojsonData)
+  // console.log("function data check: ", geojsonData)
 
   return geojsonData;
 }
@@ -144,7 +145,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
         if (layerSpec.unit === 'segment'){
           if (layerSpec.method === 'line') {
-            d3.json(layerSpec.geojsonPath).then(function (data: any) {
+            d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
@@ -165,18 +166,81 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     { lat: edge[1].lat, lon: edge[1].lon }
                   ];
   
-                  let lineColor = layerSpec.lineColor || 'red'; 
-                  const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
-  
-                  if (randomValue !== null) {
-                    const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0, 10]);
-                    lineColor = colorScale(randomValue);
+                  // Set line color based on attribute value or specific color
+                  let lineColor = layerSpec.lineColor || "red";
+                  const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineColor));
+                  if (attributeIndex !== -1) {
+                    const attributeValues = data.edges
+                      .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor]))
+                      .filter((v: any) => v !== undefined);
+                    const minValue = d3.min(attributeValues);
+                    const maxValue = d3.max(attributeValues);
+                    const attributeValue = edge[attributeIndex][lineColor];
+                    if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                      const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
+                      lineColor = colorScale(attributeValue);
+                    }
                   }
+
+                  ///line random color-->
+                  // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
+                  // if (randomValue !== null) {
+                  //   const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0, 10]);
+                  //   lineColor = colorScale(randomValue);
+                  // }
+
+
+                  // Set opacity based on attribute value or specific value
+                  let lineOpacity = layerSpec.strokeOpacity || 1;
+                  // console.log('lineOpacity check:', lineOpacity)
+                  if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                    // Directly use the specified opacity value if it's between 0 and 1
+                    lineOpacity = lineOpacity;
+                  } else if (typeof lineOpacity === "string") {
+                    // Treat lineOpacity as an attribute name and map its values from 0 to 1
+                    const opacityIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                    if (opacityIndex !== -1) {
+                      const attributeValues = data.edges
+                        .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
+                        .filter((v: any) => v !== undefined);
+                      const minValue = d3.min(attributeValues);
+                      const maxValue = d3.max(attributeValues);
+                      const attributeValue = edge[opacityIndex][lineOpacity];
+                      if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                        const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                        lineOpacity = opacityScale(attributeValue);
+                      }
+                    }
+                  }
+                  
   
+                  // let dashArray = null;
+                  // if (layerSpec.lineType === 'dashed') {
+                  //   const dashRandomValue = getRandomValueFromRange(layerSpec.lineTypeVal || '');
+                  //   dashArray = dashRandomValue !== null && dashRandomValue < 5 ? '5, 5' : '15, 10';
+                  // }
+
+                  // Set dashed line style based on attribute value
                   let dashArray = null;
-                  if (layerSpec.lineType === 'dashed') {
-                    const dashRandomValue = getRandomValueFromRange(layerSpec.lineTypeVal || '');
-                    dashArray = dashRandomValue !== null && dashRandomValue < 5 ? '5, 5' : '15, 10';
+                  if (layerSpec.lineType === "dashed" && layerSpec.lineTypeVal) {
+                    const dashIndex = edge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
+                    if (dashIndex !== -1) {
+                      const attributeValue = edge[dashIndex][layerSpec.lineTypeVal];
+                      if (attributeValue !== undefined) {
+                        const minValue = layerSpec.dashMin;
+                        const maxValue = layerSpec.dashMax;
+                        if (attributeValue < minValue + (maxValue - minValue) / 3) {
+                          dashArray = "5, 5";
+                        } else if (
+                          attributeValue >= minValue + (maxValue - minValue) / 3 &&
+                          attributeValue < minValue + (2 * (maxValue - minValue)) / 3
+                        ) {
+                          dashArray = "10, 10";
+                        } else {
+                          dashArray = "15, 10";
+                        }
+                      }
+                    }
                   }
   
                   svgGroup.append("path")
@@ -184,7 +248,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     .attr("d", lineGenerator)
                     .style("stroke", lineColor)
                     .style("stroke-width", 5)
-                    .style("stroke-opacity", applyOpacity('line', layerSpec))
+                    .style("stroke-opacity", lineOpacity)
                     .style("stroke-dasharray", dashArray || null)
                     .attr("fill", "none");
   
@@ -205,7 +269,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             });
           }
           else if(layerSpec.chart){
-            console.log(layerSpec)
+            // console.log(layerSpec)
             d3.json(layerSpec.geojsonPath).then((data: any) => {
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
@@ -352,7 +416,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               if (geojsonData && geojsonData.features) {
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
                   updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, parsedSpec);
-                  console.log('updated Data Check: ', updatedGeoJsonData)
+                  // console.log('updated Data Check: ', updatedGeoJsonData)
                   let colorScale;
 
                   if (layerSpec.domain && layerSpec.range) {
@@ -367,7 +431,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                   }
 
                   function style(feature: any) {
-                    console.log('checking if style get the right properties:', feature.properties)
+                    // console.log('checking if style get the right properties:', feature.properties)
                     return {
                       fillColor: colorScale(feature.properties[layerSpec.fillAttribute]),
                       fillOpacity: applyOpacity('fill', layerSpec),
@@ -395,7 +459,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             d3.json(layerSpec.thematicLayerPath).then((data: any) => {
               if (data && Array.isArray(data)) {
                 const heatData = data.map((point: any) => [
-                  point.lat, point.lon, point.value
+                  point.Lat, point.Lon, point.temperature
                 ]);
 
                 const heatmapLayer = (L as any).heatLayer(heatData, {

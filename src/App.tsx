@@ -14,7 +14,7 @@ interface ParsedSpec {
   strokeColor?: string;
   strokeWidth?: number;
   fillOpacity?: number;
-  strokeOpacity?: number;
+  strokeOpacity?: string | number;
   domain?: number[]; 
   range?: string[];  
   lineColor?: string; 
@@ -116,7 +116,7 @@ const App: React.FC = () => {
       let strokeColor = 'black'; // Default stroke color
       let strokeWidth = 1;
       let fillOpacity: number | undefined;
-      let strokeOpacity: number | undefined;
+      let strokeOpacity: string | number | undefined;
       let lineColor: string | undefined;
       let lineType: string | undefined;
       let lineTypeVal: string | undefined;
@@ -168,8 +168,22 @@ const App: React.FC = () => {
         }
 
         // Parse line opacity
-        const lineOpacityMatch = spec.match(/opacity\s*=\s*(\d*\.?\d+)/);
-        strokeOpacity = lineOpacityMatch ? parseFloat(lineOpacityMatch[1]) : undefined;
+        // const lineOpacityMatch = spec.match(/opacity\s*=\s*(\d*\.?\d+)/);
+        // strokeOpacity = lineOpacityMatch ? parseFloat(lineOpacityMatch[1]) : undefined;
+        // const lineOpacityMatch = spec.match(/opacity\s*=\s*(\w+|\d*\.?\d+)/);
+        // strokeOpacity = lineOpacityMatch ? (isNaN(Number(lineOpacityMatch[1])) ? lineOpacityMatch[1] : parseFloat(lineOpacityMatch[1])) : undefined;
+
+        const lineOpacityMatch = spec.match(/opacity\s*=\s*([^\)\s]+)/);
+        if (lineOpacityMatch) {
+            const opacityValue = lineOpacityMatch[1].trim();
+            if (!isNaN(Number(opacityValue))) {
+                strokeOpacity = parseFloat(opacityValue);
+            } else {
+                strokeOpacity = opacityValue; // This could be a variable name, function, etc.
+            }
+        } else {
+            strokeOpacity = undefined; // No opacity value found
+        }
       }
 
        // Parse for `point` method
