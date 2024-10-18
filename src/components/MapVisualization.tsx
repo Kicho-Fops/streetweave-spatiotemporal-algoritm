@@ -31,6 +31,10 @@ interface ParsedSpec {
   alignment?: string;    // Alignment of the chart
   physicalLayerPath?: string;
   thematicLayerPath?: string;
+  spatialRelation?: string;
+  operation?: string;
+  AggregationType?: string;
+  bufferValue?: number;
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -245,7 +249,7 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
 
       // Aggregate the data from the closest points
       const aggregatedValues = aggregateData(closestPoints, aggregationType);
-
+      // console.log('check data geojsonData2', aggregatedValues)
       // Add the aggregated values to the feature properties
       feature.properties = {
           ...feature.properties,
@@ -318,6 +322,139 @@ function aggregateEdgeData(edgesData, environmentalData, aggregationType) {
   });
 }
 
+/////3. Buffer METHOD-->
+////calculateCentroid function in up
+// Function to create a buffer around a centroid
+const createBuffer = (centroid, bufferDistance) => {
+  return turf.buffer(centroid, bufferDistance, { units: 'kilometers' });
+};
+
+
+function createBufferSegment(midpoint, bufferDistance) {
+  const point = turf.point([midpoint.lon, midpoint.lat]);
+  return turf.buffer(point, bufferDistance, { units: 'kilometers' });
+}
+
+// Function to filter points that fall within the buffer
+const filterPointsInBuffer = (buffer, points) => {
+  return points.filter(point => {
+      const pointCoords = turf.point([point.Lon, point.Lat]);
+      return turf.booleanPointInPolygon(pointCoords, buffer);
+  });
+};
+
+
+// Function to filter points within buffer
+function filterPointsWithinBufferSegment(buffer, environmentalData) {
+  return environmentalData.filter(point => {
+      const pointFeature = turf.point([point.Lon, point.Lat]);
+      return turf.booleanPointInPolygon(pointFeature, buffer);
+  });
+}
+
+
+// Function to aggregate values based on the selected aggregation type
+const aggregateValues = (points, aggregationType) => {
+  const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  let aggregatedValues = {};
+
+  attributes.forEach(attr => {
+      const values = points.map(point => point[attr]);
+      // console.log('values are', values)
+
+      if (aggregationType === 'sum') {
+          aggregatedValues[attr] = d3.sum(values);
+      } else if (aggregationType === 'mean') {
+          aggregatedValues[attr] = d3.mean(values);
+      } else if (aggregationType === 'min') {
+          aggregatedValues[attr] = d3.min(values);
+      } else if (aggregationType === 'max') {
+          aggregatedValues[attr] = d3.max(values);
+      } else {
+          aggregatedValues[attr] = 0; // Default case
+      }
+  });
+  // console.log('checking agg val:', aggregatedValues)
+
+  return aggregatedValues;
+};
+
+
+// Main function to create the new dataset with aggregated environmental data
+const createAggregatedDataset = (geojsonData, environmentalData, bufferDistance, aggregationType) => {
+  geojsonData.features.forEach(feature => {
+      // Calculate the centroid of the current MultiPolygon
+      const centroid = calculateCentroid(feature.geometry);
+      // console.log('checking centroids', centroid)
+
+      // Create a buffer around the centroid
+      const buffer = createBuffer(centroid, bufferDistance);
+      // console.log('checking centroids', buffer)
+
+      // Filter the environmental points that fall within the buffer
+      const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
+      // console.log('checking pointsInBuffer', pointsInBuffer)
+
+      // Aggregate the values based on the selected aggregation type
+      const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType);
+      // console.log('checking aggregatedValues', aggregatedValues)
+
+      // Add the aggregated values to the feature properties
+      feature.properties = {
+          ...feature.properties,
+          ...aggregatedValues
+      };
+  });
+  // console.log('check data geojsonData', geojsonData)
+
+  return geojsonData;
+};
+
+// aggregateAttributes function is up
+
+// Main function to aggregate data for each edge segment lines
+function BufferDataAggregationSegment(edgesData, environmentalData, bufferDistance = 1, aggregationType = 'sum') {
+  const aggregatedEdges = edgesData.edges.map(edge => {
+      // Extract coordinates of both points of the edge
+      const pointA = { lat: edge[0].lat, lon: edge[0].lon };
+      const pointB = { lat: edge[1].lat, lon: edge[1].lon };
+
+      // Calculate midpoint
+      const midpoint = calculateMidpoint(pointA, pointB);
+
+      // Create buffer around the midpoint
+      const buffer = createBufferSegment(midpoint, bufferDistance);
+
+      // Filter points within buffer
+      const pointsInBuffer = filterPointsWithinBufferSegment(buffer, environmentalData);
+
+      // Calculate aggregated values
+      const aggregatedValues = aggregateAttributes(pointsInBuffer, aggregationType);
+
+      // Construct the updated edge with aggregated values
+      let updatedEdge = [];
+      updatedEdge.push(edge[0]); // Point A (lat, lon)
+      updatedEdge.push(edge[1]); // Point B (lat, lon)
+      updatedEdge.push(edge[2]); // Bearing
+      updatedEdge.push(edge[3]); // Length
+
+      // Add aggregated values as separate elements in the array
+      aggregatedValues.forEach(value => {
+          updatedEdge.push(value);
+      });
+
+      return updatedEdge;
+  });
+
+  // Create final dataset
+  // const finalData = {
+  //     edges: aggregatedEdges
+  // };
+
+  // console.log("Aggregated Edges Data:", finalData);
+  return aggregatedEdges;
+}
+
 
 
 
@@ -373,9 +510,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
                   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
                     updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  }else if(layerSpec.spatialRelation == 'buffer'){
+                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                   }
-                  // updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                  // const aggregatedEdges = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
                   updatedGeoJsonData = {
                     edges: updatedGeoJsonData
                   };
@@ -660,10 +797,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
                     updatedGeoJsonData = createNewDataset(geojsonData, thematicData, layerSpec.AggregationType);
+                  }else if(layerSpec.spatialRelation == 'buffer'){
+                    updatedGeoJsonData = createAggregatedDataset(geojsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                   }
-                  // updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                  // const newDataset = createNewDataset(geojsonData, thematicData, layerSpec.AggregationType);
-                  console.log('checking ED data: ', updatedGeoJsonData)
+                  
                   let colorScale;
 
                   if (layerSpec.domain && layerSpec.range) {

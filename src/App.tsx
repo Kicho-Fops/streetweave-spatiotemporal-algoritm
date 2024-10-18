@@ -33,6 +33,7 @@ interface ParsedSpec {
   spatialRelation?: string;
   operation?: string;
   AggregationType?: string;
+  bufferValue?: number;
 }
 
 const App: React.FC = () => {
@@ -72,22 +73,58 @@ const App: React.FC = () => {
       let spatialRelation: string | undefined;
       let operation: string | undefined;
       let AggregationType: string | undefined;
-      const relationMatch = spec.match(/relation\(([^)]+)\)/);
-      if (relationMatch) {
-        const relationContent = relationMatch[1].trim();
-        const relationParts = relationContent.split(',').map(part => part.trim());
+      let bufferValue: number | undefined;
 
-        relationParts.forEach(part => {
-          const [key, value] = part.split('=').map(p => p.trim());
-          if (key === 'spatialRelation') {
-            spatialRelation = value;
-          } else if (key === 'operation') {
-            operation = value;
-          } else if (key === 'type') {
-            AggregationType = value;
-          }
-        });
-      }
+      const relationMatch = spec.match(/\.relation\(\s*spatialRelation\s*=\s*(.*?),\s*operation\s*=\s*(.*?),\s*type\s*=\s*(.*?)\)/);
+        if (relationMatch) {
+            spatialRelation = relationMatch[1].trim();
+            operation = relationMatch[2].trim();
+            AggregationType = relationMatch[3].trim();
+
+            // Handling buffer case
+            const bufferMatch = spatialRelation.match(/^buffer\((\d+)\)$/);
+            if (bufferMatch) {
+              spatialRelation = 'buffer';
+              bufferValue = parseInt(bufferMatch[1], 10);
+            } else {
+              spatialRelation = spatialRelation;
+            }
+        }
+
+        console.log(spatialRelation, operation, AggregationType, bufferValue)
+
+
+
+      // const relationMatch = spec.match(/relation\s*\(([^)]+)\)/);
+      // if (relationMatch) {
+      //   const relationContent = relationMatch[1].trim();
+      //   const relationParts = relationContent.split(',').map(part => part.trim());
+
+      //   relationParts.forEach(part => {
+      //     const [key, value] = part.split('=').map(p => p.trim());
+      //     console.log('keys are', key)
+
+      //     if (key === 'spatialRelation') {
+      //       // Check if the value is in the form of `buffer(...)`
+      //       if (value.startsWith('buffer(')) {
+      //         spatialRelation = 'buffer'; // Set the function name as spatialRelation
+      //         const bufferContentMatch = value.match(/buffer\(([^)]+)\)/);
+              
+      //         if (bufferContentMatch) {
+      //           bufferValue = parseFloat(bufferContentMatch[1].trim()); // Extract and parse buffer value
+      //         } else {
+      //           console.error("Invalid buffer value or missing parenthesis:", value);
+      //         }
+      //       }  else{
+      //         spatialRelation = value;
+      //       }
+      //     } else if (key === 'operation') {
+      //       operation = value;
+      //     } else if (key === 'type') {
+      //       AggregationType = value;
+      //     }
+      //   });
+      // }
 
 
       // Parse zoom level, if provided, otherwise default based on unit
@@ -256,7 +293,8 @@ const App: React.FC = () => {
         thematicLayerPath,
         spatialRelation,
         operation,
-        AggregationType
+        AggregationType,
+        bufferValue
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);
