@@ -19,7 +19,8 @@ interface ParsedSpec {
   range?: string[];  
   lineColor?: string; 
   lineType?: string;  
-  lineTypeVal?: string; 
+  lineTypeVal?: string;
+  lineStrokeWidth?: string | number; 
   radius?: number; 
   blur?: number;
   xField?: string;
@@ -157,6 +158,7 @@ const App: React.FC = () => {
       let lineColor: string | undefined;
       let lineType: string | undefined;
       let lineTypeVal: string | undefined;
+      let lineStrokeWidth: string | number | undefined;
       let domain: number[] | undefined; // Added for domain
       let range: string[] | undefined;  // Added for range
       let xField: string | undefined;
@@ -203,6 +205,12 @@ const App: React.FC = () => {
           lineType = lineTypeMatch[1];    // e.g., dashed
           lineTypeVal = lineTypeMatch[2]; // e.g., rand[0,10]
         }
+
+        const lineStrokeWidthMatch = spec.match(/stroke-width\s*=\s*([^)\s]+)\)/)
+        if(lineStrokeWidthMatch){
+          lineStrokeWidth = lineStrokeWidthMatch[1].trim();
+        }
+        // console.log('stroke width check',lineStrokeWidth)
 
         // Parse line opacity
         // const lineOpacityMatch = spec.match(/opacity\s*=\s*(\d*\.?\d+)/);
@@ -283,6 +291,7 @@ const App: React.FC = () => {
         lineColor,
         lineType,
         lineTypeVal,
+        lineStrokeWidth,
         xField, 
         yField, 
         pointColor,

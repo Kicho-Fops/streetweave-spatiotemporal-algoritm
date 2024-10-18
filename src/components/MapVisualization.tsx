@@ -23,6 +23,7 @@ interface ParsedSpec {
   lineColor?: string;
   lineType?: string;
   lineTypeVal?: string;
+  lineStrokeWidth?: string | number;
   xField?: string;
   yField?: string;
   pointColor?: string;
@@ -517,7 +518,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     edges: updatedGeoJsonData
                   };
 
-                  console.log('check edges data for ED:', updatedGeoJsonData)
+
                   mapInstanceRef.current?.eachLayer((layer) => {
                     if (!(layer instanceof L.TileLayer)) {
                       mapInstanceRef.current?.removeLayer(layer);
@@ -551,6 +552,35 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                         const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
                         lineColor = colorScale(attributeValue);
                       }
+                    }
+
+
+                    // Set line width based on attribute value or specific width
+                    let lineWidth = layerSpec.lineStrokeWidth;
+                    if (typeof lineWidth === "string") {
+                      // Check if lineWidth is an attribute name in the data
+                      const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineWidth));
+                      if (attributeIndex !== -1) {
+                        const attributeValues = updatedGeoJsonData.edges
+                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineWidth)).map((entry: any) => entry[lineWidth]))
+                          .filter((v: any) => v !== undefined);
+                        const minValue = d3.min(attributeValues);
+                        const maxValue = d3.max(attributeValues);
+                        const attributeValue = edge[attributeIndex][lineWidth];
+                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                          // Map attribute values between 2 and 15
+                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                          lineWidth = lineWidthScale(attributeValue)
+                        }
+                      } else {
+                        lineWidth = 5; // Default value if attribute not found
+                      }
+                    } else if (typeof lineWidth === "number") {
+                      // Use user-defined value if provided and it's a number
+                      lineWidth = layerSpec.lineStrokeWidth;
+                    } else {
+                      // Default to 5 if undefined
+                      lineWidth = 5;
                     }
 
                     ///line random color-->
@@ -618,7 +648,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                       .datum(points)
                       .attr("d", lineGenerator)
                       .style("stroke", lineColor)
-                      .style("stroke-width", 5)
+                      .style("stroke-width", lineWidth)
                       .style("stroke-opacity", lineOpacity)
                       .style("stroke-dasharray", dashArray || null)
                       .attr("fill", "none");
