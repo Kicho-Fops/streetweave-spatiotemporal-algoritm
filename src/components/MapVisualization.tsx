@@ -678,7 +678,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           }
           else if(layerSpec.chart){
             // console.log(layerSpec)
-            d3.json(layerSpec.geojsonPath).then((data: any) => {
+            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
@@ -737,7 +737,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           let NodesList = [];
           if(layerSpec.chart){
             // console.log(layerSpec)
-            d3.json(layerSpec.geojsonPath).then((data: any) => {
+            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
