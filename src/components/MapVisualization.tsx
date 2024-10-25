@@ -728,6 +728,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     mapInstanceRef.current!.on('move zoom', updateSvgPosition);
                   })
                 })
+                .then(() => {
+                  const svgLayer1 = L.svg().addTo(mapInstanceRef.current!);
+                  currentLayersRef.current.push(svgLayer1);
+                });
               }
             })
           }
@@ -812,6 +816,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                     mapInstanceRef.current!.on('move zoom', updateSvgPosition);
                   })
                 })
+                .then(() => {
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  currentLayersRef.current.push(svgLayer);
+                });
               }
             })
           }
