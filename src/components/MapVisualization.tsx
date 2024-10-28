@@ -474,16 +474,31 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   // Initialize the map on the first render
   useEffect(() => {
     if (mapRef.current) {
-      let Lat = 41.8781;
-      let Lon = -87.6298;
+      let Lat, Lon;
+      if(parsedSpec[0].unit == 'area'){
+        Lat = 41.8781;
+        Lon = -87.6298;
+      } else if(parsedSpec[0].unit == 'segment'){
+        Lat = 41.80159035804221;
+        Lon = -87.64538029790135;
+      } else if(parsedSpec[0].unit == 'node'){
+        Lat = 41.80159035804221;
+        Lon = -87.64538029790135;
+      }
+     
+      let zoomVar;
 
       if (!mapInstanceRef.current) {
+        console.log('zoom is', parsedSpec)
         // Initial map creation
         mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom); // Use zoom of first layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '© OpenStreetMap contributors',
         }).addTo(mapInstanceRef.current);
+      } else {
+        // Update zoom level when parsedSpec changes
+        mapInstanceRef.current.setView([Lat, Lon], parsedSpec[0].zoom);
       }
     }
   }, [parsedSpec]);
