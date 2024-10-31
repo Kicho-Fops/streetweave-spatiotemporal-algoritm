@@ -492,9 +492,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         console.log('zoom is', parsedSpec)
         // Initial map creation
         mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom); // Use zoom of first layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
           maxZoom: 19,
-          attribution: '© OpenStreetMap contributors',
+          attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(mapInstanceRef.current);
       } else {
         // Update zoom level when parsedSpec changes
@@ -507,7 +507,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   useEffect(() => {
     if (mapInstanceRef.current) {
       // Remove existing layers from the map
-      currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
+      // currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
       currentLayersRef.current = []; // Reset the layer reference
 
       parsedSpec.forEach((layerSpec, index) => {
@@ -536,7 +536,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
                   mapInstanceRef.current?.eachLayer((layer) => {
                     if (!(layer instanceof L.TileLayer)) {
-                      mapInstanceRef.current?.removeLayer(layer);
+                      // mapInstanceRef.current?.removeLayer(layer);
                     }
                   });
                   // Create a new SVG layer for lines
@@ -697,7 +697,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
-                    mapInstanceRef.current?.removeLayer(layer);
+                    // mapInstanceRef.current?.removeLayer(layer);
                   }
                 });
   
@@ -760,7 +760,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
-                    mapInstanceRef.current?.removeLayer(layer);
+                    // mapInstanceRef.current?.removeLayer(layer);
                   }
                 });
 
@@ -787,54 +787,61 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                       NodesList.push([secondNode.lat, secondNode.lon]);
                   }
                 });
-
-                // NodesList.forEach(NodePoint => {
-                //   console.log("each point:", NodePoint[0], NodePoint[1])
-                // })
-  
-                vegaEmbed('#vis', layerSpec.chart, {renderer: 'svg', actions: false}).then(result => {
-                  const vegaSVG = result.view._el.querySelector('svg');
-                  const svgWidth = 100;
-                  const svgHeight = 100;
-  
-                  // console.log(vegaSVG)
-                  NodesList.forEach(NodePoint => {
+                
+                //Here now for each node position different charts are creating--->
+                (async () => {
+                  for (let idx = 0; idx < NodesList.length; idx++) {
+                    const NodePoint = NodesList[idx];
                     const midpoint = { lat: NodePoint[0], lon: NodePoint[1] };
-                    // if(layerSpec.orientation=='perpendicular'){
-                    //   angle = angle + 90;
-                    // }
-  
-                    const updateSvgPosition = () => {
-                      const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-                      // const tempID = `t${midpoint.lat}${midpoint.lon}`.replace('.', '').replace('-', '') + 'svg';
-                      const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
-                      // const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select(`#${tempID}`);
-                      const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
-                      // console.log(temp)
-  
-                      if (temp.empty()) {
-                        d3.select(mapInstanceRef.current!.getPanes().overlayPane)
-                          .append('svg')
-                          .attr('class', 'vega-lite-svg')
-                          .attr('id', tempID)
-                          .attr('width', svgWidth)
-                          .attr('height', svgHeight)
-                          .attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`)
-                          .node()
-                          .appendChild(vegaSVG.cloneNode(true));
-                      } else {
-                        temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`);
-                      }
+      
+                    // Step 1: Copy the chart specification for each node
+                    const chartSpec = JSON.parse(JSON.stringify(layerSpec.chart));
+      
+                    // Step 2: Generate unique data for each node
+                    chartSpec.data = {
+                      values: [
+                        Math.floor(Math.random() * 31),
+                        Math.floor(Math.random() * 31),
+                        Math.floor(Math.random() * 31),
+                        Math.floor(Math.random() * 31),
+                        Math.floor(Math.random() * 31),
+                        Math.floor(Math.random() * 31)
+                      ],
                     };
-  
-                    updateSvgPosition();
-                    mapInstanceRef.current!.on('move zoom', updateSvgPosition);
-                  })
-                })
-                .then(() => {
+      
+                    // Step 3: Embed the chart for the current node in the #vis container
+                    await vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false }).then(result => {
+                      const vegaSVG = result.view._el.querySelector('svg');
+                      const svgWidth = 100;
+                      const svgHeight = 100;
+      
+                      const updateSvgPosition = () => {
+                        const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                        const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
+                        const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
+      
+                        if (temp.empty()) {
+                          d3.select(mapInstanceRef.current!.getPanes().overlayPane)
+                            .append('svg')
+                            .attr('class', 'vega-lite-svg')
+                            .attr('id', tempID)
+                            .attr('width', svgWidth)
+                            .attr('height', svgHeight)
+                            .attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`)
+                            .node()
+                            .appendChild(vegaSVG.cloneNode(true));
+                        } else {
+                          temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`);
+                        }
+                      };
+      
+                      updateSvgPosition();
+                      mapInstanceRef.current!.on('move zoom', updateSvgPosition);
+                    });
+                  }
                   const svgLayer = L.svg().addTo(mapInstanceRef.current!);
                   currentLayersRef.current.push(svgLayer);
-                });
+                })();
               }
             })
           }
@@ -896,7 +903,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             d3.json(layerSpec.thematicLayerPath).then((data: any) => {
               if (data && Array.isArray(data)) {
                 const heatData = data.map((point: any) => [
-                  point.Lat, point.Lon, point.temperature
+                  point.lat, point.lon, point.value
                 ]);
 
                 const heatmapLayer = (L as any).heatLayer(heatData, {

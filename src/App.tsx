@@ -131,8 +131,12 @@ const App: React.FC = () => {
       // Parse zoom level, if provided, otherwise default based on unit
       const zoomMatch = spec.match(/zoom\((\d+)\)/);
       const zoom = zoomMatch
-        ? parseInt(zoomMatch[1], 10)
-        : unit === 'segment' ? 19 : 10; // Default zoom: 19 for segment, 10 for area
+      ? parseInt(zoomMatch[1], 10)
+      : unit === 'segment'
+        ? 18
+        : unit === 'node'
+          ? 18
+          : 10;  // Default zoom: 10 for other cases
 
       // Parse method (e.g., fill or line)
       const methodMatch = spec.match(/method\s*=\s*(\w+)/);
@@ -220,14 +224,16 @@ const App: React.FC = () => {
 
         const lineOpacityMatch = spec.match(/opacity\s*=\s*([^\)\s]+)/);
         if (lineOpacityMatch) {
-            const opacityValue = lineOpacityMatch[1].trim();
-            if (!isNaN(Number(opacityValue))) {
-                strokeOpacity = parseFloat(opacityValue);
-            } else {
-                strokeOpacity = opacityValue; // This could be a variable name, function, etc.
-            }
+          const opacityValue = lineOpacityMatch[1].trim();
+
+          // Check if the value is numeric
+          if (!isNaN(opacityValue) && opacityValue !== '') {
+            strokeOpacity = parseFloat(opacityValue); // Treat as a number
+          } else {
+            strokeOpacity = opacityValue; // Treat as a string (attribute name or other identifier)
+          }
         } else {
-            strokeOpacity = undefined; // No opacity value found
+          strokeOpacity = undefined; // No opacity value found
         }
       }
 

@@ -34,15 +34,20 @@
 textarea {
   height: 90%;
   width: 100%;
-  max-width: 100%;  /* Prevent width expansion beyond its container */
-  max-height: 100%; /* Prevent height expansion beyond its container */
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 20px;
+  max-width: 100%;
+  max-height: 100%;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 16px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  resize: both;  /* Allow user to resize both horizontally and vertically, but within limits */
-  box-sizing: border-box; /* Include padding and border in the textarea size */
+  resize: both;
+  box-sizing: border-box;
+  background-color: #2e3440;  /* Dark background for code */
+  color: #d8dee9;              /* Light text color */
+  line-height: 1.5;
+  caret-color: #88c0d0;        /* Highlighted caret color */
+  overflow: auto;
 }
 
 .apply-button {
@@ -64,3 +69,6 @@ textarea {
   height: 100%;
   width: 100%;
 }
+
+
+/* Last CSS 1*/
