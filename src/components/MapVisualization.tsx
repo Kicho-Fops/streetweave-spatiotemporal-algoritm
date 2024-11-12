@@ -463,7 +463,11 @@ function BufferDataAggregationSegment(edgesData, environmentalData, bufferDistan
 
 /////////
 
-const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }) => {
+const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }> = ({ parsedSpec, applyFlag }) => {
+
+  // console.log('applyFlag check', applyFlag)
+  // applyFlag = 0;
+  // console.log('applyFlag check2', applyFlag)
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   
@@ -507,6 +511,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   useEffect(() => {
     if (mapInstanceRef.current) {
       // Remove existing layers from the map
+      if(applyFlag==1){
+        currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
+        applyFlag = 0;
+      }
       // currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
       currentLayersRef.current = []; // Reset the layer reference
 
@@ -536,6 +544,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
                   mapInstanceRef.current?.eachLayer((layer) => {
                     if (!(layer instanceof L.TileLayer)) {
+                      if(applyFlag==1){
+                        mapInstanceRef.current?.removeLayer(layer);
+                        applyFlag = 0;
+                      }
                       // mapInstanceRef.current?.removeLayer(layer);
                     }
                   });

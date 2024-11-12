@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import TextEditor from './components/TextEditor';
 import MapVisualization from './components/MapVisualization';
@@ -39,6 +39,7 @@ interface ParsedSpec {
 
 const App: React.FC = () => {
   const [parsedSpec, setParsedSpec] = useState<ParsedSpec[]>([]); // Support for multiple layers
+  const applyFlag = useRef(0); // Initialize applyFlag as a ref with value 0
 
   // Function to parse a single layer specification
   const parseSingleLayer = (spec: string): ParsedSpec | null => {
@@ -328,6 +329,7 @@ const App: React.FC = () => {
     const parsedLayers = parseSpecification(spec);
     if (parsedLayers.length > 0) {
       setParsedSpec(parsedLayers); // Set the parsed layers
+      applyFlag.current = 1;
     }
   };
 
@@ -337,7 +339,7 @@ const App: React.FC = () => {
         <TextEditor onApply={applySpec} />
       </div>
       <div className="grid-item visualization">
-        {parsedSpec.length > 0 && <MapVisualization parsedSpec={parsedSpec} />}
+        {parsedSpec.length > 0 && <MapVisualization parsedSpec={parsedSpec} applyFlag={applyFlag.current}/>}
       </div>
     </div>
   );

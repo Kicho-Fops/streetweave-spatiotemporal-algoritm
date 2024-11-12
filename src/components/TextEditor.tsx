@@ -28,3 +28,5 @@ const TextEditor: React.FC<TextEditorProps> = ({ onApply }) => {
 };
 
 export default TextEditor;
+
+//Last works
