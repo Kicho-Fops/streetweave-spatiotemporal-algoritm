@@ -512,7 +512,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
     if (mapInstanceRef.current) {
       // Remove existing layers from the map
       if(applyFlag==1){
-        currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
+        // currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
         applyFlag = 0;
       }
       // currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
@@ -558,12 +558,54 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   const lineGenerator = d3.line<any>()
                     .x((d: any) => mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).x)
                     .y((d: any) => mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).y);
+
+                  
+
+
+
+                  // Function to convert lat/lng to point on the map
+                  function projectPoint(lat, lon) {
+                    return mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(lat, lon));
+                  }
+
+                  // Function to generate a simple wavy path between two points
+                  function generateSimpleWavyPath(start, end, amplitude, wavelength) {
+                    // console.log('checking am, wl', amplitude, wavelength)
+                      const dx = end.x - start.x;
+                      const dy = end.y - start.y;
+                      const distance = Math.sqrt(dx * dx + dy * dy);
+                      const angle = Math.atan2(dy, dx);
+                      const numWaves = Math.ceil(distance / wavelength);
+                      
+                      let path = `M ${start.x},${start.y} `;
+
+                      for (let i = 0; i < numWaves; i++) {
+                          const t = (i + 0.5) / numWaves;
+                          
+                          const xMid = start.x + t * dx;
+                          const yMid = start.y + t * dy;
+
+                          // Add wave effect using sine function
+                          const offsetX = amplitude * Math.sin((i + 0.5) * Math.PI);
+                          const controlX = xMid + offsetX * Math.cos(angle + Math.PI / 2);
+                          const controlY = yMid + offsetX * Math.sin(angle + Math.PI / 2);
+
+                          const xNext = start.x + ((i + 1) / numWaves) * dx;
+                          const yNext = start.y + ((i + 1) / numWaves) * dy;
+
+                          path += `Q ${controlX},${controlY} ${xNext},${yNext} `;
+                      }
+
+                      return path;
+                  }
+
     
                   updatedGeoJsonData.edges.forEach((edge: any) => {
                     const points = [
                       { lat: edge[0].lat, lon: edge[0].lon },
                       { lat: edge[1].lat, lon: edge[1].lon }
                     ];
+
     
                     // Set line color based on attribute value or specific color
                     let lineColor = layerSpec.lineColor || "red";
@@ -655,8 +697,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       if (dashIndex !== -1) {
                         const attributeValue = edge[dashIndex][layerSpec.lineTypeVal];
                         if (attributeValue !== undefined) {
-                          const minValue = layerSpec.dashMin;
-                          const maxValue = layerSpec.dashMax;
+                          const attributeValues = updatedGeoJsonData.edges
+                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(layerSpec.lineTypeVal)).map((entry: any) => entry[layerSpec.lineTypeVal]))
+                          .filter((v: any) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          console.log('min and max is', minValue, maxValue)
                           if (attributeValue < minValue + (maxValue - minValue) / 3) {
                             dashArray = "5, 5";
                           } else if (
@@ -670,20 +716,136 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         }
                       }
                     }
+
+
+
+                    // Append line to SVG group based on type
+                    if (layerSpec.lineType === 'squiggle') {
+                      // Set squiggle amplitude and frequency based on attribute value
+                      let squiggleAmplitude = 25;
+                      let squiggleFrequency = 10;
+                      if (layerSpec.lineType === 'squiggle' && layerSpec.lineTypeVal) {
+                          const squiggleIndex = edge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
+                          if (squiggleIndex !== -1) {
+                              const attributeValue = edge[squiggleIndex][layerSpec.lineTypeVal];
+                              if (attributeValue !== undefined) {
+                                const attributeValues = updatedGeoJsonData.edges
+                                .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(layerSpec.lineTypeVal)).map((entry: any) => entry[layerSpec.lineTypeVal]))
+                                .filter((v: any) => v !== undefined);
+                                  const minValue = d3.min(attributeValues);
+                                  const maxValue = d3.max(attributeValues);
+                                  console.log('min and max is', minValue, maxValue)
+                                  const range = maxValue - minValue;
+                                  const stepSize = range/3;
+                                  const boundary1 = minValue + stepSize;
+                                  const boundary2 = minValue + 2 * stepSize;
+                                  if (attributeValue >= minValue && attributeValue < boundary1) {
+                                      squiggleAmplitude = 25;
+                                      squiggleFrequency = 60;
+                                  } else if (attributeValue >= boundary1 && attributeValue < boundary2) {
+                                      squiggleAmplitude = 25;
+                                      squiggleFrequency = 20;
+                                  } else {
+                                      squiggleAmplitude = 25;
+                                      squiggleFrequency = 5;
+                                  }
+                              }
+                          }
+                      }
+
+
+                      // Project the lat/lng coordinates to SVG points
+                      const point1 = projectPoint(points[0].lat, points[0].lon);
+                      const point2 = projectPoint(points[1].lat, points[1].lon);
+
+                      // Create a squiggly line using the new method
+                      let squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
+                      svgGroup.append("path")
+                          .attr("d", squigglyPath)
+                          .style("stroke", lineColor)
+                          .style("stroke-width", lineWidth)
+                          .style("stroke-opacity", lineOpacity)
+                          .attr("fill", "none");
+                    } else {
+                      // Create a normal line
+                      svgGroup.append("path")
+                          .datum(points)
+                          .attr("d", lineGenerator)
+                          .style("stroke", lineColor)
+                          .style("stroke-width", lineWidth)
+                          .style("stroke-opacity", lineOpacity)
+                          .style("stroke-dasharray", dashArray || null)
+                          .attr("fill", "none");
+                    }
+
+
+
     
-                    svgGroup.append("path")
-                      .datum(points)
-                      .attr("d", lineGenerator)
-                      .style("stroke", lineColor)
-                      .style("stroke-width", lineWidth)
-                      .style("stroke-opacity", lineOpacity)
-                      .style("stroke-dasharray", dashArray || null)
-                      .attr("fill", "none");
+                    // svgGroup.append("path")
+                    //   .datum(points)
+                    //   .attr("d", lineGenerator)
+                    //   .style("stroke", lineColor)
+                    //   .style("stroke-width", lineWidth)
+                    //   .style("stroke-opacity", lineOpacity)
+                    //   .style("stroke-dasharray", dashArray || null)
+                    //   .attr("fill", "none");
     
                     function updateLines() {
-                      svgGroup.selectAll("path")
-                        .attr("d", lineGenerator);
-                    }
+                      if (layerSpec.lineType === 'squiggle') {
+                        svgGroup.selectAll("path")
+                            .each(function (d: any, i: number) {
+                                // Retrieve the original data points from the edge object
+                                const edge = updatedGeoJsonData.edges[i];
+                                if (edge) {
+                                    const points = [
+                                        { lat: edge[0].lat, lon: edge[0].lon },
+                                        { lat: edge[1].lat, lon: edge[1].lon }
+                                    ];
+                                    const point1 = projectPoint(points[0].lat, points[0].lon);
+                                    const point2 = projectPoint(points[1].lat, points[1].lon);
+                
+                                    // Recalculate squiggle amplitude and frequency for each edge
+                                    let squiggleAmplitude = 25;
+                                    let squiggleFrequency = 10;
+                                    if (layerSpec.lineTypeVal) {
+                                        const squiggleIndex = edge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
+                                        if (squiggleIndex !== -1) {
+                                            const attributeValue = edge[squiggleIndex][layerSpec.lineTypeVal];
+                                            if (attributeValue !== undefined) {
+                                                const attributeValues = updatedGeoJsonData.edges
+                                                    .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(layerSpec.lineTypeVal)).map((entry: any) => entry[layerSpec.lineTypeVal]))
+                                                    .filter((v: any) => v !== undefined);
+                                                const minValue = d3.min(attributeValues);
+                                                const maxValue = d3.max(attributeValues);
+                                                const range = maxValue - minValue;
+                                                const stepSize = range / 3;
+                                                const boundary1 = minValue + stepSize;
+                                                const boundary2 = minValue + 2 * stepSize;
+                
+                                                if (attributeValue >= minValue && attributeValue < boundary1) {
+                                                    squiggleAmplitude = 25;
+                                                    squiggleFrequency = 60;
+                                                } else if (attributeValue >= boundary1 && attributeValue < boundary2) {
+                                                    squiggleAmplitude = 25;
+                                                    squiggleFrequency = 20;
+                                                } else {
+                                                    squiggleAmplitude = 25;
+                                                    squiggleFrequency = 5;
+                                                }
+                                            }
+                                        }
+                                    }
+                
+                                    const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
+                                    d3.select(this).attr("d", squigglyPath);
+                                }
+                            });
+                    } else {
+                          svgGroup.selectAll("path")
+                              .attr("d", lineGenerator);
+                      }
+                  }
+
                     mapInstanceRef.current!.on("moveend", updateLines);
                   });
     

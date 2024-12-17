@@ -45,7 +45,7 @@ const App: React.FC = () => {
   const parseSingleLayer = (spec: string): ParsedSpec | null => {
     try {
       // Parse unit (either area or segment)
-      const unitMatch = spec.match(/unit\s*==\s*(\w+)/);
+      const unitMatch = spec.match(/unit\s*=\s*(\w+)/);
       const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
 
       // Parse geojson path
