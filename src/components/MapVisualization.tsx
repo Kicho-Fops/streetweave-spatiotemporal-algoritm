@@ -512,7 +512,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
     if (mapInstanceRef.current) {
       // Remove existing layers from the map
       if(applyFlag==1){
-        // currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
+        currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
         applyFlag = 0;
       }
       // currentLayersRef.current.forEach(layer => mapInstanceRef.current!.removeLayer(layer));
