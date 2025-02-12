@@ -8,6 +8,7 @@ interface ParsedSpec {
   name: string;
   // geojsonPath: string;
   unit: string;
+  unitDivide: number;
   zoom: number;
   method: string;
   fillAttribute?: string;
@@ -45,8 +46,16 @@ const App: React.FC = () => {
   const parseSingleLayer = (spec: string): ParsedSpec | null => {
     try {
       // Parse unit (either area or segment)
-      const unitMatch = spec.match(/unit\s*=\s*(\w+)/);
-      const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
+      // const unitMatch = spec.match(/unit\s*=\s*(\w+)/);
+      // const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
+      const unitRegex = /unit\s*=\s*(\w+)(?:\/(\d+(?:\.\d+)?))?/;
+      const unitMatch = spec.match(unitRegex);
+
+      // The unit will always be the first capture group; if nothing is found, default to 'area'
+      const unit = unitMatch ? unitMatch[1] : 'area';
+
+      // If the division part is provided, parse it as a number; otherwise, default to 1.
+      const unitDivide = unitMatch && unitMatch[2] ? parseFloat(unitMatch[2]) : 1;
 
       // Parse geojson path
       // const dataMatch = spec.match(/data\(([^)]+)\)/);
@@ -285,6 +294,7 @@ const App: React.FC = () => {
         // geojsonPath,
         method,
         unit, 
+        unitDivide,
         zoom,
         radius,
         blur,
