@@ -1010,14 +1010,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                 }
 
-
-
-
-
-
-
-
-
   
                 vegaEmbed('#vis', layerSpec.chart, {renderer: 'svg', actions: false}).then(result => {
                   const vegaSVG = result.view._el.querySelector('svg');
@@ -1026,18 +1018,88 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
   
                   // console.log(vegaSVG)
                   data.edges.forEach(edge => {
-                    const start = edge[0];
-                    const end = edge[1];
+                    let start = edge[0];
+                    let end = edge[1];
+                    let bearing = edge[2].Bearing;
                     let angle = edge[2].Bearing + 90;
                     const midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
                     if(layerSpec.orientation=='perpendicular'){
                       angle = angle + 90;
                     }
+
+                    let leftPoint;
+                    let rightPoint
+
+                    // Convert degrees to radians
+                    function toRad(deg) {
+                      return deg * Math.PI / 180;
+                    }
+
+                    // Convert radians to degrees
+                    function toDeg(rad) {
+                      return rad * 180 / Math.PI;
+                    }
+
+                    function destinationPoint(lat, lon, bearing, distance) {
+                      const R = 6371000; // Earth radius in meters
+                      const brng = toRad(bearing);
+                      const lat1 = toRad(lat);
+                      const lon1 = toRad(lon);
+                      const dR = distance / R; // angular distance in radians
+                
+                      const lat2 = Math.asin(
+                        Math.sin(lat1) * Math.cos(dR) +
+                        Math.cos(lat1) * Math.sin(dR) * Math.cos(brng)
+                      );
+                      const lon2 = lon1 + Math.atan2(
+                        Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                        Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2)
+                      );
+                
+                      return { lat: toDeg(lat2), lon: toDeg(lon2) };
+                    }
+
+                    if(layerSpec.alignment=="left"){
+                      if (bearing > 180) {
+                        bearing = (bearing + 180) % 360;
+                        // Swap start/end
+                        const temp = start;
+                        start = end;
+                        end = temp;
+                      }
+                      const leftBearing = (bearing + 90) % 360;
+                      leftPoint = destinationPoint(midpoint.lat, midpoint.lon, leftBearing, 10);
+                    }
+                    else if(layerSpec.alignment=="right"){
+                      if (bearing > 180) {
+                        bearing = (bearing + 180) % 360;
+                        // Swap start/end
+                        const temp = start;
+                        start = end;
+                        end = temp;
+                      }
+                      const rightBearing = (bearing - 90 + 360) % 360;
+                      rightPoint = destinationPoint(midpoint.lat, midpoint.lon, rightBearing, 20);
+                    }
+
+
+                    let point;
+
   
                     const updateSvgPosition = () => {
-                      const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                      if(layerSpec.alignment=="center"){
+                        point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                      }else if(layerSpec.alignment=="left"){
+                        point = mapInstanceRef.current!.latLngToLayerPoint([leftPoint.lat, leftPoint.lon]);
+                      }else if(layerSpec.alignment=="right"){
+                        point = mapInstanceRef.current!.latLngToLayerPoint([rightPoint.lat, rightPoint.lon]);
+                      }
+                      // const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
                       // const tempID = `t${midpoint.lat}${midpoint.lon}`.replace('.', '').replace('-', '') + 'svg';
-                      const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
+                      const alignmentSuffix = layerSpec.alignment; // "left", "right", or "center"
+                      const tempID = 't' + alignmentSuffix + '_' 
+                                  + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') 
+                                  + 'svg';
                       // const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select(`#${tempID}`);
                       const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
                       // console.log(temp)
