@@ -1,10 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState  } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
 import 'leaflet.heat'; // Import the heatmap plugin
 import vegaEmbed from 'vega-embed';
 import * as turf from '@turf/turf';
+import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
+import maplibregl from 'maplibre-gl';
+
 
 interface ParsedSpec {
   geojsonPath: string;
@@ -83,7 +86,8 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       });
   
       // Initialize aggregation results for each attribute
-      const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
       let aggregatedValues = {};
   
       attributes.forEach((attr) => {
@@ -131,7 +135,8 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
 
       // Perform aggregation for each environmental attribute
       let aggregatedValues = [];
-      const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
 
       attributes.forEach(attr => {
         const values = pointsInBoundingBox.map(point => point[attr]);
@@ -214,7 +219,8 @@ const findClosestPoints = (distances, thematicData, numberOfPoints = 100) => {
 
 // Function to aggregate data based on type for area
 const aggregateData = (points, aggregationType) => {
-  const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -265,7 +271,8 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
 
 // Function to aggregate environmental data based on given points and aggregation type for segment line
 function aggregateAttributes(points, aggregationType) {
-  const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
   let aggregatedValues = [];
 
   attributes.forEach(attr => {
@@ -357,7 +364,8 @@ function filterPointsWithinBufferSegment(buffer, environmentalData) {
 
 // Function to aggregate values based on the selected aggregation type
 const aggregateValues = (points, aggregationType) => {
-  const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -471,9 +479,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
   // console.log('applyFlag check2', applyFlag)
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const mimicLayerRef = useRef<L.Layer | null>(null);
   
   // Store references to the current layers (for lines, fill, heatmap)
   const currentLayersRef = useRef<L.Layer[]>([]);
+  // New state to control mimic street width
+  const [mimicWidth, setMimicWidth] = useState<number>(50);
   
 
   // Initialize the map on the first render
@@ -497,6 +508,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         console.log('zoom is', parsedSpec)
         // Initial map creation
         mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom); // Use zoom of first layer
+        
+        
         L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
           maxZoom: 19,
           attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -507,6 +520,65 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       }
     }
   }, [parsedSpec]);
+
+    // NEW: Add the mimic street layer in its own pane.
+    useEffect(() => {
+      if (mapInstanceRef.current) {
+        // Create the mimic street pane if it doesn't exist
+        if (!mapInstanceRef.current.getPane('mimicStreetPane')) {
+          mapInstanceRef.current.createPane('mimicStreetPane');
+          mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350';
+        }
+        // Only add the mimic layer if it hasn't been added yet.
+        if (!mimicLayerRef.current) {
+          d3.json(`/edgesWithBearing3.json`)
+            .then((data: any) => {
+              // Transform your data into a GeoJSON FeatureCollection
+              const features = data.edges.map(edge => ({
+                type: "Feature",
+                geometry: {
+                  type: "LineString",
+                  coordinates: [
+                    [edge[0].lon, edge[0].lat],
+                    [edge[1].lon, edge[1].lat]
+                  ]
+                },
+                properties: {
+                  Bearing: edge[2].Bearing,
+                  Length: edge[3].Length
+                }
+              }));
+              const geojson = {
+                type: "FeatureCollection",
+                features: features
+              };
+    
+              mimicLayerRef.current = L.geoJSON(geojson, {
+                pane: 'mimicStreetPane',
+                style: {
+                  color: '#d3d3d6',
+                  weight: 50,
+                  opacity: 0.8
+                }
+              }).addTo(mapInstanceRef.current);
+            })
+            .catch(error => {
+              console.error("Failed to load mimic street GeoJSON:", error);
+            });
+        }
+      }
+    }, []);
+
+    // Update mimic street width when the slider value changes.
+  useEffect(() => {
+    if (mimicLayerRef.current) {
+      mimicLayerRef.current.setStyle({
+        color: '#d3d3d6',
+        weight: mimicWidth,
+        opacity: 0.8
+      });
+    }
+  }, [mimicWidth]);
 
   // Clear previous visualizations and render the new one
   useEffect(() => {
@@ -520,7 +592,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       // currentLayersRef.current = []; // Reset the layer reference
 
       currentLayersRef.current.forEach(layer => {
-        mapInstanceRef.current!.removeLayer(layer);
+        // Check if the layer's pane is NOT the mimic street pane before removing
+        if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+          mapInstanceRef.current!.removeLayer(layer);
+        }
       });
       currentLayersRef.current = [];
 
@@ -616,11 +691,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                   mapInstanceRef.current?.eachLayer((layer) => {
                     if (!(layer instanceof L.TileLayer)) {
-                      if(applyFlag==1){
-                        mapInstanceRef.current?.removeLayer(layer);
-                        applyFlag = 0;
+                      
+                      // Check if the layer's pane is NOT the mimic street pane before removing
+                      if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                        mapInstanceRef.current!.removeLayer(layer);
                       }
-                      // mapInstanceRef.current?.removeLayer(layer);
                     }
                   });
                   // Create a new SVG layer for lines
@@ -690,7 +765,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       const maxValue = d3.max(attributeValues);
                       const attributeValue = edge[attributeIndex][lineColor];
                       if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                        const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
+                        // const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
+                        const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
                         lineColor = colorScale(attributeValue);
                       }
                     }
@@ -776,7 +852,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const maxValue = d3.max(attributeValues);
                           // console.log('min and max is', minValue, maxValue)
                           if (attributeValue < minValue + (maxValue - minValue) / 3) {
-                            dashArray = "5, 5";
+                            dashArray = "2, 5";
                           } else if (
                             attributeValue >= minValue + (maxValue - minValue) / 3 &&
                             attributeValue < minValue + (2 * (maxValue - minValue)) / 3
@@ -943,7 +1019,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
-                    // mapInstanceRef.current?.removeLayer(layer);
+                    // Check if the layer's pane is NOT the mimic street pane before removing
+                    if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                      mapInstanceRef.current!.removeLayer(layer);
+                    }
                   }
                 });
 
@@ -1068,7 +1147,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         end = temp;
                       }
                       const leftBearing = (bearing + 90) % 360;
-                      leftPoint = destinationPoint(midpoint.lat, midpoint.lon, leftBearing, 10);
+                      leftPoint = destinationPoint(midpoint.lat, midpoint.lon, leftBearing, 50);
                     }
                     else if(layerSpec.alignment=="right"){
                       if (bearing > 180) {
@@ -1079,7 +1158,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         end = temp;
                       }
                       const rightBearing = (bearing - 90 + 360) % 360;
-                      rightPoint = destinationPoint(midpoint.lat, midpoint.lon, rightBearing, 20);
+                      rightPoint = destinationPoint(midpoint.lat, midpoint.lon, rightBearing, 30);
                     }
 
 
@@ -1140,7 +1219,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               if (data && data.edges){
                 mapInstanceRef.current?.eachLayer((layer) => {
                   if (!(layer instanceof L.TileLayer)) {
-                    // mapInstanceRef.current?.removeLayer(layer);
+                    // Check if the layer's pane is NOT the mimic street pane before removing
+                    if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                      mapInstanceRef.current!.removeLayer(layer);
+                    }
                   }
                 });
 
@@ -1346,6 +1428,28 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       
       {/* Hidden Vega-Lite chart container */}
       <div id="vis" style={{ visibility: 'hidden', position: 'absolute', top: 0, left: 0, zIndex: -1 }}></div>
+      <div
+        style={{
+          position: 'absolute',
+          right: '20px',
+          top: '50%',
+          zIndex: 500,
+          background: 'rgba(255,255,255,0.8)',
+          padding: '10px',
+          borderRadius: '5px'
+        }}
+      >
+        <label htmlFor="widthSlider">Street Width: {mimicWidth}</label>
+        <br />
+        <input
+          id="widthSlider"
+          type="range"
+          min="10"
+          max="100"
+          value={mimicWidth}
+          onChange={(e) => setMimicWidth(Number(e.target.value))}
+        />
+      </div>
     </div>
   );
   
