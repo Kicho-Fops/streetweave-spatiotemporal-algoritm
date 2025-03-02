@@ -5,13 +5,14 @@ import * as d3 from 'd3';
 import 'leaflet.heat'; // Import the heatmap plugin
 import vegaEmbed from 'vega-embed';
 import * as turf from '@turf/turf';
-import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
-import maplibregl from 'maplibre-gl';
+// import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
+// import maplibregl from 'maplibre-gl';
 
 
 interface ParsedSpec {
   geojsonPath: string;
   method: string;
+  shape: string;
   unit: string;
   unitDivide: number;
   zoom: number;
@@ -28,6 +29,7 @@ interface ParsedSpec {
   lineType?: string;
   lineTypeVal?: string;
   lineStrokeWidth?: string | number;
+  height?: string | number; 
   xField?: string;
   yField?: string;
   pointColor?: string;
@@ -683,6 +685,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     };
 
                   }
+                  console.log("updatedGeoJsonData is", updatedGeoJsonData)
 
 
 
@@ -1209,15 +1212,540 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               }
             })
           }
+
+          else if (layerSpec.shape === 'spike') {
+            let updatedGeoJsonData;
+          
+            d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
+              if (data && data.edges) {
+                d3.json(layerSpec.thematicLayerPath).then(function (thematicData: any) {
+                  // 1) Spatial Aggregation (unchanged)
+                  if (layerSpec.spatialRelation === 'contains') {
+                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  } else if (layerSpec.spatialRelation === 'buffer') {
+                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                  }
+          
+                  // 2) Subdivide if needed
+                  if (layerSpec.unitDivide === 1) {
+                    updatedGeoJsonData = { edges: updatedGeoJsonData };
+                  } else {
+                    const subdividedEdges: any[] = [];
+                    updatedGeoJsonData.forEach((edge: any) => {
+                      const start = edge[0];
+                      const end   = edge[1];
+                      const extras= edge.slice(2);
+          
+                      const lat0 = start.lat, lon0 = start.lon;
+                      const lat1 = end.lat,   lon1 = end.lon;
+                      const dLat = lat1 - lat0;
+                      const dLon = lon1 - lon0;
+          
+                      for (let i = 0; i < layerSpec.unitDivide; i++) {
+                        const segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                        const segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                        const segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                        const segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+          
+                        const newStart = { lat: segStartLat, lon: segStartLon };
+                        const newEnd   = { lat: segEndLat,   lon: segEndLon };
+                        const newEdge  = [newStart, newEnd].concat(extras);
+                        subdividedEdges.push(newEdge);
+                      }
+                    });
+                    updatedGeoJsonData = { edges: subdividedEdges };
+                  }
+          
+                  // 3) Remove old layers
+                  mapInstanceRef.current?.eachLayer((layer) => {
+                    if (!(layer instanceof L.TileLayer)) {
+                      if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                        mapInstanceRef.current!.removeLayer(layer);
+                      }
+                    }
+                  });
+          
+                  // 4) Create Leaflet SVG layer
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  const svgGroup = d3
+                    .select(mapInstanceRef.current!.getPanes().overlayPane)
+                    .select("svg")
+                    .append("g")
+                    .attr("class", "leaflet-zoom-hide");
+          
+                  const edgesArray = updatedGeoJsonData.edges;
+          
+                  // 5) Helper: get midpoint + project to map coords
+                  function getMidpoint(segment: any) {
+                    const lat1 = segment[0].lat, lon1 = segment[0].lon;
+                    const lat2 = segment[1].lat, lon2 = segment[1].lon;
+                    return { lat: (lat1 + lat2) / 2, lon: (lon1 + lon2) / 2 };
+                  }
+                  function projectPoint(lat: number, lon: number) {
+                    return mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(lat, lon));
+                  }
+          
+                  // 6) Spike path generator
+                  function spikePath(length: number, width: number) {
+                    return `M${-width / 2},0 L0,${-length} L${width / 2},0 Z`;
+                  }
+          
+                  // 7) Main draw function
+                  function updateSpikes() {
+                    // Bind data
+                    const selection = svgGroup.selectAll("path.mySpike").data(edgesArray);
+          
+                    selection
+                      .join("path")
+                      .attr("class", "mySpike")
+                      // For each edge, compute color, width, opacity from your EXACT code snippet:
+                      .each(function (edge: any) {
+                        // ---------------------------
+                        // 7a) EXACT color snippet
+                        // ---------------------------
+                        let lineColor = layerSpec.lineColor || "red";
+                        const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineColor));
+                        if (attributeIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e: any) =>
+                              e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor])
+                            )
+                            .filter((v: any) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = edge[attributeIndex][lineColor];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            // const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
+                            const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                            lineColor = colorScale(attributeValue);
+                          }
+                        }
+                        // Store the final color on the edge so we can read it in .attr
+                        edge.__spikeColor = lineColor;
+          
+                        // ---------------------------
+                        // 7b) EXACT width snippet
+                        // ---------------------------
+                        let lineWidth = layerSpec.lineStrokeWidth;
+                        if (typeof lineWidth === "string") {
+                          // Check if lineWidth is an attribute name in the data
+                          const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineWidth));
+                          if (attributeIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) =>
+                                e.filter((entry: any) => entry.hasOwnProperty(lineWidth)).map((entry: any) => entry[lineWidth])
+                              )
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = edge[attributeIndex][lineWidth];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              // Map attribute values between 5 and 30 (example)
+                              const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                              lineWidth = lineWidthScale(attributeValue);
+                            }
+                          } else {
+                            lineWidth = 5; // Default if attribute not found
+                          }
+                        } else if (typeof lineWidth === "number") {
+                          // Use user-defined numeric value
+                          lineWidth = layerSpec.lineStrokeWidth;
+                        } else {
+                          lineWidth = 5; // default
+                        }
+                        // Store final width on the edge
+                        edge.__spikeWidth = lineWidth;
+
+
+                        ////height
+                        let height = layerSpec.height;
+                        if (typeof height === "string") {
+                          // Check if lineWidth is an attribute name in the data
+                          const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(height));
+                          if (attributeIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) =>
+                                e.filter((entry: any) => entry.hasOwnProperty(height)).map((entry: any) => entry[height])
+                              )
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = edge[attributeIndex][height];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              // Map attribute values between 5 and 30 (example)
+                              const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                              lineWidth = heightScale(attributeValue);
+                            }
+                          } else {
+                            height = 5; // Default if attribute not found
+                          }
+                        } else if (typeof height === "number") {
+                          // Use user-defined numeric value
+                          height = layerSpec.height;
+                        } else {
+                          height = 5; // default
+                        }
+                        // Store final width on the edge
+                        edge.__spikeheight = height;
+          
+                        // ---------------------------
+                        // 7c) EXACT opacity snippet
+                        // ---------------------------
+                        let lineOpacity = layerSpec.strokeOpacity || 1;
+                        if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                          lineOpacity = lineOpacity;
+                        } else if (typeof lineOpacity === "string") {
+                          const opacityIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                          if (opacityIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) =>
+                                e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity])
+                              )
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = edge[opacityIndex][lineOpacity];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                              lineOpacity = opacityScale(attributeValue);
+                            }
+                          }
+                        }
+                        // Store final opacity
+                        edge.__spikeOpacity = lineOpacity;
+                      })
+                      // Now set shape position & path
+                      .attr("transform", (edge: any) => {
+                        const mid = getMidpoint(edge);
+                        const pt = projectPoint(mid.lat, mid.lon);
+                        return `translate(${pt.x}, ${pt.y})`;
+                      })
+                      .attr("d", (edge: any) => {
+                        // Spike height from edge[3].Length (if present)
+                        const lengthVal = edge[3]?.Length || 0; 
+                        // Use the “width” we computed above
+                        const baseWidth = edge.__spikeWidth || 5;
+                        return spikePath(lengthVal, baseWidth);
+                      })
+                      // Fill with lineColor, set fill-opacity
+                      .attr("fill", (edge: any) => edge.__spikeColor)
+                      .attr("fill-opacity", (edge: any) => edge.__spikeOpacity)
+                      .attr("stroke", "#333")
+                      .attr("stroke-width", 0.5)
+                      .selectAll("title") // remove old titles before appending new
+                      .remove();
+          
+                    // Append new title
+                    selection.append("title").text((edge: any) => {
+                      const lenVal = edge[3]?.Length?.toFixed(2) ?? "N/A";
+                      return `Length: ${edge.__spikeheight}
+                              Color: ${edge.__spikeColor}
+                              Width: ${edge.__spikeWidth}
+                              Opacity: ${edge.__spikeOpacity}`;
+                    });
+                  }
+          
+                  // 8) Draw once
+                  updateSpikes();
+                  // 9) Redraw on zoom/pan
+                  mapInstanceRef.current!.on("zoomend moveend", updateSpikes);
+          
+                  // Keep track of the new layer
+                  currentLayersRef.current.push(svgLayer);
+                });
+              } else {
+                console.error("Data is missing edges or is invalid.");
+              }
+            }).catch(error => {
+              console.error("Failed to load JSON data:", error);
+            });
+          }
+          // // -------------------------------------------
+          // // NEW BRANCH FOR RECT SHAPE
+          // // -------------------------------------------
+          else if (layerSpec.shape === 'rect') {
+            let updatedGeoJsonData;
+          
+            // 1) Load physical-layer JSON
+            d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
+              if (data && data.edges) {
+                // 2) Load thematic data (if needed)
+                d3.json(layerSpec.thematicLayerPath).then(function (thematicData: any) {
+                  // 3) Perform spatial aggregation
+                  if (layerSpec.spatialRelation === 'contains') {
+                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  } else if (layerSpec.spatialRelation === 'buffer') {
+                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                  }
+          
+                  // 4) Subdivide edges if unitDivide > 1
+                  if (layerSpec.unitDivide === 1) {
+                    updatedGeoJsonData = { edges: updatedGeoJsonData };
+                  } else {
+                    const subdividedEdges: any[] = [];
+                    updatedGeoJsonData.forEach((edge: any) => {
+                      const start = edge[0];
+                      const end   = edge[1];
+                      const extras= edge.slice(2);
+          
+                      const lat0 = start.lat, lon0 = start.lon;
+                      const lat1 = end.lat,   lon1 = end.lon;
+                      const dLat = lat1 - lat0;
+                      const dLon = lon1 - lon0;
+          
+                      for (let i = 0; i < layerSpec.unitDivide; i++) {
+                        const segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                        const segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                        const segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                        const segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+          
+                        const newStart = { lat: segStartLat, lon: segStartLon };
+                        const newEnd   = { lat: segEndLat,   lon: segEndLon };
+                        const newEdge  = [newStart, newEnd].concat(extras);
+                        subdividedEdges.push(newEdge);
+                      }
+                    });
+                    updatedGeoJsonData = { edges: subdividedEdges };
+                  }
+          
+                  // 5) Remove old layers except tile or mimicStreetPane
+                  mapInstanceRef.current?.eachLayer((layer) => {
+                    if (!(layer instanceof L.TileLayer)) {
+                      if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                        mapInstanceRef.current!.removeLayer(layer);
+                      }
+                    }
+                  });
+          
+                  // 6) Create Leaflet SVG layer
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  const svgGroup = d3
+                    .select(mapInstanceRef.current!.getPanes().overlayPane)
+                    .select("svg")
+                    .append("g")
+                    .attr("class", "leaflet-zoom-hide");
+          
+                  const edgesArray = updatedGeoJsonData.edges;
+          
+                  // 7) Helper functions
+                  function getMidpoint(segment: any) {
+                    const lat1 = segment[0].lat, lon1 = segment[0].lon;
+                    const lat2 = segment[1].lat, lon2 = segment[1].lon;
+                    return { lat: (lat1 + lat2) / 2, lon: (lon1 + lon2) / 2 };
+                  }
+                  function projectPoint(lat: number, lon: number) {
+                    return mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(lat, lon));
+                  }
+          
+                  // 8) Rectangular path generator
+                  function rectPath(length: number, width: number) {
+                    return `M${-width / 2},0 
+                            L${-width / 2},${-length}
+                            L${width / 2},${-length}
+                            L${width / 2},0 Z`;
+                  }
+          
+                  // 9) Main draw function
+                  function updateRects() {
+                    const selection = svgGroup.selectAll("path.myRect").data(edgesArray);
+          
+                    selection
+                      .join("path")
+                      .attr("class", "myRect")
+                      // 9a) For each edge, use EXACT color/width/opacity code:
+                      .each(function (edge: any) {
+                        // -------------------------------------
+                        // 9a-i) Set color (lineColor) snippet
+                        // -------------------------------------
+                        let lineColor = layerSpec.lineColor || "red";
+                        const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineColor));
+                        if (attributeIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e: any) =>
+                              e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor])
+                            )
+                            .filter((v: any) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = edge[attributeIndex][lineColor];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                            lineColor = colorScale(attributeValue);
+                          }
+                        }
+                        edge.__rectColor = lineColor;
+          
+                        // -------------------------------------
+                        // 9a-ii) Set width (lineWidth) snippet
+                        // -------------------------------------
+                        let lineWidth = layerSpec.lineStrokeWidth;
+                        if (typeof lineWidth === "string") {
+                          const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineWidth));
+                          if (attributeIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) =>
+                                e.filter((entry: any) => entry.hasOwnProperty(lineWidth)).map((entry: any) => entry[lineWidth])
+                              )
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = edge[attributeIndex][lineWidth];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                              lineWidth = lineWidthScale(attributeValue);
+                            }
+                          } else {
+                            lineWidth = 5; 
+                          }
+                        } else if (typeof lineWidth === "number") {
+                          lineWidth = layerSpec.lineStrokeWidth;
+                        } else {
+                          lineWidth = 5;
+                        }
+                        edge.__rectWidth = lineWidth;
+
+
+                        ////height
+                        let height = layerSpec.height;
+                        if (typeof height === "string") {
+                          // Check if lineWidth is an attribute name in the data
+                          const attributeIndex = edge.findIndex((e: any) => e.hasOwnProperty(height));
+                          if (attributeIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) =>
+                                e.filter((entry: any) => entry.hasOwnProperty(height)).map((entry: any) => entry[height])
+                              )
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = edge[attributeIndex][height];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              // Map attribute values between 5 and 30 (example)
+                              const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                              lineWidth = heightScale(attributeValue);
+                            }
+                          } else {
+                            height = 5; // Default if attribute not found
+                          }
+                        } else if (typeof height === "number") {
+                          // Use user-defined numeric value
+                          height = layerSpec.height;
+                        } else {
+                          height = 5; // default
+                        }
+                        // Store final width on the edge
+                        edge.__spikeheight = height;
+
+          
+                        // -------------------------------------
+                        // 9a-iii) Set opacity (lineOpacity) snippet
+                        // -------------------------------------
+                        let lineOpacity = layerSpec.strokeOpacity || 1;
+                        if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                          lineOpacity = lineOpacity;
+                        } else if (typeof lineOpacity === "string") {
+                          const opacityIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                          if (opacityIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) =>
+                                e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity])
+                              )
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = edge[opacityIndex][lineOpacity];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                              lineOpacity = opacityScale(attributeValue);
+                            }
+                          }
+                        }
+                        edge.__rectOpacity = lineOpacity;
+                      })
+                      // 9b) Position each rect at midpoint
+                      .attr("transform", (edge: any) => {
+                        const mid = getMidpoint(edge);
+                        const pt = projectPoint(mid.lat, mid.lon);
+                        return `translate(${pt.x}, ${pt.y})`;
+                      })
+                      // 9c) Height from edge[3].Length, width from edge.__rectWidth
+                      .attr("d", (edge: any) => {
+                        const lengthVal = edge[3]?.Length || 0; 
+                        const baseWidth = edge.__rectWidth || 5;
+                        return rectPath(lengthVal, baseWidth);
+                      })
+                      // 9d) Fill color & opacity
+                      .attr("fill", (edge: any) => edge.__rectColor)
+                      .attr("fill-opacity", (edge: any) => edge.__rectOpacity)
+                      .attr("stroke", "#333")
+                      .attr("stroke-width", 0.5)
+                      .selectAll("title")
+                      .remove();
+          
+                    // Add <title> for tooltip
+                    selection.append("title").text((edge: any) => {
+                      // const lenVal = edge[3]?.Length?.toFixed(2) ?? "N/A";
+                      return `Length: ${edge.__spikeheight}
+                              Color: ${edge.__rectColor}
+                              Width: ${edge.__rectWidth}
+                              Opacity: ${edge.__rectOpacity}`;
+                    });
+                  }
+          
+                  // 10) Draw once
+                  updateRects();
+                  // 11) Redraw on zoom/pan
+                  mapInstanceRef.current!.on("zoomend moveend", updateRects);
+          
+                  // Keep track of this new layer
+                  currentLayersRef.current.push(svgLayer);
+                });
+              } else {
+                console.error("Data is missing edges or is invalid.");
+              }
+            }).catch(error => {
+              console.error("Failed to load JSON data:", error);
+            });
+          }
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
         else if(layerSpec.unit === 'node'){
+
+          let updatedGeoJsonData
+          
+
+
           let nodesSet = new Set();
           let NodesList = [];
-          if(layerSpec.chart){
-            // console.log(layerSpec)
+          if (layerSpec.chart) {
             d3.json(layerSpec.physicalLayerPath).then((data: any) => {
-              if (data && data.edges){
-                mapInstanceRef.current?.eachLayer((layer) => {
+              if (data && data.edges) {
+                // 1) Remove old layers except the mimicStreetPane
+                mapInstanceRef.current?.eachLayer((layer: any) => {
                   if (!(layer instanceof L.TileLayer)) {
                     // Check if the layer's pane is NOT the mimic street pane before removing
                     if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
@@ -1226,62 +1754,126 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   }
                 });
 
-                // console.log('data check: ', data)
-                const edges = data.edges;
+                d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                  if(layerSpec.spatialRelation == 'contains'){
+                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                    console.log("data is:", updatedGeoJsonData)
+                  }else if(layerSpec.spatialRelation == 'nearest neighbor'){
+                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  }else if(layerSpec.spatialRelation == 'buffer'){
+                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                    // console.log("checking updatedGeoData inside", updatedGeoJsonData)
+                  }
+                // })
 
-                edges.forEach(edge => {
-                  // The first two elements in each edge contain the lat, lon information
+                updatedGeoJsonData = {
+                  edges: updatedGeoJsonData
+                };
+                // console.log("checking updatedGeoData outside", updatedGeoJsonData)
+          
+                // 2) Accumulate node data in a dictionary keyed by lat,lon
+                const NodesMap: Record<string, any> = {};
+          
+                // Helper function to add data for a node
+                function addNodeData(lat: number, lon: number, edgeData: Record<string, any>) {
+                  const key = `${lat},${lon}`;
+          
+                  if (!NodesMap[key]) {
+                    NodesMap[key] = {
+                      lat,
+                      lon,
+                      sums: {},  // sums of numeric attributes
+                      count: 0
+                    };
+                  }
+          
+                  // For each attribute in edgeData, if it's numeric, accumulate it
+                  for (const [attrKey, attrValue] of Object.entries(edgeData)) {
+                    if (typeof attrValue === 'number') {
+                      if (!NodesMap[key].sums[attrKey]) {
+                        NodesMap[key].sums[attrKey] = 0;
+                      }
+                      NodesMap[key].sums[attrKey] += attrValue;
+                    }
+                  }
+          
+                  NodesMap[key].count += 1;
+                }
+          
+                // 3) Go through each edge, gather the node data
+                const edges = updatedGeoJsonData.edges;
+                // console.log("checking the data for edge", updatedGeoJsonData)
+                edges.forEach((edge: any) => {
+                  // edge[0] = first node { lat, lon }
+                  // edge[1] = second node { lat, lon }
                   const firstNode = edge[0];
                   const secondNode = edge[1];
-
-                  // Create a unique string representation for each lat, lon pair
-                  const firstNodeKey = `${firstNode.lat},${firstNode.lon}`;
-                  const secondNodeKey = `${secondNode.lat},${secondNode.lon}`;
-
-                  // Check if the node is unique and add it to the NodesList
-                  if (!nodesSet.has(firstNodeKey)) {
-                      nodesSet.add(firstNodeKey);
-                      NodesList.push([firstNode.lat, firstNode.lon]);
-                  }
-
-                  if (!nodesSet.has(secondNodeKey)) {
-                      nodesSet.add(secondNodeKey);
-                      NodesList.push([secondNode.lat, secondNode.lon]);
-                  }
+          
+                  // The rest of the edge array items are objects with numeric attributes
+                  // e.g. { bearing: 88.8 }, { length: 101.731 }, { speed: 40 }, etc.
+                  // Merge them into a single object
+                  const mergedAttributes = Object.assign({}, ...edge.slice(2));
+                  // Example mergedAttributes => { bearing: 88.8, length: 101.731, speed: 40, ... }
+          
+                  addNodeData(firstNode.lat, firstNode.lon, mergedAttributes);
+                  addNodeData(secondNode.lat, secondNode.lon, mergedAttributes);
                 });
-                
-                //Here now for each node position different charts are creating--->
+          
+                // 4) Convert the NodesMap to a final array (averaging the numeric sums)
+                const NodesList = Object.values(NodesMap).map((node: any) => {
+                  const averagedAttrs: Record<string, number> = {};
+          
+                  for (const [attrKey, sumValue] of Object.entries(node.sums)) {
+                    averagedAttrs[attrKey] = (sumValue as number) / node.count;
+                  }
+          
+                  return {
+                    lat: node.lat,
+                    lon: node.lon,
+                    ...averagedAttrs  // e.g. bearing, length, speed, etc.
+                  };
+                });
+          
+                // console.log('Unique NodesList with averaged attributes:', NodesList);
+          
+                // 5) For each unique node, embed a Vega-Lite chart
                 (async () => {
                   for (let idx = 0; idx < NodesList.length; idx++) {
-                    const NodePoint = NodesList[idx];
-                    const midpoint = { lat: NodePoint[0], lon: NodePoint[1] };
-      
-                    // Step 1: Copy the chart specification for each node
+                    const nodeData = NodesList[idx];
+                    // console.log("Node data is:", nodeData)
+                    const midpoint = { lat: nodeData.lat, lon: nodeData.lon };
+          
+                    // 5a) Copy the chart specification
                     const chartSpec = JSON.parse(JSON.stringify(layerSpec.chart));
-      
-                    // Step 2: Generate unique data for each node
+          
+          
+                    // 5c) Assign to chartSpec.data
                     chartSpec.data = {
                       values: [
-                        Math.floor(Math.random() * 31),
-                        Math.floor(Math.random() * 31),
-                        Math.floor(Math.random() * 31),
-                        Math.floor(Math.random() * 31),
-                        Math.floor(Math.random() * 31),
-                        Math.floor(Math.random() * 31)
+                        nodeData.NTAscoree,
+                        nodeData.MarketScor,
+                        nodeData.LibScore,
+                        nodeData.SchoolsSco,
+                        nodeData.MetraScore,
+                        nodeData.CTAScore,
+                        nodeData.PaceScore
+                        
                       ],
                     };
-      
-                    // Step 3: Embed the chart for the current node in the #vis container
-                    await vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false }).then(result => {
+                    // console.log("chart data check:", chartSpec.data)
+          
+                    // 5d) Render the chart in a hidden container (#vis), then move the SVG
+                    await vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false }).then((result) => {
                       const vegaSVG = result.view._el.querySelector('svg');
-                      const svgWidth = 100;
-                      const svgHeight = 100;
-      
+                      const svgWidth = 200;
+                      const svgHeight = 200;
+          
+                      // Function to position the chart on the map
                       const updateSvgPosition = () => {
                         const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
                         const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
                         const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
-      
+          
                         if (temp.empty()) {
                           d3.select(mapInstanceRef.current!.getPanes().overlayPane)
                             .append('svg')
@@ -1296,16 +1888,19 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`);
                         }
                       };
-      
+          
                       updateSvgPosition();
                       mapInstanceRef.current!.on('move zoom', updateSvgPosition);
                     });
                   }
+          
+                  // 6) Add an SVG layer to the map so overlays work
                   const svgLayer = L.svg().addTo(mapInstanceRef.current!);
                   currentLayersRef.current.push(svgLayer);
-                })();
+                })(); // end async IIFE
+              })
               }
-            })
+            });
           }
         }
         else if (layerSpec.unit === 'area'){

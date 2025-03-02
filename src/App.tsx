@@ -11,6 +11,7 @@ interface ParsedSpec {
   unitDivide: number;
   zoom: number;
   method: string;
+  shape: string;
   fillAttribute?: string;
   strokeColor?: string;
   strokeWidth?: number;
@@ -22,6 +23,7 @@ interface ParsedSpec {
   lineType?: string;  
   lineTypeVal?: string;
   lineStrokeWidth?: string | number; 
+  height?: string | number; 
   radius?: number; 
   blur?: number;
   xField?: string;
@@ -152,6 +154,10 @@ const App: React.FC = () => {
       const methodMatch = spec.match(/method\s*=\s*(\w+)/);
       const method = methodMatch ? methodMatch[1] : '';
 
+      // Parse shape (e.g., fill or line)
+      const shapeMatch = spec.match(/shape\s*=\s*(\w+)/);
+      const shape = shapeMatch ? shapeMatch[1] : '';
+
       let radius: number | undefined;
       let blur: number | undefined;
 
@@ -173,6 +179,7 @@ const App: React.FC = () => {
       let lineType: string | undefined;
       let lineTypeVal: string | undefined;
       let lineStrokeWidth: string | number | undefined;
+      let height: string | number | undefined;
       let domain: number[] | undefined; // Added for domain
       let range: string[] | undefined;  // Added for range
       let xField: string | undefined;
@@ -208,7 +215,7 @@ const App: React.FC = () => {
       }
 
       // Parse for `line` method
-      if (method === 'line') {
+      if (method === 'line' || shape === 'spike' || shape === 'rect') {
         // Parse line color (rand[min,max] or a specific color)
         const lineColorMatch = spec.match(/color\(([^)]+)\)/);
         lineColor = lineColorMatch ? lineColorMatch[1].trim() : 'red'; // Default to red
@@ -220,10 +227,15 @@ const App: React.FC = () => {
           lineTypeVal = lineTypeMatch[2]; // e.g., rand[0,10]
         }
 
-        const lineStrokeWidthMatch = spec.match(/stroke-width\s*=\s*([^)\s]+)\)/)
+        const lineStrokeWidthMatch = spec.match(/width\s*=\s*([^)\s]+)\)/)
         if(lineStrokeWidthMatch){
           lineStrokeWidth = lineStrokeWidthMatch[1].trim();
         }
+
+        console.log("checking lineStrokeWidth", lineStrokeWidth)
+
+        const heightMatch = spec.match(/height\(([^)]+)\)/);
+        height = heightMatch ? heightMatch[1].trim() : 'red'; // Default to red
         // console.log('stroke width check',lineStrokeWidth)
 
         // Parse line opacity
@@ -293,6 +305,7 @@ const App: React.FC = () => {
       return {
         // geojsonPath,
         method,
+        shape,
         unit, 
         unitDivide,
         zoom,
@@ -309,6 +322,7 @@ const App: React.FC = () => {
         lineType,
         lineTypeVal,
         lineStrokeWidth,
+        height,
         xField, 
         yField, 
         pointColor,
