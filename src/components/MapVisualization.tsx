@@ -1711,26 +1711,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               console.error("Failed to load JSON data:", error);
             });
           }
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         }
         else if(layerSpec.unit === 'node'){
@@ -1902,6 +1882,307 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               }
             });
           }
+          if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
+            // 1) Load the physical-layer JSON (which has "edges")
+            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
+              if (data && data.edges) {
+                // 2) Remove old layers (except tile or mimicStreetPane)
+                mapInstanceRef.current?.eachLayer((layer: any) => {
+                  if (!(layer instanceof L.TileLayer)) {
+                    if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                      mapInstanceRef.current!.removeLayer(layer);
+                    }
+                  }
+                });
+          
+                // 3) Load the thematic data (if needed), then aggregate
+                d3.json(layerSpec.thematicLayerPath).then((thematicData: any) => {
+                  let updatedGeoJsonData: any;
+                  if (layerSpec.spatialRelation === 'contains') {
+                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  } else if (layerSpec.spatialRelation === 'buffer') {
+                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                  }
+          
+                  // No unitDivide here
+                  updatedGeoJsonData = { edges: updatedGeoJsonData };
+          
+                  // 4) Build a dictionary of nodes keyed by lat,lon
+                  const NodesMap: Record<string, any> = {};
+          
+                  function addNodeData(lat: number, lon: number, edgeData: Record<string, any>) {
+                    const key = `${lat},${lon}`;
+                    if (!NodesMap[key]) {
+                      NodesMap[key] = {
+                        lat,
+                        lon,
+                        sums: {},
+                        count: 0
+                      };
+                    }
+                    // Accumulate numeric attributes
+                    for (const [attrKey, attrValue] of Object.entries(edgeData)) {
+                      if (typeof attrValue === 'number') {
+                        if (!NodesMap[key].sums[attrKey]) {
+                          NodesMap[key].sums[attrKey] = 0;
+                        }
+                        NodesMap[key].sums[attrKey] += attrValue;
+                      }
+                    }
+                    NodesMap[key].count += 1;
+                  }
+          
+                  // 5) For each edge, gather node data
+                  const edges = updatedGeoJsonData.edges;
+                  edges.forEach((edge: any) => {
+                    const firstNode = edge[0]; 
+                    const secondNode = edge[1]; 
+                    // Merge any additional attributes (e.g. {Bearing, Length, Speed, ...})
+                    const mergedAttributes = Object.assign({}, ...edge.slice(2));
+                    addNodeData(firstNode.lat, firstNode.lon, mergedAttributes);
+                    addNodeData(secondNode.lat, secondNode.lon, mergedAttributes);
+                  });
+          
+                  // 6) Convert NodesMap -> array, computing average for each numeric field
+                  const NodesList = Object.values(NodesMap).map((node: any) => {
+                    const averagedAttrs: Record<string, number> = {};
+                    for (const [attrKey, sumValue] of Object.entries(node.sums)) {
+                      averagedAttrs[attrKey] = (sumValue as number) / node.count;
+                    }
+                    return {
+                      lat: node.lat,
+                      lon: node.lon,
+                      ...averagedAttrs
+                    };
+                  });
+
+                  console.log("NodesList with aggregated attributes:", NodesList);
+          
+                  // 7) Create a Leaflet SVG overlay
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  const svgGroup = d3
+                    .select(mapInstanceRef.current!.getPanes().overlayPane)
+                    .select("svg")
+                    .append("g")
+                    .attr("class", "leaflet-zoom-hide");
+          
+                  // Helpers
+                  function projectPoint(lat: number, lon: number) {
+                    return mapInstanceRef.current!.latLngToLayerPoint([lat, lon]);
+                  }
+                  function spikePath(length: number, width: number) {
+                    return `M${-width / 2},0 L0,${-length} L${width / 2},0 Z`;
+                  }
+                  function rectPath(length: number, width: number) {
+                    return `M${-width / 2},0
+                            L${-width / 2},${-length}
+                            L${width / 2},${-length}
+                            L${width / 2},0 Z`;
+                  }
+          
+                  // 8) Main draw function
+                  function updateShapes() {
+                    const selection = svgGroup.selectAll("path.nodeShape").data(NodesList);
+          
+                    selection
+                      .join("path")
+                      .attr("class", "nodeShape")
+                      .each(function (node: any) {
+                        // console.log("node is:", node)
+                        // -----------------------------------------------------
+                        // EXACT color snippet from your line code
+                        // -----------------------------------------------------
+                        let lineColor = layerSpec.lineColor || 'red';
+                        if (typeof lineColor === 'string' && node.hasOwnProperty(lineColor)) {
+                          // Gather all values for this attribute across NodesList
+                          const attributeValues = NodesList
+                            .map((n: any) => n[lineColor])
+                            .filter((v: any) => typeof v === 'number');
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = node[lineColor];
+                          if (
+                            minValue !== undefined &&
+                            maxValue !== undefined &&
+                            attributeValue !== undefined
+                          ) {
+                            const colorScale = d3
+                              .scaleSequential(d3.interpolateBuGn)
+                              .domain([minValue, maxValue]);
+                            lineColor = colorScale(attributeValue);
+                          }
+                        }
+                        node.__shapeColor = lineColor;
+                        // console.log("node.__shapeColor: ", node.__shapeColor)
+          
+                        // -----------------------------------------------------
+                        // EXACT width snippet (becomes shape's base width)
+                        // -----------------------------------------------------
+                        let lineWidth = layerSpec.lineStrokeWidth;
+                        if (typeof lineWidth === 'string' && node.hasOwnProperty(lineWidth)) {
+                          const attributeValues = NodesList
+                            .map((n: any) => n[lineWidth])
+                            .filter((v: any) => typeof v === 'number');
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = node[lineWidth];
+                          if (
+                            minValue !== undefined &&
+                            maxValue !== undefined &&
+                            attributeValue !== undefined
+                          ) {
+                            const lineWidthScale = d3
+                              .scaleLinear()
+                              .domain([minValue, maxValue])
+                              .range([5, 30]);
+                            lineWidth = lineWidthScale(attributeValue);
+                          } else {
+                            lineWidth = 5;
+                          }
+                        } else if (typeof lineWidth === 'number') {
+                          // direct numeric
+                          lineWidth = layerSpec.lineStrokeWidth;
+                        } else {
+                          lineWidth = 5;
+                        }
+                        node.__shapeWidth = lineWidth;
+          
+                        // -----------------------------------------------------
+                        // Height snippet (for node.__shapeheight)
+                        // -----------------------------------------------------
+                        let height = layerSpec.height;
+                        if (typeof height === 'string' && node.hasOwnProperty(height)) {
+                          const attributeValues = NodesList
+                            .map((n: any) => n[height])
+                            .filter((v: any) => typeof v === 'number');
+                            // console.log("node.height: ", attributeValues)
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = node[height];
+                          if (
+                            minValue !== undefined &&
+                            maxValue !== undefined &&
+                            attributeValue !== undefined
+                          ) {
+                            const heightScale = d3
+                              .scaleLinear()
+                              .domain([minValue, maxValue])
+                              .range([5, 30]);
+                            height = heightScale(attributeValue);
+                            console.log("node.height: ", height)
+                          } else {
+                            height = 5;
+                          }
+                        } else if (typeof height === 'number') {
+                          height = layerSpec.height;
+                        } else {
+                          height = 5;
+                        }
+                        node.__height = height;
+                        console.log("Final node.height: ", height)
+
+                        // console.log("height check is", node.__height)
+                        // console.log("color check is", node.__shapeColor)
+          
+                        // -----------------------------------------------------
+                        // EXACT opacity snippet
+                        // -----------------------------------------------------
+                        let lineOpacity = layerSpec.strokeOpacity || 1;
+                        if (typeof lineOpacity === 'string' && node.hasOwnProperty(lineOpacity)) {
+                          const attributeValues = NodesList
+                            .map((n: any) => n[lineOpacity])
+                            .filter((v: any) => typeof v === 'number');
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = node[lineOpacity];
+                          if (
+                            minValue !== undefined &&
+                            maxValue !== undefined &&
+                            attributeValue !== undefined
+                          ) {
+                            const opacityScale = d3
+                              .scaleLinear()
+                              .domain([minValue, maxValue])
+                              .range([0, 1]);
+                            lineOpacity = opacityScale(attributeValue);
+                          } else {
+                            lineOpacity = 1;
+                          }
+                        } else if (typeof lineOpacity === 'number') {
+                          lineOpacity = layerSpec.strokeOpacity;
+                        }
+                        node.__shapeOpacity = lineOpacity;
+                      })
+                      // Position each shape at node lat/lon
+                      .attr("transform", (node: any) => {
+                        const pt = projectPoint(node.lat, node.lon);
+                        return `translate(${pt.x},${pt.y})`;
+                      })
+                      // Use the shape = 'spike' or 'rect' to pick path
+                      .attr("d", (node: any) => {
+                        const heightVal = node.__height || 5; // from the snippet above
+                        // console.log("node.__height val is", node.__height)
+                        const baseWidth = node.__shapeWidth || 5;
+                        if (layerSpec.shape === 'rect') {
+                          return rectPath(heightVal, baseWidth);
+                        } else {
+                          // shape = 'spike'
+                          return spikePath(heightVal, baseWidth);
+                        }
+                      })
+                      .attr("fill", (node: any) => node.__shapeColor)
+                      .attr("fill-opacity", (node: any) => node.__shapeOpacity)
+                      .attr("stroke", "#333")
+                      .attr("stroke-width", 0.5)
+                      .selectAll("title")
+                      .remove();
+          
+                    // Add <title> tooltip
+                    selection
+                      .append("title")
+                      .text((node: any) => {
+                        return `Height: ${node.__height}
+                                Color: ${node.__shapeColor}
+                                Width: ${node.__shapeWidth}
+                                Opacity: ${node.__shapeOpacity}`;
+                      });
+                  }
+          
+                  // 9) Draw once
+                  updateShapes();
+                  // 10) Re-draw on zoom/pan
+                  mapInstanceRef.current!.on("zoomend moveend", updateShapes);
+          
+                  // 11) Store the new layer reference
+                  currentLayersRef.current.push(svgLayer);
+                });
+              } else {
+                console.error("Data is missing edges or invalid.");
+              }
+            }).catch(error => {
+              console.error("Failed to load JSON data:", error);
+            });
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
         else if (layerSpec.unit === 'area'){
           // Handle the `fill` method
