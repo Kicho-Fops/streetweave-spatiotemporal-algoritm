@@ -2071,7 +2071,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                               .domain([minValue, maxValue])
                               .range([5, 30]);
                             height = heightScale(attributeValue);
-                            console.log("node.height: ", height)
+                            console.log("Final node.height: ", minValue, maxValue)
                           } else {
                             height = 5;
                           }
@@ -2081,7 +2081,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           height = 5;
                         }
                         node.__height = height;
-                        console.log("Final node.height: ", height)
+                        // console.log("Final node.height: ", minValue, maxValue)
 
                         // console.log("height check is", node.__height)
                         // console.log("color check is", node.__shapeColor)
