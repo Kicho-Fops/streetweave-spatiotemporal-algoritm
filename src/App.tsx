@@ -215,7 +215,7 @@ const App: React.FC = () => {
       }
 
       // Parse for `line` method
-      if (method === 'line' || shape === 'spike' || shape === 'rect') {
+      if (method === 'line' || method === 'rect' || shape === 'spike' || shape === 'rect') {
         // Parse line color (rand[min,max] or a specific color)
         const lineColorMatch = spec.match(/color\(([^)]+)\)/);
         lineColor = lineColorMatch ? lineColorMatch[1].trim() : 'red'; // Default to red
