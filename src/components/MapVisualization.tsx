@@ -2346,7 +2346,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                             .node()
                             .appendChild(vegaSVG.cloneNode(true));
                         } else {
-                          temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`);
+                          temp.attr('transform', `translate(${point.x - svgWidth / 3}, ${point.y - svgHeight / 3})`);
                         }
                       };
           
