@@ -1056,406 +1056,338 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               console.error("Failed to load JSON data:", error);
             });
           }else if (layerSpec.method === 'rect') {
-            let updatedGeoJsonData;
-            d3.json(layerSpec.physicalLayerPath).then(function (data) {
-              if (data && data.edges) {
-                var subdividedEdges = [];
-                // Loop through each edge in the original array
-                data.edges.forEach(function (edge) {
-                  // Get the start and end coordinates
-                  var start = edge[0]; // { lat, lon }
-                  var end = edge[1];   // { lat, lon }
-                  // Get the extra values (indices 2 to 12)
-                  var extras = edge.slice(2);
-      
-                  // Destructure the coordinates
-                  var lat0 = start["lat"],
-                      lon0 = start["lon"],
-                      lat1 = end["lat"],
-                      lon1 = end["lon"];
-      
-                  // Calculate the total difference between the start and end points
-                  var dLat = lat1 - lat0;
-                  var dLon = lon1 - lon0;
-      
-                  // Subdivide this edge into `unitDivide` segments
-                  for (var i = 0; i < layerSpec.unitDivide; i++) {
-                    // Calculate the start coordinate of the new segment
-                    var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
-                    var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
-      
-                    // Calculate the end coordinate of the new segment
-                    var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
-                    var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
-      
-                    // Build new coordinate objects
-                    var newStart = { lat: segStartLat, lon: segStartLon };
-                    var newEnd = { lat: segEndLat, lon: segEndLon };
-      
-                    // Create the new edge. The new edge will contain:
-                    //  - The new start coordinate
-                    //  - The new end coordinate
-                    //  - The same extra values from the original edge
-                    var newEdge = [ newStart, newEnd ].concat(extras);
-                    subdividedEdges.push(newEdge);
-                  }
-                  
-                });
-                subdividedEdges = {
-                  edges: subdividedEdges
-                };
-                
-
-                d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
-                  // Apply spatial aggregation
-                  if (layerSpec.spatialRelation === 'contains') {
-                    updatedGeoJsonData = aggregationContains(subdividedEdges, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                    console.log("data is:", updatedGeoJsonData);
-                  } else if (layerSpec.spatialRelation === 'nearest neighbor') {
-                    updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, layerSpec.AggregationType);
-                  } else if (layerSpec.spatialRelation === 'buffer') {
-                    updatedGeoJsonData = BufferDataAggregationSegment(subdividedEdges, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
-                  }
-          
-
-                  updatedGeoJsonData = {
-                    edges: updatedGeoJsonData
+            if(layerSpec.orientation === 'parallel'){
+              let updatedGeoJsonData;
+              d3.json(layerSpec.physicalLayerPath).then(function (data) {
+                if (data && data.edges) {
+                  var subdividedEdges = [];
+                  // Loop through each edge in the original array
+                  data.edges.forEach(function (edge) {
+                    // Get the start and end coordinates
+                    var start = edge[0]; // { lat, lon }
+                    var end = edge[1];   // { lat, lon }
+                    // Get the extra values (indices 2 to 12)
+                    var extras = edge.slice(2);
+        
+                    // Destructure the coordinates
+                    var lat0 = start["lat"],
+                        lon0 = start["lon"],
+                        lat1 = end["lat"],
+                        lon1 = end["lon"];
+        
+                    // Calculate the total difference between the start and end points
+                    var dLat = lat1 - lat0;
+                    var dLon = lon1 - lon0;
+        
+                    // Subdivide this edge into `unitDivide` segments
+                    for (var i = 0; i < layerSpec.unitDivide; i++) {
+                      // Calculate the start coordinate of the new segment
+                      var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                      var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+        
+                      // Calculate the end coordinate of the new segment
+                      var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                      var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+        
+                      // Build new coordinate objects
+                      var newStart = { lat: segStartLat, lon: segStartLon };
+                      var newEnd = { lat: segEndLat, lon: segEndLon };
+        
+                      // Create the new edge. The new edge will contain:
+                      //  - The new start coordinate
+                      //  - The new end coordinate
+                      //  - The same extra values from the original edge
+                      var newEdge = [ newStart, newEnd ].concat(extras);
+                      subdividedEdges.push(newEdge);
+                    }
+                    
+                  });
+                  subdividedEdges = {
+                    edges: subdividedEdges
                   };
-                  // updatedGeoJsonData = [updatedGeoJsonData.edges[0]]
-
-                  console.log("data check for rect2", updatedGeoJsonData)
-
-                  let lineColor = layerSpec.lineColor || "red";
-                  let lineWidth = layerSpec.lineStrokeWidth;
-                  let lineOpacity = layerSpec.strokeOpacity || 1;
-          
-                  // Create separate panes for left and right if not already created.
-                  if (!mapInstanceRef.current.getPane("leftPane")) {
-                    mapInstanceRef.current.createPane("leftPane");
-                    mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
-                  }
-                  if (!mapInstanceRef.current.getPane("rightPane")) {
-                    mapInstanceRef.current.createPane("rightPane");
-                    mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
-                  }
-                  // Determine the pane name based on alignment.
-                  const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
-
-                  // Remove only layers in the current pane (unless they belong to mimicStreetPane)
-                  mapInstanceRef.current?.eachLayer((layer) => {
-                    if (!(layer instanceof L.TileLayer)) {
-                      if (!(layer.options && layer.options.pane === 'mimicStreetPane') &&
-                          (layer.options && layer.options.pane === paneName)) {
-                        mapInstanceRef.current.removeLayer(layer);
-                      }
-                    }
-                  });
-
-                  // Create an SVG layer in the proper pane with a unique class.
-                  const svgLayer = L.svg({
-                    pane: paneName,
-                    className: "gMap-" + layerSpec.alignment
-                  }).addTo(mapInstanceRef.current);
-
-                  // Create an SVG group inside that pane.
-                  const svgGroup = d3.select(mapInstanceRef.current.getPanes()[paneName])
-                                    .select("svg")
-                                    .append("g")
-                                    .attr("class", "leaflet-zoom-hide");
-
-                  // We'll use this group as the container for drawing (it’s independent for each alignment).
-                  const group = svgGroup;
                   
-                  // Create separate groups for left and right
-                  const leftGroup = svgGroup.append("g").attr("class", "rect-left");
-                  const rightGroup = svgGroup.append("g").attr("class", "rect-right");
-          
-                  // --- Helper Functions ---
-                  // Offset a point by a certain distance (in meters) at a given bearing (in degrees)
-                  function offsetPoint(lat, lon, bearing, distance) {
-                    const R = 6378137; // Earth radius in meters
-                    const toRad = Math.PI / 180;
-                    const lat1 = lat * toRad;
-                    const lon1 = lon * toRad;
-                    const brng = bearing * toRad;
-                    const dR = distance / R;
-                    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) +
-                                           Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
-                    const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
-                                                   Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
-                    return [ lat2 / toRad, lon2 / toRad ];
-                  }
-          
-                  // Convert geographic coordinates to SVG layer points
-                  function projectPoint(lat, lon) {
-                    const point = mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(lat, lon));
-                    return [ point.x, point.y ];
-                  }
-          
-                  // Calculate bearing between two points
-                  function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
-                    const toRad = Math.PI / 180;
-                    const phi1 = lat1 * toRad;
-                    const phi2 = lat2 * toRad;
-                    const dLon = (lon2 - lon1) * toRad;
-                    const y = Math.sin(dLon) * Math.cos(phi2);
-                    const x = Math.cos(phi1) * Math.sin(phi2) -
-                              Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLon);
-                    let brng = Math.atan2(y, x) * (180 / Math.PI);
-                    return (brng + 360) % 360;
-                  }
-          
-                  // Normalize the segment by swapping start and end if needed (assumes a Bearing property in extras)
-                  function normalizeSegment(segment) {
-                    const start = segment[0];
-                    const end = segment[1];
-                    let bearing = segment[2].Bearing;
-                    bearing = ((bearing % 360) + 360) % 360;
-                    if (bearing >= 180) {
-                      // Swap start & end
-                      const temp = { lat: start.lat, lon: start.lon };
-                      start.lat = end.lat;   start.lon = end.lon;
-                      end.lat = temp.lat;    end.lon = temp.lon;
-                      bearing -= 180;
-                    }
-                    segment[2].Bearing = bearing;
-                  }
-          
-                  // Draw a polygon using an array of [x, y] coordinates
-                  function drawPolygon(g, corners, color) {
-                    const pointsStr = corners.map(pt => pt.join(",")).join(" ");
-                    g.append("polygon")
-                     .attr("points", pointsStr)
-                     .style("fill", color)
-                     .style("fill-opacity", 0.4);
-                  }
-                  // --- End Helper Functions ---
-          
-                  // For each edge, assign random left/right widths (or you could use attribute values)
-                  updatedGeoJsonData.edges.forEach(function(segment) {
-                    normalizeSegment(segment);
-                    segment._leftWidth = Math.random() * 20 + 10;  // width between 10 and 30 meters
-                    segment._rightWidth = Math.random() * 20 + 10;
-                  });
-                  
-          
-                  // Draw rectangles (4-corner polygons) for each edge
-                  updatedGeoJsonData.edges.forEach(function(segment) {
 
-                    // Set line color based on attribute value or specific color
-                    
-                    const attributeIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineColor));
-                    if (attributeIndex !== -1) {
-                      const attributeValues = updatedGeoJsonData.edges
-                        .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor]))
-                        .filter((v: any) => v !== undefined);
-                      const minValue = d3.min(attributeValues);
-                      const maxValue = d3.max(attributeValues);
-                      const attributeValue = segment[attributeIndex][lineColor];
-                      if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                        // const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
-                        const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
-                        lineColor = colorScale(attributeValue);
-                      }
+                  d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
+                    // Apply spatial aggregation
+                    if (layerSpec.spatialRelation === 'contains') {
+                      updatedGeoJsonData = aggregationContains(subdividedEdges, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                      console.log("data is:", updatedGeoJsonData);
+                    } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                      updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, layerSpec.AggregationType);
+                    } else if (layerSpec.spatialRelation === 'buffer') {
+                      updatedGeoJsonData = BufferDataAggregationSegment(subdividedEdges, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                     }
+            
 
-                    // Set line width based on attribute value or specific width
-                    if (typeof lineWidth === "string") {
-                      // Check if lineWidth is an attribute name in the data
-                      const attributeIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineWidth));
-                      if (attributeIndex !== -1) {
-                        const attributeValues = updatedGeoJsonData.edges
-                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineWidth)).map((entry: any) => entry[lineWidth]))
-                          .filter((v: any) => v !== undefined);
-                        const minValue = d3.min(attributeValues);
-                        const maxValue = d3.max(attributeValues);
-                        const attributeValue = segment[attributeIndex][lineWidth];
-                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                          // Map attribute values between 2 and 15
-                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
-                          lineWidth = lineWidthScale(attributeValue)
-                        }
-                      } else {
-                        lineWidth = 5; // Default value if attribute not found
-                      }
-                    } else if (typeof lineWidth === "number") {
-                      // Use user-defined value if provided and it's a number
-                      lineWidth = layerSpec.lineStrokeWidth;
-                    } else {
-                      // Default to 5 if undefined
-                      lineWidth = 5;
+                    updatedGeoJsonData = {
+                      edges: updatedGeoJsonData
+                    };
+                    // updatedGeoJsonData = [updatedGeoJsonData.edges[0]]
+
+                    console.log("data check for rect2", updatedGeoJsonData)
+
+                    let lineColor = layerSpec.lineColor || "red";
+                    let lineWidth = layerSpec.lineStrokeWidth;
+                    let lineOpacity = layerSpec.strokeOpacity || 1;
+            
+                    // Create separate panes for left and right if not already created.
+                    if (!mapInstanceRef.current.getPane("leftPane")) {
+                      mapInstanceRef.current.createPane("leftPane");
+                      mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
                     }
+                    if (!mapInstanceRef.current.getPane("rightPane")) {
+                      mapInstanceRef.current.createPane("rightPane");
+                      mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
+                    }
+                    // Determine the pane name based on alignment.
+                    const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
 
-                    // Set opacity based on attribute value or specific value
-                    // console.log('lineOpacity check:', lineOpacity)
-                    if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
-                      // Directly use the specified opacity value if it's between 0 and 1
-                      lineOpacity = lineOpacity;
-                    } else if (typeof lineOpacity === "string") {
-                      // Treat lineOpacity as an attribute name and map its values from 0 to 1
-                      const opacityIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
-                      if (opacityIndex !== -1) {
-                        const attributeValues = updatedGeoJsonData.edges
-                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
-                          .filter((v: any) => v !== undefined);
-                        const minValue = d3.min(attributeValues);
-                        const maxValue = d3.max(attributeValues);
-                        const attributeValue = segment[opacityIndex][lineOpacity];
-                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                          const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
-                          lineOpacity = opacityScale(attributeValue);
+                    // Remove only layers in the current pane (unless they belong to mimicStreetPane)
+                    mapInstanceRef.current?.eachLayer((layer) => {
+                      if (!(layer instanceof L.TileLayer)) {
+                        if (!(layer.options && layer.options.pane === 'mimicStreetPane') &&
+                            (layer.options && layer.options.pane === paneName)) {
+                          mapInstanceRef.current.removeLayer(layer);
                         }
                       }
-                    }
+                    });
 
+                    // Create an SVG layer in the proper pane with a unique class.
+                    const svgLayer = L.svg({
+                      pane: paneName,
+                      className: "gMap-" + layerSpec.alignment
+                    }).addTo(mapInstanceRef.current);
 
+                    // Create an SVG group inside that pane.
+                    const svgGroup = d3.select(mapInstanceRef.current.getPanes()[paneName])
+                                      .select("svg")
+                                      .append("g")
+                                      .attr("class", "leaflet-zoom-hide");
 
-
-
-
-
-                    const start = segment[0];
-                    const end = segment[1];
-                    // Compute the bearing between start and end
-                    const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
-
-                    if(layerSpec.alignment === "left"){
-                      const leftBearing = (bearing + 270) % 360;
-                      // Determine left/right insets
-                      const inset = 15; // fixed inset distance in meters
-          
-                      // Inside edge offsets for LEFT side
-                      const [sLeftLat, sLeftLon] = offsetPoint(start.lat, start.lon, leftBearing, inset);
-                      const [eLeftLat, eLeftLon] = offsetPoint(end.lat, end.lon, leftBearing, inset);
-          
-                      // Compute bearing of the inside edge lines
-                      const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
-          
-                      // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360
-                      const outwardLeft = (bLeftLine + 270) % 360;
-                      const wLeft = segment._leftWidth;
-          
-                      // Outer corners for LEFT side
-                      const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
-                      const [eLeft2Lat, eLeft2Lon] = offsetPoint(eLeftLat, eLeftLon, outwardLeft, wLeft);
-                      
-          
-                      // Convert geographic coordinates to screen (SVG) coordinates
-                      const sLeftXY  = projectPoint(sLeftLat, sLeftLon);
-                      const eLeftXY  = projectPoint(eLeftLat, eLeftLon);
-                      const sLeft2XY = projectPoint(sLeft2Lat, sLeft2Lon);
-                      const eLeft2XY = projectPoint(eLeft2Lat, eLeft2Lon);
-          
-          
-                    // Draw left-side polygon (blue) and right-side polygon (green)
-                    // drawPolygon(svgGroup, [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ], "blue");
-                    // drawPolygon(svgGroup, [ sRightXY, eRightXY, eRight2XY, sRight2XY ], "green");
-                    leftGroup.append("polygon")
-                            .attr("points", [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ]
-                                              .map(pt => pt.join(",")).join(" "))
-                            .style("fill", lineColor)
-                            .style("fill-opacity", lineOpacity)
-                            .style("stroke-width", lineWidth);
-
-                    }
-                    if(layerSpec.alignment === "right"){
-                      // Determine left/right insets
-                      const rightBearing = (bearing + 90) % 360;
-                      const inset = 15; // fixed inset distance in meters
-          
-                      // Inside edge offsets for RIGHT side
-                      const [sRightLat, sRightLon] = offsetPoint(start.lat, start.lon, rightBearing, inset);
-                      const [eRightLat, eRightLon] = offsetPoint(end.lat, end.lon, rightBearing, inset);
-          
-                      // Compute bearing of the inside edge lines
-                      const bRightLine = bearingBetweenPoints(sRightLat, sRightLon, eRightLat, eRightLon);
-          
-                      // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360 
-                      const outwardRight = (bRightLine + 90) % 360;
-                      const wRight = segment._rightWidth;
-          
-                      // Outer corners for RIGHT side
-                      const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
-                      const [eRight2Lat, eRight2Lon] = offsetPoint(eRightLat, eRightLon, outwardRight, wRight);
-          
-                      // Convert geographic coordinates to screen (SVG) coordinates
-                      const sRightXY  = projectPoint(sRightLat, sRightLon);
-                      const eRightXY  = projectPoint(eRightLat, eRightLon);
-                      const sRight2XY = projectPoint(sRight2Lat, sRight2Lon);
-                      const eRight2XY = projectPoint(eRight2Lat, eRight2Lon);
-          
-                    // Draw left-side polygon (blue) and right-side polygon (green)
-                    // drawPolygon(svgGroup, [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ], "blue");
-                    // drawPolygon(svgGroup, [ sRightXY, eRightXY, eRight2XY, sRight2XY ], "green");
-
-                    // Draw right-side polygon with the same styling
-                    rightGroup.append("polygon")
-                            .attr("points", [ sRightXY, eRightXY, eRight2XY, sRight2XY ]
-                                              .map(pt => pt.join(",")).join(" "))
-                            .style("fill", lineColor)
-                            .style("fill-opacity", lineOpacity)
-                            .style("stroke-width", lineWidth);
-
-                    }
-          
+                    // We'll use this group as the container for drawing (it’s independent for each alignment).
+                    const group = svgGroup;
                     
-                  });
-          
-                  // Update rectangles on map movements (pan/zoom)
-                  function updateRectangles() {
-                    if(layerSpec.alignment === "left"){leftGroup.selectAll("*").remove();}
-                    if(layerSpec.alignment === "right"){rightGroup.selectAll("*").remove();}
-
-                    // svgGroup.selectAll("*").remove();
-                    updatedGeoJsonData.edges.forEach(function(segment) {
-                      normalizeSegment(segment);
+                    // Create separate groups for left and right
+                    const leftGroup = svgGroup.append("g").attr("class", "rect-left");
+                    const rightGroup = svgGroup.append("g").attr("class", "rect-right");
+            
+                    // --- Helper Functions ---
+                    // Offset a point by a certain distance (in meters) at a given bearing (in degrees)
+                    function offsetPoint(lat, lon, bearing, distance) {
+                      const R = 6378137; // Earth radius in meters
+                      const toRad = Math.PI / 180;
+                      const lat1 = lat * toRad;
+                      const lon1 = lon * toRad;
+                      const brng = bearing * toRad;
+                      const dR = distance / R;
+                      const lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) +
+                                            Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+                      const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                                                    Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+                      return [ lat2 / toRad, lon2 / toRad ];
+                    }
+            
+                    // Convert geographic coordinates to SVG layer points
+                    function projectPoint(lat, lon) {
+                      const point = mapInstanceRef.current!.latLngToLayerPoint(new L.LatLng(lat, lon));
+                      return [ point.x, point.y ];
+                    }
+            
+                    // Calculate bearing between two points
+                    function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+                      const toRad = Math.PI / 180;
+                      const phi1 = lat1 * toRad;
+                      const phi2 = lat2 * toRad;
+                      const dLon = (lon2 - lon1) * toRad;
+                      const y = Math.sin(dLon) * Math.cos(phi2);
+                      const x = Math.cos(phi1) * Math.sin(phi2) -
+                                Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLon);
+                      let brng = Math.atan2(y, x) * (180 / Math.PI);
+                      return (brng + 360) % 360;
+                    }
+            
+                    // Normalize the segment by swapping start and end if needed (assumes a Bearing property in extras)
+                    function normalizeSegment(segment) {
                       const start = segment[0];
                       const end = segment[1];
+                      let bearing = segment[2].Bearing;
+                      bearing = ((bearing % 360) + 360) % 360;
+                      if (bearing >= 180) {
+                        // Swap start & end
+                        const temp = { lat: start.lat, lon: start.lon };
+                        start.lat = end.lat;   start.lon = end.lon;
+                        end.lat = temp.lat;    end.lon = temp.lon;
+                        bearing -= 180;
+                      }
+                      segment[2].Bearing = bearing;
+                    }
+            
+                    // Draw a polygon using an array of [x, y] coordinates
+                    function drawPolygon(g, corners, color) {
+                      const pointsStr = corners.map(pt => pt.join(",")).join(" ");
+                      g.append("polygon")
+                      .attr("points", pointsStr)
+                      .style("fill", color)
+                      .style("fill-opacity", 0.4);
+                    }
+                    // --- End Helper Functions ---
+            
+                    // For each edge, assign random left/right widths (or you could use attribute values)
+                    updatedGeoJsonData.edges.forEach(function(segment) {
+                      normalizeSegment(segment);
+                      segment._leftWidth = Math.random() * 20 + 10;  // width between 10 and 30 meters
+                      segment._rightWidth = Math.random() * 20 + 10;
+                    });
+                    
+            
+                    // Draw rectangles (4-corner polygons) for each edge
+                    updatedGeoJsonData.edges.forEach(function(segment) {
+
+                      // Set line color based on attribute value or specific color
+                      
+                      const attributeIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineColor));
+                      if (attributeIndex !== -1) {
+                        const attributeValues = updatedGeoJsonData.edges
+                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor]))
+                          .filter((v: any) => v !== undefined);
+                        const minValue = d3.min(attributeValues);
+                        const maxValue = d3.max(attributeValues);
+                        const attributeValue = segment[attributeIndex][lineColor];
+                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                          // const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
+                          const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          lineColor = colorScale(attributeValue);
+                        }
+                      }
+
+                      // Set line width based on attribute value or specific width
+                      if (typeof lineWidth === "string") {
+                        // Check if lineWidth is an attribute name in the data
+                        const attributeIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineWidth));
+                        if (attributeIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineWidth)).map((entry: any) => entry[lineWidth]))
+                            .filter((v: any) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = segment[attributeIndex][lineWidth];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            // Map attribute values between 2 and 15
+                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                            lineWidth = lineWidthScale(attributeValue)
+                          }
+                        } else {
+                          lineWidth = 5; // Default value if attribute not found
+                        }
+                      } else if (typeof lineWidth === "number") {
+                        // Use user-defined value if provided and it's a number
+                        lineWidth = layerSpec.lineStrokeWidth;
+                      } else {
+                        // Default to 5 if undefined
+                        lineWidth = 5;
+                      }
+
+                      // Set opacity based on attribute value or specific value
+                      // console.log('lineOpacity check:', lineOpacity)
+                      if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                        // Directly use the specified opacity value if it's between 0 and 1
+                        lineOpacity = lineOpacity;
+                      } else if (typeof lineOpacity === "string") {
+                        // Treat lineOpacity as an attribute name and map its values from 0 to 1
+                        const opacityIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                        if (opacityIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
+                            .filter((v: any) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = segment[opacityIndex][lineOpacity];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                            lineOpacity = opacityScale(attributeValue);
+                          }
+                        }
+                      }
+
+
+
+
+
+
+
+                      const start = segment[0];
+                      const end = segment[1];
+                      // Compute the bearing between start and end
                       const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
 
                       if(layerSpec.alignment === "left"){
-                        const leftBearing = (bearing + 270) % 360;
-                        const inset = 15;
+                        const leftBearing = (bearing + 90) % 360;
+                        // Determine left/right insets
+                        const inset = 5; // fixed inset distance in meters
+            
+                        // Inside edge offsets for LEFT side
                         const [sLeftLat, sLeftLon] = offsetPoint(start.lat, start.lon, leftBearing, inset);
                         const [eLeftLat, eLeftLon] = offsetPoint(end.lat, end.lon, leftBearing, inset);
+            
+                        // Compute bearing of the inside edge lines
                         const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
-                        const outwardLeft = (bLeftLine + 270) % 360;
+            
+                        // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360
+                        const outwardLeft = (bLeftLine + 90) % 360;
                         const wLeft = segment._leftWidth;
+            
+                        // Outer corners for LEFT side
                         const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
-                      const [eLeft2Lat, eLeft2Lon] = offsetPoint(eLeftLat, eLeftLon, outwardLeft, wLeft);
-                      const sLeftXY  = projectPoint(sLeftLat, sLeftLon);
-                      const eLeftXY  = projectPoint(eLeftLat, eLeftLon);
-                      const sLeft2XY = projectPoint(sLeft2Lat, sLeft2Lon);
-                      const eLeft2XY = projectPoint(eLeft2Lat, eLeft2Lon);
-
+                        const [eLeft2Lat, eLeft2Lon] = offsetPoint(eLeftLat, eLeftLon, outwardLeft, wLeft);
+                        
+            
+                        // Convert geographic coordinates to screen (SVG) coordinates
+                        const sLeftXY  = projectPoint(sLeftLat, sLeftLon);
+                        const eLeftXY  = projectPoint(eLeftLat, eLeftLon);
+                        const sLeft2XY = projectPoint(sLeft2Lat, sLeft2Lon);
+                        const eLeft2XY = projectPoint(eLeft2Lat, eLeft2Lon);
+            
+            
+                      // Draw left-side polygon (blue) and right-side polygon (green)
+                      // drawPolygon(svgGroup, [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ], "blue");
+                      // drawPolygon(svgGroup, [ sRightXY, eRightXY, eRight2XY, sRight2XY ], "green");
                       leftGroup.append("polygon")
-                            .attr("points", [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ]
-                                              .map(pt => pt.join(",")).join(" "))
-                            .style("fill", lineColor)
-                            .style("fill-opacity", lineOpacity)
-                            .style("stroke-width", lineWidth);
+                              .attr("points", [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ]
+                                                .map(pt => pt.join(",")).join(" "))
+                              .style("fill", lineColor)
+                              .style("fill-opacity", lineOpacity)
+                              .style("stroke-width", lineWidth);
+
                       }
                       if(layerSpec.alignment === "right"){
-                        // rightGroup.selectAll("*").remove();
-                        const rightBearing = (bearing + 90) % 360;
-                        const inset = 15;
+                        // Determine left/right insets
+                        const rightBearing = (bearing + 270) % 360;
+                        const inset = 5; // fixed inset distance in meters
+            
+                        // Inside edge offsets for RIGHT side
                         const [sRightLat, sRightLon] = offsetPoint(start.lat, start.lon, rightBearing, inset);
                         const [eRightLat, eRightLon] = offsetPoint(end.lat, end.lon, rightBearing, inset);
-                        
+            
+                        // Compute bearing of the inside edge lines
                         const bRightLine = bearingBetweenPoints(sRightLat, sRightLon, eRightLat, eRightLon);
-                        
-                        const outwardRight = (bRightLine + 90) % 360;
-                        
+            
+                        // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360 
+                        const outwardRight = (bRightLine + 270) % 360;
                         const wRight = segment._rightWidth;
-                        
+            
+                        // Outer corners for RIGHT side
                         const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
                         const [eRight2Lat, eRight2Lon] = offsetPoint(eRightLat, eRightLon, outwardRight, wRight);
-                        
+            
+                        // Convert geographic coordinates to screen (SVG) coordinates
                         const sRightXY  = projectPoint(sRightLat, sRightLon);
                         const eRightXY  = projectPoint(eRightLat, eRightLon);
                         const sRight2XY = projectPoint(sRight2Lat, sRight2Lon);
                         const eRight2XY = projectPoint(eRight2Lat, eRight2Lon);
-                        
+            
+                      // Draw left-side polygon (blue) and right-side polygon (green)
+                      // drawPolygon(svgGroup, [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ], "blue");
+                      // drawPolygon(svgGroup, [ sRightXY, eRightXY, eRight2XY, sRight2XY ], "green");
 
                       // Draw right-side polygon with the same styling
                       rightGroup.append("polygon")
@@ -1466,21 +1398,407 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                               .style("stroke-width", lineWidth);
 
                       }
+            
+                      
                     });
-                  }
-          
-                  mapInstanceRef.current!.on("moveend", updateRectangles);
-                  currentLayersRef.current.push(svgLayer);
-          
-                }).catch(error => {
-                  console.error("Failed to load thematic JSON data:", error);
-                });
-              } else {
-                console.error("Data is missing edges or is invalid.");
-              }
-            }).catch(error => {
-              console.error("Failed to load physical JSON data:", error);
-            });
+            
+                    // Update rectangles on map movements (pan/zoom)
+                    function updateRectangles() {
+                      if(layerSpec.alignment === "left"){leftGroup.selectAll("*").remove();}
+                      if(layerSpec.alignment === "right"){rightGroup.selectAll("*").remove();}
+
+                      // svgGroup.selectAll("*").remove();
+                      updatedGeoJsonData.edges.forEach(function(segment) {
+                        normalizeSegment(segment);
+                        const start = segment[0];
+                        const end = segment[1];
+                        const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+
+                        if(layerSpec.alignment === "left"){
+                          const leftBearing = (bearing + 90) % 360;
+                          const inset = 5;
+                          const [sLeftLat, sLeftLon] = offsetPoint(start.lat, start.lon, leftBearing, inset);
+                          const [eLeftLat, eLeftLon] = offsetPoint(end.lat, end.lon, leftBearing, inset);
+                          const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
+                          const outwardLeft = (bLeftLine + 90) % 360;
+                          const wLeft = segment._leftWidth;
+                          const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
+                        const [eLeft2Lat, eLeft2Lon] = offsetPoint(eLeftLat, eLeftLon, outwardLeft, wLeft);
+                        const sLeftXY  = projectPoint(sLeftLat, sLeftLon);
+                        const eLeftXY  = projectPoint(eLeftLat, eLeftLon);
+                        const sLeft2XY = projectPoint(sLeft2Lat, sLeft2Lon);
+                        const eLeft2XY = projectPoint(eLeft2Lat, eLeft2Lon);
+
+                        leftGroup.append("polygon")
+                              .attr("points", [ sLeftXY, eLeftXY, eLeft2XY, sLeft2XY ]
+                                                .map(pt => pt.join(",")).join(" "))
+                              .style("fill", lineColor)
+                              .style("fill-opacity", lineOpacity)
+                              .style("stroke-width", lineWidth);
+                        }
+                        if(layerSpec.alignment === "right"){
+                          // rightGroup.selectAll("*").remove();
+                          const rightBearing = (bearing + 270) % 360;
+                          const inset = 5;
+                          const [sRightLat, sRightLon] = offsetPoint(start.lat, start.lon, rightBearing, inset);
+                          const [eRightLat, eRightLon] = offsetPoint(end.lat, end.lon, rightBearing, inset);
+                          
+                          const bRightLine = bearingBetweenPoints(sRightLat, sRightLon, eRightLat, eRightLon);
+                          
+                          const outwardRight = (bRightLine + 270) % 360;
+                          
+                          const wRight = segment._rightWidth;
+                          
+                          const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
+                          const [eRight2Lat, eRight2Lon] = offsetPoint(eRightLat, eRightLon, outwardRight, wRight);
+                          
+                          const sRightXY  = projectPoint(sRightLat, sRightLon);
+                          const eRightXY  = projectPoint(eRightLat, eRightLon);
+                          const sRight2XY = projectPoint(sRight2Lat, sRight2Lon);
+                          const eRight2XY = projectPoint(eRight2Lat, eRight2Lon);
+                          
+
+                        // Draw right-side polygon with the same styling
+                        rightGroup.append("polygon")
+                                .attr("points", [ sRightXY, eRightXY, eRight2XY, sRight2XY ]
+                                                  .map(pt => pt.join(",")).join(" "))
+                                .style("fill", lineColor)
+                                .style("fill-opacity", lineOpacity)
+                                .style("stroke-width", lineWidth);
+
+                        }
+                      });
+                    }
+            
+                    mapInstanceRef.current!.on("moveend", updateRectangles);
+                    currentLayersRef.current.push(svgLayer);
+            
+                  }).catch(error => {
+                    console.error("Failed to load thematic JSON data:", error);
+                  });
+                } else {
+                  console.error("Data is missing edges or is invalid.");
+                }
+              }).catch(error => {
+                console.error("Failed to load physical JSON data:", error);
+              });
+            }
+            else if(layerSpec.orientation === 'perpendicular'){
+              let updatedGeoJsonData;
+              d3.json(layerSpec.physicalLayerPath).then(function (data) {
+                if (data && data.edges) {
+                  // 1) Subdivide edges if needed
+                  var subdividedEdges = [];
+                  data.edges.forEach(function (edge) {
+                    var start = edge[0]; // { lat, lon }
+                    var end   = edge[1]; // { lat, lon }
+                    var extras = edge.slice(2);
+
+                    var lat0 = start.lat, lon0 = start.lon,
+                        lat1 = end.lat,   lon1 = end.lon;
+                    var dLat = lat1 - lat0, dLon = lon1 - lon0;
+
+                    for (var i = 0; i < layerSpec.unitDivide; i++) {
+                      var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                      var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                      var segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                      var segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+
+                      var newStart = { lat: segStartLat, lon: segStartLon };
+                      var newEnd   = { lat: segEndLat,   lon: segEndLon };
+                      var newEdge  = [ newStart, newEnd ].concat(extras);
+                      subdividedEdges.push(newEdge);
+                    }
+                  });
+                  subdividedEdges = { edges: subdividedEdges };
+
+                  // 2) Aggregate with thematic data
+                  d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
+                    // Apply spatial aggregation
+                    if (layerSpec.spatialRelation === 'contains') {
+                      updatedGeoJsonData = aggregationContains(subdividedEdges, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                      console.log("data is:", updatedGeoJsonData);
+                    } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                      updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, layerSpec.AggregationType);
+                    } else if (layerSpec.spatialRelation === 'buffer') {
+                      updatedGeoJsonData = BufferDataAggregationSegment(subdividedEdges, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                    }
+                    updatedGeoJsonData = { edges: updatedGeoJsonData };
+                    console.log("data check for rect2", updatedGeoJsonData);
+
+                    // 3) Prepare style parameters
+                    let lineColor   = layerSpec.lineColor   || "red";
+                    let lineWidth   = layerSpec.lineStrokeWidth;
+                    let lineOpacity = layerSpec.strokeOpacity || 1;
+
+                    // 4) Create separate panes for left and right (if not existing)
+                    if (!mapInstanceRef.current.getPane("leftPane")) {
+                      mapInstanceRef.current.createPane("leftPane");
+                      mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
+                    }
+                    if (!mapInstanceRef.current.getPane("rightPane")) {
+                      mapInstanceRef.current.createPane("rightPane");
+                      mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
+                    }
+
+                    // Determine which pane to use based on alignment
+                    const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
+
+                    // Remove only layers in the current pane (unless mimicStreetPane)
+                    mapInstanceRef.current?.eachLayer((layer) => {
+                      if (!(layer instanceof L.TileLayer)) {
+                        if (!(layer.options && layer.options.pane === 'mimicStreetPane') &&
+                            (layer.options && layer.options.pane === paneName)) {
+                          mapInstanceRef.current.removeLayer(layer);
+                        }
+                      }
+                    });
+
+                    // Create an SVG layer in the chosen pane
+                    const svgLayer = L.svg({
+                      pane: paneName,
+                      className: "gMap-" + layerSpec.alignment
+                    }).addTo(mapInstanceRef.current);
+
+                    // Create an SVG group inside that pane
+                    const svgGroup = d3.select(mapInstanceRef.current.getPanes()[paneName])
+                                      .select("svg")
+                                      .append("g")
+                                      .attr("class", "leaflet-zoom-hide");
+
+                    // We'll separate lines for left & right
+                    const leftGroup  = svgGroup.append("g").attr("class", "hedge-left");
+                    const rightGroup = svgGroup.append("g").attr("class", "hedge-right");
+
+                    // --- Helper Functions ---
+                    function offsetPoint(lat, lon, bearing, distance) {
+                      const R = 6378137;
+                      const toRad = Math.PI / 180;
+                      const lat1 = lat * toRad, lon1 = lon * toRad, brng = bearing * toRad;
+                      const dR = distance / R;
+                      const lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) +
+                                            Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+                      const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                                                    Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+                      return [ lat2 / toRad, lon2 / toRad ];
+                    }
+                    function projectPoint(lat, lon) {
+                      const point = mapInstanceRef.current.latLngToLayerPoint(new L.LatLng(lat, lon));
+                      return [ point.x, point.y ];
+                    }
+                    function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+                      const toRad = Math.PI / 180;
+                      const phi1 = lat1 * toRad, phi2 = lat2 * toRad;
+                      const dLon = (lon2 - lon1) * toRad;
+                      const y = Math.sin(dLon) * Math.cos(phi2);
+                      const x = Math.cos(phi1)*Math.sin(phi2) -
+                                Math.sin(phi1)*Math.cos(phi2)*Math.cos(dLon);
+                      let brng = Math.atan2(y, x) * (180 / Math.PI);
+                      return (brng + 360) % 360;
+                    }
+                    function normalizeSegment(segment) {
+                      const start = segment[0], end = segment[1];
+                      let bearing = segment[2].Bearing;
+                      bearing = ((bearing % 360) + 360) % 360;
+                      if (bearing >= 180) {
+                        const temp = { lat: start.lat, lon: start.lon };
+                        start.lat = end.lat;   start.lon = end.lon;
+                        end.lat   = temp.lat;  end.lon   = temp.lon;
+                        bearing  -= 180;
+                      }
+                      segment[2].Bearing = bearing;
+                    }
+                    // --- End Helper Functions ---
+
+                    // 5) For each edge, assign random left/right widths or use your attribute logic
+                    updatedGeoJsonData.edges.forEach(function(segment) {
+                      normalizeSegment(segment);
+                      segment._leftWidth  = Math.random() * 20 + 10; // 10..30
+                      segment._rightWidth = Math.random() * 20 + 10;
+                    });
+
+                    // 6) Draw “hedgehog” lines from the midpoint
+                    updatedGeoJsonData.edges.forEach(function(segment) {
+                      // --- Dynamic styling for color/width/opacity ---
+                      // (A) lineColor
+                      const attrIndexColor = segment.findIndex((e) => e.hasOwnProperty(lineColor));
+                      if (attrIndexColor !== -1) {
+                        const attributeValues = updatedGeoJsonData.edges
+                          .flatMap((e) => e.filter((entry) => entry.hasOwnProperty(lineColor))
+                                          .map((entry) => entry[lineColor]))
+                          .filter((v) => v !== undefined);
+                        const minValue = d3.min(attributeValues);
+                        const maxValue = d3.max(attributeValues);
+                        const attributeValue = segment[attrIndexColor][lineColor];
+                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                          const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          lineColor = colorScale(attributeValue);
+                        }
+                      }
+                      // (B) lineWidth
+                      if (typeof lineWidth === "string") {
+                        const attrIndexWidth = segment.findIndex((e) => e.hasOwnProperty(lineWidth));
+                        if (attrIndexWidth !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e) => e.filter((entry) => entry.hasOwnProperty(lineWidth))
+                                            .map((entry) => entry[lineWidth]))
+                            .filter((v) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = segment[attrIndexWidth][lineWidth];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                            lineWidth = lineWidthScale(attributeValue);
+                          }
+                        } else {
+                          lineWidth = 5;
+                        }
+                      } else if (typeof lineWidth === "number") {
+                        lineWidth = layerSpec.lineStrokeWidth;
+                      } else {
+                        lineWidth = 5;
+                      }
+                      // (C) lineOpacity
+                      if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                        lineOpacity = lineOpacity;
+                      } else if (typeof lineOpacity === "string") {
+                        const opacityIndex = segment.findIndex((e) => e.hasOwnProperty(lineOpacity));
+                        if (opacityIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e) => e.filter((entry) => entry.hasOwnProperty(lineOpacity))
+                                            .map((entry) => entry[lineOpacity]))
+                            .filter((v) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = segment[opacityIndex][lineOpacity];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                            lineOpacity = opacityScale(attributeValue);
+                          }
+                        }
+                      }
+
+                      // 7) Geometry: Midpoint + offset
+                      const start = segment[0];
+                      const end   = segment[1];
+                      const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+
+                      // 7A) Compute midpoint
+                      const midLat = (start.lat + end.lat) / 2;
+                      const midLon = (start.lon + end.lon) / 2;
+
+                      // 7B) For alignment=left or right, offset the midpoint & draw a single outward line
+                      if (layerSpec.alignment === "left") {
+                        // Offset the midpoint by (bearing+270) => left side, 5m
+                        const offsetBearing = (bearing + 270) % 360;
+                        const [mLeftLat, mLeftLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
+
+                        // Then draw outward line using same offsetBearing, length = segment._leftWidth
+                        const lineLength = segment._leftWidth;
+                        const [mLeft2Lat, mLeft2Lon] = offsetPoint(mLeftLat, mLeftLon, offsetBearing, lineLength);
+
+                        // Convert to screen coords & draw <line>
+                        const p1 = projectPoint(mLeftLat,  mLeftLon);
+                        const p2 = projectPoint(mLeft2Lat, mLeft2Lon);
+
+                        leftGroup.append("line")
+                          .attr("x1", p1[0]).attr("y1", p1[1])
+                          .attr("x2", p2[0]).attr("y2", p2[1])
+                          .style("stroke", lineColor)
+                          .style("stroke-opacity", lineOpacity)
+                          .style("stroke-width", lineWidth)
+                          .style("stroke-linecap", "round");
+
+                      } else if (layerSpec.alignment === "right") {
+                        // Offset the midpoint by (bearing+90) => right side, 5m
+                        const offsetBearing = (bearing + 90) % 360;
+                        const [mRightLat, mRightLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
+
+                        // Then draw outward line using same offsetBearing, length = segment._rightWidth
+                        const lineLength = segment._rightWidth;
+                        const [mRight2Lat, mRight2Lon] = offsetPoint(mRightLat, mRightLon, offsetBearing, lineLength);
+
+                        const p1 = projectPoint(mRightLat,  mRightLon);
+                        const p2 = projectPoint(mRight2Lat, mRight2Lon);
+
+                        rightGroup.append("line")
+                          .attr("x1", p1[0]).attr("y1", p1[1])
+                          .attr("x2", p2[0]).attr("y2", p2[1])
+                          .style("stroke", lineColor)
+                          .style("stroke-opacity", lineOpacity)
+                          .style("stroke-width", lineWidth)
+                          .style("stroke-linecap", "round");
+                      }
+                    });
+
+                    // 8) Update on map movements
+                    function updateRectangles() {
+                      // Clear lines from the relevant group
+                      if (layerSpec.alignment === "left") {
+                        leftGroup.selectAll("*").remove();
+                      }
+                      if (layerSpec.alignment === "right") {
+                        rightGroup.selectAll("*").remove();
+                      }
+
+                      // Redraw lines
+                      updatedGeoJsonData.edges.forEach(function(segment) {
+                        normalizeSegment(segment);
+                        const start = segment[0], end = segment[1];
+                        const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+                        const midLat = (start.lat + end.lat) / 2;
+                        const midLon = (start.lon + end.lon) / 2;
+
+                        if (layerSpec.alignment === "left") {
+                          const offsetBearing = (bearing + 270) % 360;
+                          const [mLeftLat, mLeftLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
+                          const lineLength = segment._leftWidth;
+                          const [mLeft2Lat, mLeft2Lon] = offsetPoint(mLeftLat, mLeftLon, offsetBearing, lineLength);
+                          const p1 = projectPoint(mLeftLat,  mLeftLon);
+                          const p2 = projectPoint(mLeft2Lat, mLeft2Lon);
+
+                          leftGroup.append("line")
+                            .attr("x1", p1[0]).attr("y1", p1[1])
+                            .attr("x2", p2[0]).attr("y2", p2[1])
+                            .style("stroke", lineColor)
+                            .style("stroke-opacity", lineOpacity)
+                            .style("stroke-width", lineWidth)
+                            .style("stroke-linecap", "round");
+
+                        } else if (layerSpec.alignment === "right") {
+                          const offsetBearing = (bearing + 90) % 360;
+                          const [mRightLat, mRightLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
+                          const lineLength = segment._rightWidth;
+                          const [mRight2Lat, mRight2Lon] = offsetPoint(mRightLat, mRightLon, offsetBearing, lineLength);
+                          const p1 = projectPoint(mRightLat,  mRightLon);
+                          const p2 = projectPoint(mRight2Lat, mRight2Lon);
+
+                          rightGroup.append("line")
+                            .attr("x1", p1[0]).attr("y1", p1[1])
+                            .attr("x2", p2[0]).attr("y2", p2[1])
+                            .style("stroke", lineColor)
+                            .style("stroke-opacity", lineOpacity)
+                            .style("stroke-width", lineWidth)
+                            .style("stroke-linecap", "round");
+                        }
+                      });
+                    }
+
+                    mapInstanceRef.current.on("moveend", updateRectangles);
+                    currentLayersRef.current.push(svgLayer);
+
+                  }).catch(error => {
+                    console.error("Failed to load thematic JSON data:", error);
+                  });
+                } else {
+                  console.error("Data is missing edges or is invalid.");
+                }
+              }).catch(error => {
+                console.error("Failed to load physical JSON data:", error);
+              });
+              
+
+            }
           }
 
 
