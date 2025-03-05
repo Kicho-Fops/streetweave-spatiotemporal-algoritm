@@ -1490,8 +1490,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   // 1) Subdivide edges if needed
                   var subdividedEdges = [];
                   data.edges.forEach(function (edge) {
-                    var start = edge[0]; // { lat, lon }
-                    var end   = edge[1]; // { lat, lon }
+                    var start = edge[0];
+                    var end   = edge[1];
                     var extras = edge.slice(2);
 
                     var lat0 = start.lat, lon0 = start.lon,
@@ -1608,27 +1608,58 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }
                       segment[2].Bearing = bearing;
                     }
-                    // --- End Helper Functions ---
 
-                    // 5) For each edge, assign random left/right widths or use your attribute logic
+                    // Function to get "height" for each line from layerSpec.height
+                    function getLineHeight(segment, updatedGeoJsonData) {
+                      let height = layerSpec.height;
+                      if (typeof height === "string") {
+                        // Interpret as an attribute name
+                        const attributeIndex = segment.findIndex((e) => e.hasOwnProperty(height));
+                        if (attributeIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((edg) =>
+                              edg.filter((entry) => entry.hasOwnProperty(height)).map((entry) => entry[height])
+                            )
+                            .filter((v) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          // console.log("min and max height val check:", minValue, maxValue)
+                          const attributeValue = segment[attributeIndex][height];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            // Map attribute values to [5..30], for example
+                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                            height = heightScale(attributeValue);
+                          } else {
+                            height = 5; // default if not found or invalid
+                          }
+                        } else {
+                          height = 5; // default if attribute not found
+                        }
+                      } else if (typeof height === "number") {
+                        // Use the numeric value directly
+                        height = layerSpec.height;
+                      } else {
+                        height = 5; // default
+                      }
+                      return height;
+                    }
+
+                    // 5) For each edge, set up data & draw lines
                     updatedGeoJsonData.edges.forEach(function(segment) {
+                      // 5A) Normalize bearing & compute lineColor/lineWidth/lineOpacity (as in your snippet)
                       normalizeSegment(segment);
-                      segment._leftWidth  = Math.random() * 20 + 10; // 10..30
-                      segment._rightWidth = Math.random() * 20 + 10;
-                    });
 
-                    // 6) Draw “hedgehog” lines from the midpoint
-                    updatedGeoJsonData.edges.forEach(function(segment) {
-                      // --- Dynamic styling for color/width/opacity ---
+                      // --- Dynamic styling for color/width/opacity (already shown above) ---
                       // (A) lineColor
                       const attrIndexColor = segment.findIndex((e) => e.hasOwnProperty(lineColor));
                       if (attrIndexColor !== -1) {
                         const attributeValues = updatedGeoJsonData.edges
-                          .flatMap((e) => e.filter((entry) => entry.hasOwnProperty(lineColor))
-                                          .map((entry) => entry[lineColor]))
+                          .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineColor))
+                                              .map((entry) => entry[lineColor]))
                           .filter((v) => v !== undefined);
                         const minValue = d3.min(attributeValues);
                         const maxValue = d3.max(attributeValues);
+                        // console.log("min and max col val check:", minValue, maxValue)
                         const attributeValue = segment[attrIndexColor][lineColor];
                         if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
                           const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
@@ -1640,14 +1671,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const attrIndexWidth = segment.findIndex((e) => e.hasOwnProperty(lineWidth));
                         if (attrIndexWidth !== -1) {
                           const attributeValues = updatedGeoJsonData.edges
-                            .flatMap((e) => e.filter((entry) => entry.hasOwnProperty(lineWidth))
-                                            .map((entry) => entry[lineWidth]))
+                            .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineWidth))
+                                                .map((entry) => entry[lineWidth]))
                             .filter((v) => v !== undefined);
                           const minValue = d3.min(attributeValues);
                           const maxValue = d3.max(attributeValues);
+                          // console.log("min and max width val check:", minValue, maxValue)
                           const attributeValue = segment[attrIndexWidth][lineWidth];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 100]);
                             lineWidth = lineWidthScale(attributeValue);
                           }
                         } else {
@@ -1665,8 +1697,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const opacityIndex = segment.findIndex((e) => e.hasOwnProperty(lineOpacity));
                         if (opacityIndex !== -1) {
                           const attributeValues = updatedGeoJsonData.edges
-                            .flatMap((e) => e.filter((entry) => entry.hasOwnProperty(lineOpacity))
-                                            .map((entry) => entry[lineOpacity]))
+                            .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineOpacity))
+                                                .map((entry) => entry[lineOpacity]))
                             .filter((v) => v !== undefined);
                           const minValue = d3.min(attributeValues);
                           const maxValue = d3.max(attributeValues);
@@ -1678,29 +1710,32 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         }
                       }
 
-                      // 7) Geometry: Midpoint + offset
-                      const start = segment[0];
-                      const end   = segment[1];
-                      const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+                      // 5B) Get the line "height" from layerSpec.height attribute
+                      const hedgehogHeight = getLineHeight(segment, updatedGeoJsonData); // 5..30 or numeric
 
-                      // 7A) Compute midpoint
+                      // 5C) Compute midpoint & offset
+                      const start = segment[0], end = segment[1];
+                      const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
                       const midLat = (start.lat + end.lat) / 2;
                       const midLon = (start.lon + end.lon) / 2;
 
-                      // 7B) For alignment=left or right, offset the midpoint & draw a single outward line
+                      // 5D) Left or right alignment => offset & draw
                       if (layerSpec.alignment === "left") {
-                        // Offset the midpoint by (bearing+270) => left side, 5m
+                        // offset bearing = (bearing + 270)
                         const offsetBearing = (bearing + 270) % 360;
+                        // offset midpoint by 5m
                         const [mLeftLat, mLeftLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
 
-                        // Then draw outward line using same offsetBearing, length = segment._leftWidth
-                        const lineLength = segment._leftWidth;
-                        const [mLeft2Lat, mLeft2Lon] = offsetPoint(mLeftLat, mLeftLon, offsetBearing, lineLength);
+                        // outward line => same offsetBearing, length = hedgehogHeight
+                        const [mLeft2Lat, mLeft2Lon] = offsetPoint(mLeftLat, mLeftLon, offsetBearing, hedgehogHeight);
 
-                        // Convert to screen coords & draw <line>
+                        // convert to screen coords
                         const p1 = projectPoint(mLeftLat,  mLeftLon);
                         const p2 = projectPoint(mLeft2Lat, mLeft2Lon);
 
+                        console.log("checkinh LineWidth for each", lineWidth)
+
+                        // draw line
                         leftGroup.append("line")
                           .attr("x1", p1[0]).attr("y1", p1[1])
                           .attr("x2", p2[0]).attr("y2", p2[1])
@@ -1710,13 +1745,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           .style("stroke-linecap", "round");
 
                       } else if (layerSpec.alignment === "right") {
-                        // Offset the midpoint by (bearing+90) => right side, 5m
+                        // offset bearing = (bearing + 90)
                         const offsetBearing = (bearing + 90) % 360;
+                        // offset midpoint by 5m
                         const [mRightLat, mRightLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
 
-                        // Then draw outward line using same offsetBearing, length = segment._rightWidth
-                        const lineLength = segment._rightWidth;
-                        const [mRight2Lat, mRight2Lon] = offsetPoint(mRightLat, mRightLon, offsetBearing, lineLength);
+                        // outward line => same offsetBearing, length = hedgehogHeight
+                        const [mRight2Lat, mRight2Lon] = offsetPoint(mRightLat, mRightLon, offsetBearing, hedgehogHeight);
 
                         const p1 = projectPoint(mRightLat,  mRightLon);
                         const p2 = projectPoint(mRight2Lat, mRight2Lon);
@@ -1731,7 +1766,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }
                     });
 
-                    // 8) Update on map movements
+                    // 6) Update on map movements
                     function updateRectangles() {
                       // Clear lines from the relevant group
                       if (layerSpec.alignment === "left") {
@@ -1744,6 +1779,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       // Redraw lines
                       updatedGeoJsonData.edges.forEach(function(segment) {
                         normalizeSegment(segment);
+                        const hedgehogHeight = getLineHeight(segment, updatedGeoJsonData);
+
                         const start = segment[0], end = segment[1];
                         const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
                         const midLat = (start.lat + end.lat) / 2;
@@ -1752,8 +1789,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         if (layerSpec.alignment === "left") {
                           const offsetBearing = (bearing + 270) % 360;
                           const [mLeftLat, mLeftLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
-                          const lineLength = segment._leftWidth;
-                          const [mLeft2Lat, mLeft2Lon] = offsetPoint(mLeftLat, mLeftLon, offsetBearing, lineLength);
+                          const [mLeft2Lat, mLeft2Lon] = offsetPoint(mLeftLat, mLeftLon, offsetBearing, hedgehogHeight);
+
                           const p1 = projectPoint(mLeftLat,  mLeftLon);
                           const p2 = projectPoint(mLeft2Lat, mLeft2Lon);
 
@@ -1768,8 +1805,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         } else if (layerSpec.alignment === "right") {
                           const offsetBearing = (bearing + 90) % 360;
                           const [mRightLat, mRightLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
-                          const lineLength = segment._rightWidth;
-                          const [mRight2Lat, mRight2Lon] = offsetPoint(mRightLat, mRightLon, offsetBearing, lineLength);
+                          const [mRight2Lat, mRight2Lon] = offsetPoint(mRightLat, mRightLon, offsetBearing, hedgehogHeight);
+
                           const p1 = projectPoint(mRightLat,  mRightLon);
                           const p2 = projectPoint(mRight2Lat, mRight2Lon);
 
