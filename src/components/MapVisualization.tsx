@@ -1081,6 +1081,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         
                     // Subdivide this edge into `unitDivide` segments
                     for (var i = 0; i < layerSpec.unitDivide; i++) {
+
+                      // Skip the first two (i < 2) and last two (i >= layerSpec.unitDivide - 2)
+                      if (i < 2 || i >= layerSpec.unitDivide - 2) {
+                        continue; // Do not push these subdivided segments
+                      }
                       // Calculate the start coordinate of the new segment
                       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
                       var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
@@ -1126,9 +1131,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                     console.log("data check for rect2", updatedGeoJsonData)
 
-                    let lineColor = layerSpec.lineColor || "red";
-                    let lineWidth = layerSpec.lineStrokeWidth;
-                    let lineOpacity = layerSpec.strokeOpacity || 1;
+            
             
                     // Create separate panes for left and right if not already created.
                     if (!mapInstanceRef.current.getPane("leftPane")) {
@@ -1234,71 +1237,74 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             
                     // For each edge, assign random left/right widths (or you could use attribute values)
                     updatedGeoJsonData.edges.forEach(function(segment) {
+                      segment[2].Bearing = bearingBetweenPoints(segment[0].lat, segment[0].lon,
+                        segment[1].lat, segment[1].lon);
                       normalizeSegment(segment);
                       segment._leftWidth = Math.random() * 20 + 10;  // width between 10 and 30 meters
                       segment._rightWidth = Math.random() * 20 + 10;
                     });
-                    
-            
-                    // Draw rectangles (4-corner polygons) for each edge
-                    updatedGeoJsonData.edges.forEach(function(segment) {
 
-                      // Set line color based on attribute value or specific color
-                      
-                      const attributeIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineColor));
-                      if (attributeIndex !== -1) {
+                    function getWidth(segment, updatedGeoJsonData){
+                      let lineWidth   = layerSpec.lineStrokeWidth;
+                      // (B) lineWidth
+                      if (typeof lineWidth === "string") {
+                        const attrIndexWidth = segment.findIndex((e) => e.hasOwnProperty(lineWidth));
+                        if (attrIndexWidth !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineWidth))
+                                                .map((entry) => entry[lineWidth]))
+                            .filter((v) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          // console.log("min and max width val check:", minValue, maxValue)
+                          const attributeValue = segment[attrIndexWidth][lineWidth];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
+                            lineWidth = lineWidthScale(attributeValue);
+                          }
+                        } else {
+                          lineWidth = 5;
+                        }
+                      } else if (typeof lineWidth === "number") {
+                        lineWidth = layerSpec.lineStrokeWidth;
+                      } else {
+                        lineWidth = 5;
+                      }
+                      return lineWidth
+                    }
+                    function getColor(segment, updatedGeoData){
+                      // (A) lineColor
+                      let lineColor   = layerSpec.lineColor   || "red";
+                      const attrIndexColor = segment.findIndex((e) => e.hasOwnProperty(lineColor));
+                      if (attrIndexColor !== -1) {
                         const attributeValues = updatedGeoJsonData.edges
-                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor)).map((entry: any) => entry[lineColor]))
-                          .filter((v: any) => v !== undefined);
+                          .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineColor))
+                                              .map((entry) => entry[lineColor]))
+                          .filter((v) => v !== undefined);
                         const minValue = d3.min(attributeValues);
                         const maxValue = d3.max(attributeValues);
-                        const attributeValue = segment[attributeIndex][lineColor];
+                        // console.log("min and max col val check:", minValue, maxValue)
+                        const attributeValue = segment[attrIndexColor][lineColor];
                         if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                          // const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
                           const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
                           lineColor = colorScale(attributeValue);
                         }
                       }
+                      return lineColor
+                    }
 
-                      // Set line width based on attribute value or specific width
-                      if (typeof lineWidth === "string") {
-                        // Check if lineWidth is an attribute name in the data
-                        const attributeIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineWidth));
-                        if (attributeIndex !== -1) {
-                          const attributeValues = updatedGeoJsonData.edges
-                            .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineWidth)).map((entry: any) => entry[lineWidth]))
-                            .filter((v: any) => v !== undefined);
-                          const minValue = d3.min(attributeValues);
-                          const maxValue = d3.max(attributeValues);
-                          const attributeValue = segment[attributeIndex][lineWidth];
-                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                            // Map attribute values between 2 and 15
-                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
-                            lineWidth = lineWidthScale(attributeValue)
-                          }
-                        } else {
-                          lineWidth = 5; // Default value if attribute not found
-                        }
-                      } else if (typeof lineWidth === "number") {
-                        // Use user-defined value if provided and it's a number
-                        lineWidth = layerSpec.lineStrokeWidth;
-                      } else {
-                        // Default to 5 if undefined
-                        lineWidth = 5;
-                      }
-
-                      // Set opacity based on attribute value or specific value
-                      // console.log('lineOpacity check:', lineOpacity)
+                    function getOpacity(segment, updatedGeoData){
+                      let lineOpacity = layerSpec.strokeOpacity || 1;
+                      // (C) lineOpacity
                       if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
-                        // Directly use the specified opacity value if it's between 0 and 1
                         lineOpacity = lineOpacity;
                       } else if (typeof lineOpacity === "string") {
-                        // Treat lineOpacity as an attribute name and map its values from 0 to 1
-                        const opacityIndex = segment.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                        const opacityIndex = segment.findIndex((e) => e.hasOwnProperty(lineOpacity));
                         if (opacityIndex !== -1) {
                           const attributeValues = updatedGeoJsonData.edges
-                            .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
-                            .filter((v: any) => v !== undefined);
+                            .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineOpacity))
+                                                .map((entry) => entry[lineOpacity]))
+                            .filter((v) => v !== undefined);
                           const minValue = d3.min(attributeValues);
                           const maxValue = d3.max(attributeValues);
                           const attributeValue = segment[opacityIndex][lineOpacity];
@@ -1308,6 +1314,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           }
                         }
                       }
+                      return lineOpacity
+                    }
+                    
+            
+                    // Draw rectangles (4-corner polygons) for each edge
+                    updatedGeoJsonData.edges.forEach(function(segment) {
+
+                      
+                      const lineWidth = getWidth(segment, updatedGeoJsonData)
+                      const lineColor = getColor(segment, updatedGeoJsonData)
+                      const lineOpacity = getOpacity(segment, updatedGeoJsonData)
 
 
 
@@ -1413,6 +1430,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const start = segment[0];
                         const end = segment[1];
                         const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+                        const lineWidth = getWidth(segment, updatedGeoJsonData)
+                        const lineColor = getColor(segment, updatedGeoJsonData)
+                        const lineOpacity = getOpacity(segment, updatedGeoJsonData)
 
                         if(layerSpec.alignment === "left"){
                           const leftBearing = (bearing + 90) % 360;
@@ -1499,6 +1519,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     var dLat = lat1 - lat0, dLon = lon1 - lon0;
 
                     for (var i = 0; i < layerSpec.unitDivide; i++) {
+                      // Skip the first two (i < 2) and last two (i >= layerSpec.unitDivide - 2)
+                      if (i < 2 || i >= layerSpec.unitDivide - 2) {
+                        continue; // Do not push these subdivided segments
+                      }
                       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
                       var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
                       var segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
@@ -1527,9 +1551,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     console.log("data check for rect2", updatedGeoJsonData);
 
                     // 3) Prepare style parameters
-                    let lineColor   = layerSpec.lineColor   || "red";
-                    let lineWidth   = layerSpec.lineStrokeWidth;
-                    let lineOpacity = layerSpec.strokeOpacity || 1;
+                   
 
                     // 4) Create separate panes for left and right (if not existing)
                     if (!mapInstanceRef.current.getPane("leftPane")) {
@@ -1644,13 +1666,37 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       return height;
                     }
 
-                    // 5) For each edge, set up data & draw lines
-                    updatedGeoJsonData.edges.forEach(function(segment) {
-                      // 5A) Normalize bearing & compute lineColor/lineWidth/lineOpacity (as in your snippet)
-                      normalizeSegment(segment);
-
-                      // --- Dynamic styling for color/width/opacity (already shown above) ---
+                    function getWidth(segment, updatedGeoJsonData){
+                      let lineWidth   = layerSpec.lineStrokeWidth;
+                      // (B) lineWidth
+                      if (typeof lineWidth === "string") {
+                        const attrIndexWidth = segment.findIndex((e) => e.hasOwnProperty(lineWidth));
+                        if (attrIndexWidth !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineWidth))
+                                                .map((entry) => entry[lineWidth]))
+                            .filter((v) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          // console.log("min and max width val check:", minValue, maxValue)
+                          const attributeValue = segment[attrIndexWidth][lineWidth];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
+                            lineWidth = lineWidthScale(attributeValue);
+                          }
+                        } else {
+                          lineWidth = 5;
+                        }
+                      } else if (typeof lineWidth === "number") {
+                        lineWidth = layerSpec.lineStrokeWidth;
+                      } else {
+                        lineWidth = 5;
+                      }
+                      return lineWidth
+                    }
+                    function getColor(segment, updatedGeoData){
                       // (A) lineColor
+                      let lineColor   = layerSpec.lineColor   || "red";
                       const attrIndexColor = segment.findIndex((e) => e.hasOwnProperty(lineColor));
                       if (attrIndexColor !== -1) {
                         const attributeValues = updatedGeoJsonData.edges
@@ -1666,30 +1712,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           lineColor = colorScale(attributeValue);
                         }
                       }
-                      // (B) lineWidth
-                      if (typeof lineWidth === "string") {
-                        const attrIndexWidth = segment.findIndex((e) => e.hasOwnProperty(lineWidth));
-                        if (attrIndexWidth !== -1) {
-                          const attributeValues = updatedGeoJsonData.edges
-                            .flatMap((edg) => edg.filter((entry) => entry.hasOwnProperty(lineWidth))
-                                                .map((entry) => entry[lineWidth]))
-                            .filter((v) => v !== undefined);
-                          const minValue = d3.min(attributeValues);
-                          const maxValue = d3.max(attributeValues);
-                          // console.log("min and max width val check:", minValue, maxValue)
-                          const attributeValue = segment[attrIndexWidth][lineWidth];
-                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 100]);
-                            lineWidth = lineWidthScale(attributeValue);
-                          }
-                        } else {
-                          lineWidth = 5;
-                        }
-                      } else if (typeof lineWidth === "number") {
-                        lineWidth = layerSpec.lineStrokeWidth;
-                      } else {
-                        lineWidth = 5;
-                      }
+                      return lineColor
+                    }
+
+                    function getOpacity(segment, updatedGeoData){
+                      let lineOpacity = layerSpec.strokeOpacity || 1;
                       // (C) lineOpacity
                       if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
                         lineOpacity = lineOpacity;
@@ -1709,9 +1736,24 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           }
                         }
                       }
+                      return lineOpacity
+                    }
+
+                    // 5) For each edge, set up data & draw lines
+                    updatedGeoJsonData.edges.forEach(function(segment) {
+                      // 5A) Normalize bearing & compute lineColor/lineWidth/lineOpacity (as in your snippet)
+                      normalizeSegment(segment);
+
+                      // --- Dynamic styling for color/width/opacity (already shown above) ---
+                    
+                      
+                    
 
                       // 5B) Get the line "height" from layerSpec.height attribute
                       const hedgehogHeight = getLineHeight(segment, updatedGeoJsonData); // 5..30 or numeric
+                      const lineWidth = getWidth(segment, updatedGeoJsonData)
+                      const lineColor = getColor(segment, updatedGeoJsonData)
+                      const lineOpacity = getOpacity(segment, updatedGeoJsonData)
 
                       // 5C) Compute midpoint & offset
                       const start = segment[0], end = segment[1];
@@ -1780,6 +1822,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       updatedGeoJsonData.edges.forEach(function(segment) {
                         normalizeSegment(segment);
                         const hedgehogHeight = getLineHeight(segment, updatedGeoJsonData);
+                        const lineWidth = getWidth(segment, updatedGeoJsonData)
+                        const lineColor = getColor(segment, updatedGeoJsonData)
+                        const lineOpacity = getOpacity(segment, updatedGeoJsonData)
 
                         const start = segment[0], end = segment[1];
                         const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
