@@ -38,6 +38,10 @@ interface ParsedSpec {
   operation?: string;
   AggregationType?: string;
   bufferValue?: number;
+  roadDirection?: string;
+  address?: string;
+  roadRadius?: number; 
+  radiusUnit?: string; 
 }
 
 const App: React.FC = () => {
@@ -299,6 +303,38 @@ const App: React.FC = () => {
       if (alignmentMatch) {
         alignment = alignmentMatch[1];
       }
+
+      let roadDirection = undefined;
+      let address = undefined;
+      let roadRadius = undefined;
+      let radiusUnit = undefined
+
+      // Extract the content inside .query( ... )
+      const queryMatch = spec.match(/\.query\(([^)]+)\)/);
+      if (queryMatch) {
+        const queryContent = queryMatch[1];
+
+        // Capture "road direction" if it exists
+        const rdMatch = queryContent.match(/road direction\s*=\s*([^,]+)/);
+        if (rdMatch) {
+          roadDirection = rdMatch[1].trim();
+        }
+
+        // Capture "address" if it exists (value in double quotes)
+        const addressMatch = queryContent.match(/address\s*=\s*"([^"]+)"/);
+        if (addressMatch) {
+          address = addressMatch[1].trim();
+        }
+
+        // Capture "radius" if it exists, with numeric and unit parts
+        const radiusMatch = queryContent.match(/radius\s*=\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)/);
+        if (radiusMatch) {
+          roadRadius = radiusMatch[1].trim();
+          radiusUnit = radiusMatch[2].trim();
+        }
+      }
+
+      console.log(roadDirection, address, roadRadius, radiusUnit);
     
 
       // Return the parsed specification for this layer
@@ -334,7 +370,11 @@ const App: React.FC = () => {
         spatialRelation,
         operation,
         AggregationType,
-        bufferValue
+        bufferValue,
+        roadDirection,
+        address,
+        roadRadius,
+        radiusUnit
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);

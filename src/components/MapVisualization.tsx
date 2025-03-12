@@ -42,6 +42,10 @@ interface ParsedSpec {
   operation?: string;
   AggregationType?: string;
   bufferValue?: number;
+  roadDirection?: string;
+  address?: string;
+  roadRadius?: number; 
+  radiusUnit?: string;
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -89,7 +93,14 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
   
       // Initialize aggregation results for each attribute
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
+      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
       let aggregatedValues = {};
   
       attributes.forEach((attr) => {
@@ -138,7 +149,14 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       // Perform aggregation for each environmental attribute
       let aggregatedValues = [];
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
+      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
 
       attributes.forEach(attr => {
         const values = pointsInBoundingBox.map(point => point[attr]);
@@ -222,7 +240,14 @@ const findClosestPoints = (distances, thematicData, numberOfPoints = 100) => {
 // Function to aggregate data based on type for area
 const aggregateData = (points, aggregationType) => {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
+  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -274,7 +299,14 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
 // Function to aggregate environmental data based on given points and aggregation type for segment line
 function aggregateAttributes(points, aggregationType) {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
+  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
   let aggregatedValues = [];
 
   attributes.forEach(attr => {
@@ -367,7 +399,14 @@ function filterPointsWithinBufferSegment(buffer, environmentalData) {
 // Function to aggregate values based on the selected aggregation type
 const aggregateValues = (points, aggregationType) => {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore"]
+  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -474,6 +513,13 @@ function BufferDataAggregationSegment(edgesData, environmentalData, bufferDistan
 
 /////////
 
+// Helper: Convert a bearing (in degrees) to one of 8 cardinal directions.
+function getCardinalDirection(bearing: number): string {
+  const directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+  const index = Math.floor((bearing + 22.5) / 45) % 8;
+  return directions[index];
+}
+
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }> = ({ parsedSpec, applyFlag }) => {
 
   // console.log('applyFlag check', applyFlag)
@@ -486,7 +532,26 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
   // Store references to the current layers (for lines, fill, heatmap)
   const currentLayersRef = useRef<L.Layer[]>([]);
   // New state to control mimic street width
-  const [mimicWidth, setMimicWidth] = useState<number>(50);
+  const [mimicWidth, setMimicWidth] = useState<number>(5);
+  // New state for the geocoded address coordinates.
+  const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
+
+   // Geocode the address if provided (using Nominatim)
+   useEffect(() => {
+    const address = parsedSpec[0].address;
+    if (address) {
+      fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            setAddressCoords({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
+          }
+        })
+        .catch(error => console.error("Error geocoding address:", error));
+    } else {
+      setAddressCoords(null);
+    }
+  }, [parsedSpec[0].address]);
   
 
   // Initialize the map on the first render
@@ -533,7 +598,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         }
         // Only add the mimic layer if it hasn't been added yet.
         if (!mimicLayerRef.current) {
-          d3.json(`/edgesWithBearing3.json`)
+          d3.json(`/filtered_data.json`)
             .then((data: any) => {
               // Transform your data into a GeoJSON FeatureCollection
               const features = data.edges.map(edge => ({
@@ -571,16 +636,38 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       }
     }, []);
 
-    // Update mimic street width when the slider value changes.
-  useEffect(() => {
-    if (mimicLayerRef.current) {
-      mimicLayerRef.current.setStyle({
-        color: '#d3d3d6',
-        weight: mimicWidth,
-        opacity: 0.8
-      });
-    }
-  }, [mimicWidth]);
+      // Update mimic street width based on the slider value and filtering conditions.
+      useEffect(() => {
+        if (mimicLayerRef.current) {
+          mimicLayerRef.current.eachLayer((layer: any) => {
+            const defaultWeight = 50;
+            let shouldUpdate = true;
+            // If a roadDirection is provided, check the feature's cardinal direction.
+            if (parsedSpec[0].roadDirection) {
+              const featureBearing = layer.feature.properties.Bearing;
+              const featureDirection = getCardinalDirection(featureBearing);
+              if (featureDirection.toLowerCase() !== parsedSpec[0].roadDirection.toLowerCase()) {
+                shouldUpdate = false;
+              }
+            }
+            // If an address is provided (via geocoded addressCoords), check if the feature is within a 5km radius.
+            if (addressCoords) {
+              const addressPoint = turf.point([addressCoords.lon, addressCoords.lat]);
+              const lineFeature = turf.lineString(layer.feature.geometry.coordinates);
+              const distance = turf.pointToLineDistance(addressPoint, lineFeature, { units: parsedSpec[0].radiusUnit });
+              if (distance > parsedSpec[0].roadRadius) {
+                shouldUpdate = false;
+              }
+            }
+            // If neither condition is provided, or if all provided conditions are met, update the width.
+            layer.setStyle({
+              color: '#d3d3d6',
+              weight: shouldUpdate ? mimicWidth : defaultWeight,
+              opacity: 0.8
+            });
+          });
+        }
+      }, [mimicWidth, parsedSpec, addressCoords]);
 
   // Clear previous visualizations and render the new one
   useEffect(() => {
@@ -612,80 +699,133 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             let updatedGeoJsonData;
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
+                  var subdividedEdges = [];
+
+                  // Loop through each edge in the original array
+                  data.edges.forEach(function(edge) {
+                    // Get the start and end coordinates
+                    var start = edge[0]; // [lat, lon]
+                    var end = edge[1];   // [lat, lon]
+                    // Get the extra values (indices 2 to 12)
+                    var extras = edge.slice(2);
+
+                    // Destructure the coordinates
+                    var lat0 = start["lat"],
+                        lon0 = start["lon"],
+                        lat1 = end["lat"],
+                        lon1 = end["lon"];
+
+                    // Calculate the total difference between the start and end points
+                    var dLat = lat1 - lat0;
+                    var dLon = lon1 - lon0;
+
+                    // Subdivide this edge into `unitDivide` segments
+                    for (var i = 0; i < layerSpec.unitDivide; i++) {
+                      // Calculate the start coordinate of the new segment
+                      var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                      var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                      // console.log("calculation lat lon", segStartLat, segStartLon)
+
+                      // Calculate the end coordinate of the new segment
+                      var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                      var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+
+                      // Build new coordinate objects
+                      var newStart = { lat: segStartLat, lon: segStartLon };
+                      var newEnd = { lat: segEndLat, lon: segEndLon };
+
+
+                      // Create the new edge. The new edge will contain:
+                      //  - The new start coordinate
+                      //  - The new end coordinate
+                      //  - The same extra values from the original edge
+                      var newEdge = [
+                        newStart,newEnd
+                      ].concat(extras);
+
+                      subdividedEdges.push(newEdge);
+                    }
+                  });
+                  updatedGeoJsonData = {
+                    edges: subdividedEdges
+                  };
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
                   if(layerSpec.spatialRelation == 'contains'){
-                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                    updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                     console.log("data is:", updatedGeoJsonData)
                   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
-                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                    updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
                   }else if(layerSpec.spatialRelation == 'buffer'){
-                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                    updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                   }
 
-                  if (layerSpec.unitDivide == 1){
-                    updatedGeoJsonData = {
-                      edges: updatedGeoJsonData
-                    };
-                  }else{
-                    var subdividedEdges = [];
+                  // if (layerSpec.unitDivide == 1){
+                  //   updatedGeoJsonData = {
+                  //     edges: updatedGeoJsonData
+                  //   };
+                  // }else{
+                  //   var subdividedEdges = [];
 
-                    // Loop through each edge in the original array
-                    updatedGeoJsonData.forEach(function(edge) {
-                      // Get the start and end coordinates
-                      var start = edge[0]; // [lat, lon]
-                      var end = edge[1];   // [lat, lon]
-                      // Get the extra values (indices 2 to 12)
-                      var extras = edge.slice(2);
+                  //   // Loop through each edge in the original array
+                  //   updatedGeoJsonData.forEach(function(edge) {
+                  //     // Get the start and end coordinates
+                  //     var start = edge[0]; // [lat, lon]
+                  //     var end = edge[1];   // [lat, lon]
+                  //     // Get the extra values (indices 2 to 12)
+                  //     var extras = edge.slice(2);
 
-                      // Destructure the coordinates
-                      var lat0 = start["lat"],
-                          lon0 = start["lon"],
-                          lat1 = end["lat"],
-                          lon1 = end["lon"];
+                  //     // Destructure the coordinates
+                  //     var lat0 = start["lat"],
+                  //         lon0 = start["lon"],
+                  //         lat1 = end["lat"],
+                  //         lon1 = end["lon"];
 
-                      // Calculate the total difference between the start and end points
-                      var dLat = lat1 - lat0;
-                      var dLon = lon1 - lon0;
+                  //     // Calculate the total difference between the start and end points
+                  //     var dLat = lat1 - lat0;
+                  //     var dLon = lon1 - lon0;
 
-                      // Subdivide this edge into `unitDivide` segments
-                      for (var i = 0; i < layerSpec.unitDivide; i++) {
-                        // Calculate the start coordinate of the new segment
-                        var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
-                        var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
-                        // console.log("calculation lat lon", segStartLat, segStartLon)
+                  //     // Subdivide this edge into `unitDivide` segments
+                  //     for (var i = 0; i < layerSpec.unitDivide; i++) {
+                  //       // Calculate the start coordinate of the new segment
+                  //       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                  //       var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                  //       // console.log("calculation lat lon", segStartLat, segStartLon)
 
-                        // Calculate the end coordinate of the new segment
-                        var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
-                        var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+                  //       // Calculate the end coordinate of the new segment
+                  //       var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                  //       var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
 
-                        // Build new coordinate objects
-                        var newStart = { lat: segStartLat, lon: segStartLon };
-                        var newEnd = { lat: segEndLat, lon: segEndLon };
-
-
-                        // Create the new edge. The new edge will contain:
-                        //  - The new start coordinate
-                        //  - The new end coordinate
-                        //  - The same extra values from the original edge
-                        var newEdge = [
-                          newStart,newEnd
-                        ].concat(extras);
-
-                        subdividedEdges.push(newEdge);
-                      }
-                    });
-
-                      console.log("data2 is:", subdividedEdges)
+                  //       // Build new coordinate objects
+                  //       var newStart = { lat: segStartLat, lon: segStartLon };
+                  //       var newEnd = { lat: segEndLat, lon: segEndLon };
 
 
+                  //       // Create the new edge. The new edge will contain:
+                  //       //  - The new start coordinate
+                  //       //  - The new end coordinate
+                  //       //  - The same extra values from the original edge
+                  //       var newEdge = [
+                  //         newStart,newEnd
+                  //       ].concat(extras);
+
+                  //       subdividedEdges.push(newEdge);
+                  //     }
+                  //   });
+
+                  //     console.log("data2 is:", subdividedEdges)
 
 
-                    updatedGeoJsonData = {
-                      edges: subdividedEdges
-                    };
 
-                  }
-                  console.log("updatedGeoJsonData is", updatedGeoJsonData)
+
+                  //   updatedGeoJsonData = {
+                  //     edges: subdividedEdges
+                  //   };
+
+                  // }
+                  
+                  updatedGeoJsonData = {
+                        edges: updatedGeoJsonData
+                      };
 
 
                   mapInstanceRef.current?.eachLayer((layer) => {
@@ -1520,6 +1660,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                     for (var i = 0; i < layerSpec.unitDivide; i++) {
                       // Skip the first two (i < 2) and last two (i >= layerSpec.unitDivide - 2)
+                      let Gap;
+
+                      if(layerSpec.unitDivide<8){
+                        Gap = 2
+                      }else if(layerSpec.unitDivide>8 && layerSpec.unitDivide<15){
+                        Gap = 4
+                      }else{
+                        Gap = 6
+                      }
                       if (i < 2 || i >= layerSpec.unitDivide - 2) {
                         continue; // Do not push these subdivided segments
                       }
@@ -1741,6 +1890,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                     // 5) For each edge, set up data & draw lines
                     updatedGeoJsonData.edges.forEach(function(segment) {
+                      segment[2].Bearing = bearingBetweenPoints(segment[0].lat, segment[0].lon,
+                        segment[1].lat, segment[1].lon);
                       // 5A) Normalize bearing & compute lineColor/lineWidth/lineOpacity (as in your snippet)
                       normalizeSegment(segment);
 
@@ -1882,18 +2033,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
             }
           }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2099,45 +2238,69 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
+                var subdividedEdges = [];
+
+                  // Loop through each edge in the original array
+                  data.edges.forEach(function(edge) {
+                    // Get the start and end coordinates
+                    var start = edge[0]; // [lat, lon]
+                    var end = edge[1];   // [lat, lon]
+                    // Get the extra values (indices 2 to 12)
+                    var extras = edge.slice(2);
+
+                    // Destructure the coordinates
+                    var lat0 = start["lat"],
+                        lon0 = start["lon"],
+                        lat1 = end["lat"],
+                        lon1 = end["lon"];
+
+                    // Calculate the total difference between the start and end points
+                    var dLat = lat1 - lat0;
+                    var dLon = lon1 - lon0;
+
+                    // Subdivide this edge into `unitDivide` segments
+                    for (var i = 0; i < layerSpec.unitDivide; i++) {
+                      // Calculate the start coordinate of the new segment
+                      var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                      var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                      // console.log("calculation lat lon", segStartLat, segStartLon)
+
+                      // Calculate the end coordinate of the new segment
+                      var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                      var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+
+                      // Build new coordinate objects
+                      var newStart = { lat: segStartLat, lon: segStartLon };
+                      var newEnd = { lat: segEndLat, lon: segEndLon };
+
+
+                      // Create the new edge. The new edge will contain:
+                      //  - The new start coordinate
+                      //  - The new end coordinate
+                      //  - The same extra values from the original edge
+                      var newEdge = [
+                        newStart,newEnd
+                      ].concat(extras);
+
+                      subdividedEdges.push(newEdge);
+                    }
+                  });
+                  updatedGeoJsonData = {
+                    edges: subdividedEdges
+                  };
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData: any) {
                   // 1) Spatial Aggregation (unchanged)
                   if (layerSpec.spatialRelation === 'contains') {
-                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                    updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                   } else if (layerSpec.spatialRelation === 'nearest neighbor') {
-                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                    updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
                   } else if (layerSpec.spatialRelation === 'buffer') {
-                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                    updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                   }
-          
-                  // 2) Subdivide if needed
-                  if (layerSpec.unitDivide === 1) {
-                    updatedGeoJsonData = { edges: updatedGeoJsonData };
-                  } else {
-                    const subdividedEdges: any[] = [];
-                    updatedGeoJsonData.forEach((edge: any) => {
-                      const start = edge[0];
-                      const end   = edge[1];
-                      const extras= edge.slice(2);
-          
-                      const lat0 = start.lat, lon0 = start.lon;
-                      const lat1 = end.lat,   lon1 = end.lon;
-                      const dLat = lat1 - lat0;
-                      const dLon = lon1 - lon0;
-          
-                      for (let i = 0; i < layerSpec.unitDivide; i++) {
-                        const segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
-                        const segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
-                        const segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
-                        const segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
-          
-                        const newStart = { lat: segStartLat, lon: segStartLon };
-                        const newEnd   = { lat: segEndLat,   lon: segEndLon };
-                        const newEdge  = [newStart, newEnd].concat(extras);
-                        subdividedEdges.push(newEdge);
-                      }
-                    });
-                    updatedGeoJsonData = { edges: subdividedEdges };
-                  }
+
+                  updatedGeoJsonData = {
+                    edges: updatedGeoJsonData
+                  };
           
                   // 3) Remove old layers
                   mapInstanceRef.current?.eachLayer((layer) => {
@@ -2352,46 +2515,69 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             // 1) Load physical-layer JSON
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
+                var subdividedEdges = [];
+
+                  // Loop through each edge in the original array
+                  data.edges.forEach(function(edge) {
+                    // Get the start and end coordinates
+                    var start = edge[0]; // [lat, lon]
+                    var end = edge[1];   // [lat, lon]
+                    // Get the extra values (indices 2 to 12)
+                    var extras = edge.slice(2);
+
+                    // Destructure the coordinates
+                    var lat0 = start["lat"],
+                        lon0 = start["lon"],
+                        lat1 = end["lat"],
+                        lon1 = end["lon"];
+
+                    // Calculate the total difference between the start and end points
+                    var dLat = lat1 - lat0;
+                    var dLon = lon1 - lon0;
+
+                    // Subdivide this edge into `unitDivide` segments
+                    for (var i = 0; i < layerSpec.unitDivide; i++) {
+                      // Calculate the start coordinate of the new segment
+                      var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                      var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                      // console.log("calculation lat lon", segStartLat, segStartLon)
+
+                      // Calculate the end coordinate of the new segment
+                      var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                      var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+
+                      // Build new coordinate objects
+                      var newStart = { lat: segStartLat, lon: segStartLon };
+                      var newEnd = { lat: segEndLat, lon: segEndLon };
+
+
+                      // Create the new edge. The new edge will contain:
+                      //  - The new start coordinate
+                      //  - The new end coordinate
+                      //  - The same extra values from the original edge
+                      var newEdge = [
+                        newStart,newEnd
+                      ].concat(extras);
+
+                      subdividedEdges.push(newEdge);
+                    }
+                  });
+                  updatedGeoJsonData = {
+                    edges: subdividedEdges
+                  };
                 // 2) Load thematic data (if needed)
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData: any) {
                   // 3) Perform spatial aggregation
                   if (layerSpec.spatialRelation === 'contains') {
-                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                    updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                   } else if (layerSpec.spatialRelation === 'nearest neighbor') {
-                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                    updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
                   } else if (layerSpec.spatialRelation === 'buffer') {
-                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                    updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                   }
-          
-                  // 4) Subdivide edges if unitDivide > 1
-                  if (layerSpec.unitDivide === 1) {
+
                     updatedGeoJsonData = { edges: updatedGeoJsonData };
-                  } else {
-                    const subdividedEdges: any[] = [];
-                    updatedGeoJsonData.forEach((edge: any) => {
-                      const start = edge[0];
-                      const end   = edge[1];
-                      const extras= edge.slice(2);
-          
-                      const lat0 = start.lat, lon0 = start.lon;
-                      const lat1 = end.lat,   lon1 = end.lon;
-                      const dLat = lat1 - lat0;
-                      const dLon = lon1 - lon0;
-          
-                      for (let i = 0; i < layerSpec.unitDivide; i++) {
-                        const segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
-                        const segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
-                        const segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
-                        const segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
-          
-                        const newStart = { lat: segStartLat, lon: segStartLon };
-                        const newEnd   = { lat: segEndLat,   lon: segEndLon };
-                        const newEdge  = [newStart, newEnd].concat(extras);
-                        subdividedEdges.push(newEdge);
-                      }
-                    });
-                    updatedGeoJsonData = { edges: subdividedEdges };
-                  }
+                  
           
                   // 5) Remove old layers except tile or mimicStreetPane
                   mapInstanceRef.current?.eachLayer((layer) => {
@@ -2663,6 +2849,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           
                 // 3) Go through each edge, gather the node data
                 const edges = updatedGeoJsonData.edges;
+                console.log("edges:", edges)
                 // console.log("checking the data for edge", updatedGeoJsonData)
                 edges.forEach((edge: any) => {
                   // edge[0] = first node { lat, lon }
@@ -2711,13 +2898,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // 5c) Assign to chartSpec.data
                     chartSpec.data = {
                       values: [
-                        nodeData.NTAscoree,
-                        nodeData.MarketScor,
-                        nodeData.LibScore,
-                        nodeData.SchoolsSco,
-                        nodeData.MetraScore,
-                        nodeData.CTAScore,
-                        nodeData.PaceScore
+                        {"category": "Total Crimes", "value": nodeData.Total_Crimes},
+                        {"category": "Summer", "value": nodeData.Summer},
+                        {"category": "Winter", "value": nodeData.Winter},
+                        {"category": "Spring", "value": nodeData.Spring},
+                        // nodeData.Total_Crimes,
+                        // nodeData.Summer,
+                        // nodeData.Winter,
+                        // nodeData.Spring
+                        // nodeData.MetraScore,
+                        // nodeData.CTAScore,
+                        // nodeData.PaceScore
                         
                       ],
                     };
@@ -2726,8 +2917,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // 5d) Render the chart in a hidden container (#vis), then move the SVG
                     await vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false }).then((result) => {
                       const vegaSVG = result.view._el.querySelector('svg');
-                      const svgWidth = 200;
-                      const svgHeight = 200;
+                      const svgWidth = 120;
+                      const svgHeight = 120;
           
                       // Function to position the chart on the map
                       const updateSvgPosition = () => {
@@ -2746,7 +2937,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                             .node()
                             .appendChild(vegaSVG.cloneNode(true));
                         } else {
-                          temp.attr('transform', `translate(${point.x - svgWidth / 3}, ${point.y - svgHeight / 3})`);
+                          temp.attr('transform', `translate(${point.x - svgWidth / 1.5}, ${point.y - svgHeight / 1.5})`);
                         }
                       };
           
