@@ -532,7 +532,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
   // Store references to the current layers (for lines, fill, heatmap)
   const currentLayersRef = useRef<L.Layer[]>([]);
   // New state to control mimic street width
-  const [mimicWidth, setMimicWidth] = useState<number>(5);
+  const [mimicWidth, setMimicWidth] = useState<number>(0);
   // New state for the geocoded address coordinates.
   const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
 
@@ -562,11 +562,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         Lat = 41.8781;
         Lon = -87.6298;
       } else if(parsedSpec[0].unit == 'segment'){
-        Lat = 41.80159035804221;
-        Lon = -87.64538029790135;
+        // Lat = 41.80159035804221;
+        // Lon = -87.64538029790135;
+        Lat = 47.61902970588908;
+        Lon = -122.29361573322541;
       } else if(parsedSpec[0].unit == 'node'){
-        Lat = 41.80159035804221;
-        Lon = -87.64538029790135;
+        // Lat = 41.80159035804221;
+        // Lon = -87.64538029790135;
+        Lat = 47.61902970588908;
+        Lon = -122.29361573322541;
       }
      
       let zoomVar;
@@ -598,7 +602,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         }
         // Only add the mimic layer if it hasn't been added yet.
         if (!mimicLayerRef.current) {
-          d3.json(`/filtered_data.json`)
+          d3.json(`/SeattleStreets.json`)
             .then((data: any) => {
               // Transform your data into a GeoJSON FeatureCollection
               const features = data.edges.map(edge => ({
@@ -624,7 +628,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                 pane: 'mimicStreetPane',
                 style: {
                   color: '#d3d3d6',
-                  weight: 50,
+                  weight: 0,
                   opacity: 0.8
                 }
               }).addTo(mapInstanceRef.current);
@@ -3392,7 +3396,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         <input
           id="widthSlider"
           type="range"
-          min="10"
+          min="0"
           max="100"
           value={mimicWidth}
           onChange={(e) => setMimicWidth(Number(e.target.value))}
