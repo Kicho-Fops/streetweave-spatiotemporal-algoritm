@@ -1,0 +1,4079 @@
+[
+    {
+        "Lat": 47.62189995625,
+        "Lon": -122.28801919999998,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61951904444444,
+        "Lon": -122.28822243333333,
+        "score": 0.03732688734412946,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61726057527429,
+        "Lon": -122.3061532767236,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61717539175809,
+        "Lon": -122.30602977557453,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.625000199999995,
+        "Lon": -122.28995796666668,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62499405,
+        "Lon": -122.288899125,
+        "score": 0.0015011822567369917,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 3,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.624957550000005,
+        "Lon": -122.2928471,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6248799375,
+        "Lon": -122.2934453125,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62282502960354,
+        "Lon": -122.29620508123804,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6226923197357,
+        "Lon": -122.29640048749202,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622389749999996,
+        "Lon": -122.29687545,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62534245,
+        "Lon": -122.29516741666667,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62454461594231,
+        "Lon": -122.29540710285384,
+        "score": 0.9241418199787566,
+        "CurbRamp": 6,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62422401376924,
+        "Lon": -122.29509526141544,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61889759457968,
+        "Lon": -122.29482720402187,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62309175,
+        "Lon": -122.29483934999999,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6207581,
+        "Lon": -122.29478639999999,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62175779999999,
+        "Lon": -122.29482016666667,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61953659457967,
+        "Lon": -122.29481060402188,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.621916299999995,
+        "Lon": -122.293181,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.624511600000005,
+        "Lon": -122.29314063333334,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6230855,
+        "Lon": -122.29316705,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 3,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.618891462201546,
+        "Lon": -122.29351073745562,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.620750099999995,
+        "Lon": -122.2934738,
+        "score": 0.5621765008857981,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61948030488062,
+        "Lon": -122.29349855498226,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62192215,
+        "Lon": -122.29377545,
+        "score": 0.00020342697805520653,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.6241965,
+        "Lon": -122.2937298,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 3,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62308765,
+        "Lon": -122.29375350000001,
+        "score": 1.7603432133424856e-06,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 9,
+        "SurfaceProblem": 8
+    },
+    {
+        "Lat": 47.6247701,
+        "Lon": -122.29766775,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62324401889044,
+        "Lon": -122.29749419764212,
+        "score": 0.7772998611746911,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622746437780876,
+        "Lon": -122.29727504528424,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622441175,
+        "Lon": -122.29730085,
+        "score": 0.9770226300899744,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61954875,
+        "Lon": -122.2972647,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.621966199999996,
+        "Lon": -122.29719817999998,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62076945,
+        "Lon": -122.29725934999999,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6122595,
+        "Lon": -122.301451,
+        "score": 0.004070137715896128,
+        "CurbRamp": 2,
+        "NoCurbRamp": 6,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6108015,
+        "Lon": -122.30147435,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61810733333334,
+        "Lon": -122.30120883333335,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6147278,
+        "Lon": -122.30140234999999,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.617280714285705,
+        "Lon": -122.30132924285716,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.615887900000004,
+        "Lon": -122.3013794,
+        "score": 0.03732688734412946,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.613547600000004,
+        "Lon": -122.30142715,
+        "score": 0.14804719803168948,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.625231325,
+        "Lon": -122.30671115000001,
+        "score": 0.11920292202211755,
+        "CurbRamp": 4,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.625238533333324,
+        "Lon": -122.30799253333333,
+        "score": 0.09534946489910949,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.62522302,
+        "Lon": -122.30537444,
+        "score": 0.9968273171575148,
+        "CurbRamp": 9,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6256895401767,
+        "Lon": -122.2910247249121,
+        "score": 0.0019267346633274757,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62086086666667,
+        "Lon": -122.29123473333334,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62190785,
+        "Lon": -122.29121755,
+        "score": 1.1861120010657661e-08,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 2,
+        "SurfaceProblem": 14
+    },
+    {
+        "Lat": 47.6195142,
+        "Lon": -122.29125149999999,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6245295,
+        "Lon": -122.291124475,
+        "score": 5.829126566113865e-05,
+        "CurbRamp": 3,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 9
+    },
+    {
+        "Lat": 47.62289996666667,
+        "Lon": -122.29118656666667,
+        "score": 0.0031726828424851893,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.62486079999999,
+        "Lon": -122.30730516666665,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.625954775,
+        "Lon": -122.30730232500001,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623827399999996,
+        "Lon": -122.30731259999999,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622388625,
+        "Lon": -122.307328,
+        "score": 0.7772998611746911,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6194148,
+        "Lon": -122.30363495,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6248105,
+        "Lon": -122.30356775,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62597385,
+        "Lon": -122.30359533333332,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62379425,
+        "Lon": -122.3035639,
+        "score": 0.7772998611746911,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.620801400000005,
+        "Lon": -122.3036187,
+        "score": 0.7772998611746911,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622283499999995,
+        "Lon": -122.3035908,
+        "score": 0.060086650174007626,
+        "CurbRamp": 7,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.620406450000004,
+        "Lon": -122.30561709999999,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.620481874999996,
+        "Lon": -122.306813175,
+        "score": 0.8175744761936437,
+        "CurbRamp": 6,
+        "NoCurbRamp": 1,
+        "Obstacle": 2,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6213824,
+        "Lon": -122.3041742,
+        "score": 0.0011695102650555148,
+        "CurbRamp": 3,
+        "NoCurbRamp": 5,
+        "Obstacle": 3,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62136566,
+        "Lon": -122.30044782,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6213803,
+        "Lon": -122.30305535,
+        "score": 0.9626731126558706,
+        "CurbRamp": 7,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.621371425,
+        "Lon": -122.30183107500001,
+        "score": 0.9980732653366725,
+        "CurbRamp": 11,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61232678333334,
+        "Lon": -122.29620233333333,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.610499999999995,
+        "Lon": -122.29620535000001,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61909005,
+        "Lon": -122.3060888,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.620349149999996,
+        "Lon": -122.30607325,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61994595,
+        "Lon": -122.30607825,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623648233333334,
+        "Lon": -122.29166706666666,
+        "score": 0.03732688734412946,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.623675600000006,
+        "Lon": -122.2944137,
+        "score": 0.0024726231566347743,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62365965,
+        "Lon": -122.292446875,
+        "score": 0.0003353501304664781,
+        "CurbRamp": 0,
+        "NoCurbRamp": 7,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62367315,
+        "Lon": -122.29345190000001,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.623363203333334,
+        "Lon": -122.28919161,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.62143661428571,
+        "Lon": -122.29001521428573,
+        "score": 0.5621765008857981,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.618361509499294,
+        "Lon": -122.28993758088392,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61862946983309,
+        "Lon": -122.29018571029464,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62558665,
+        "Lon": -122.2895442,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6193568,
+        "Lon": -122.30477619999999,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.619672800000004,
+        "Lon": -122.30573294999999,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.614065249999996,
+        "Lon": -122.28981745,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61409195,
+        "Lon": -122.29310685,
+        "score": 0.0005527786369235996,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6140784,
+        "Lon": -122.29194225,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61411765,
+        "Lon": -122.29553135,
+        "score": 0.0011695102650555148,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.61410506666667,
+        "Lon": -122.2942804,
+        "score": 0.0005527786369235996,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61412680448306,
+        "Lon": -122.29618567487513,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6140705,
+        "Lon": -122.2908547,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61406757499999,
+        "Lon": -122.288682875,
+        "score": 0.0011695102650555148,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61416496434195,
+        "Lon": -122.30267905156283,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61415951434196,
+        "Lon": -122.30204500156283,
+        "score": 0.2689414213699951,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61413703333333,
+        "Lon": -122.29815003333333,
+        "score": 0.0015011822567369917,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61413016965537,
+        "Lon": -122.29683638325008,
+        "score": 0.22270013882530884,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.614143766666665,
+        "Lon": -122.29943743333332,
+        "score": 9.610241549947396e-05,
+        "CurbRamp": 1,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.614150599999995,
+        "Lon": -122.3007448,
+        "score": 0.18242552380635635,
+        "CurbRamp": 6,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6247852,
+        "Lon": -122.29980015,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6233592,
+        "Lon": -122.29983686666667,
+        "score": 0.0002611903190957194,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.62114640000001,
+        "Lon": -122.2998971,
+        "score": 0.060086650174007626,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.620975083144764,
+        "Lon": -122.29990009181193,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61956205,
+        "Lon": -122.29988175,
+        "score": 0.14804719803168948,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.620668688763175,
+        "Lon": -122.29989692787463,
+        "score": 0.5,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.612283899999994,
+        "Lon": -122.29145635,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61103755,
+        "Lon": -122.29148355000001,
+        "score": 0.320821300824607,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.60985485,
+        "Lon": -122.2915045,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.62366216666666,
+        "Lon": -122.30245116666667,
+        "score": 0.9770226300899744,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6248573,
+        "Lon": -122.30243186666667,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.625516275,
+        "Lon": -122.30242125,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622939599999995,
+        "Lon": -122.30246389999998,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62083187499999,
+        "Lon": -122.302508475,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62206616666666,
+        "Lon": -122.302482,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.619677466666666,
+        "Lon": -122.30673596666668,
+        "score": 0.9626731126558706,
+        "CurbRamp": 7,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62015635,
+        "Lon": -122.28945304999999,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6201495,
+        "Lon": -122.2885232,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62020989802197,
+        "Lon": -122.30102766247612,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62015435,
+        "Lon": -122.29177665,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6201622,
+        "Lon": -122.29306159999999,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62017612547146,
+        "Lon": -122.29544500377341,
+        "score": 0.5621765008857981,
+        "CurbRamp": 3,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62016836666667,
+        "Lon": -122.294144,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6202026,
+        "Lon": -122.29923339999999,
+        "score": 0.9399133498259924,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6201931,
+        "Lon": -122.29792557500001,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.620180088207185,
+        "Lon": -122.29609900566012,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62018365,
+        "Lon": -122.2966787,
+        "score": 0.5,
+        "CurbRamp": 4,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62020714901099,
+        "Lon": -122.30056720623804,
+        "score": 0.6224593312018546,
+        "CurbRamp": 6,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.610418550000006,
+        "Lon": -122.28990780000001,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61042605,
+        "Lon": -122.29095885000001,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6104083,
+        "Lon": -122.288836,
+        "score": 0.022977369910025615,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6104236,
+        "Lon": -122.29206193333333,
+        "score": 0.0002611903190957194,
+        "CurbRamp": 1,
+        "NoCurbRamp": 4,
+        "Obstacle": 2,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61043,
+        "Lon": -122.29322193333333,
+        "score": 0.0031726828424851893,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 2,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.622509675,
+        "Lon": -122.296404975,
+        "score": 0.9770226300899744,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6226574,
+        "Lon": -122.3018278,
+        "score": 0.9859363729567544,
+        "CurbRamp": 7,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.614696949999995,
+        "Lon": -122.29487165,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61703285,
+        "Lon": -122.294847,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.615865299999996,
+        "Lon": -122.29485930000001,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61365225,
+        "Lon": -122.29488764999999,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6182572,
+        "Lon": -122.29483404999999,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.6108534,
+        "Lon": -122.29493554999999,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61237140000001,
+        "Lon": -122.2949294,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62190111666666,
+        "Lon": -122.28857411666667,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61831561392954,
+        "Lon": -122.28863828628317,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61845237595302,
+        "Lon": -122.28873562418876,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.618928357142856,
+        "Lon": -122.28927345714285,
+        "score": 2.2603242979035746e-06,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 12
+    },
+    {
+        "Lat": 47.619599650000005,
+        "Lon": -122.28900275000001,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.620048099642986,
+        "Lon": -122.30126489767613,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61949187482149,
+        "Lon": -122.30121409883807,
+        "score": 0.14804719803168948,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62372183333334,
+        "Lon": -122.29651223333333,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623562066666665,
+        "Lon": -122.29631003333333,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6108001,
+        "Lon": -122.29752535,
+        "score": 0.0019267346633274757,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.61349093333334,
+        "Lon": -122.29750309999999,
+        "score": 0.03732688734412946,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6158777,
+        "Lon": -122.29747375,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61726195,
+        "Lon": -122.2974303,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61471555,
+        "Lon": -122.29748935,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.612322966666675,
+        "Lon": -122.29750970000002,
+        "score": 0.00020342697805520653,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.61801715,
+        "Lon": -122.297295025,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6247733,
+        "Lon": -122.29873125,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6255359,
+        "Lon": -122.29872915,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622687525,
+        "Lon": -122.298580075,
+        "score": 0.7772998611746911,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6207799,
+        "Lon": -122.29858279999999,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61955785,
+        "Lon": -122.29857035,
+        "score": 0.0005527786369235996,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.624380753846154,
+        "Lon": -122.28836652307693,
+        "score": 3.059022269256247e-07,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 13
+    },
+    {
+        "Lat": 47.610230400000006,
+        "Lon": -122.29379175,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6110513,
+        "Lon": -122.2937791,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6110284,
+        "Lon": -122.2904101,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.60985205,
+        "Lon": -122.29043595,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.61894838181818,
+        "Lon": -122.28811904545455,
+        "score": 0.004070137715896128,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.618884714819245,
+        "Lon": -122.29234565891166,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.620742,
+        "Lon": -122.29231395,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.619456685927695,
+        "Lon": -122.29233222356466,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6202165,
+        "Lon": -122.30542009999999,
+        "score": 0.2689414213699951,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.612947659999996,
+        "Lon": -122.29565848,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62021753333334,
+        "Lon": -122.3030927,
+        "score": 0.5,
+        "CurbRamp": 4,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62021826666666,
+        "Lon": -122.3041391,
+        "score": 0.9988304897349445,
+        "CurbRamp": 9,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62382825,
+        "Lon": -122.29525914999999,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61417160528414,
+        "Lon": -122.29618462357105,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6133705,
+        "Lon": -122.29619576666666,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61475570528414,
+        "Lon": -122.29618232357105,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 8
+    },
+    {
+        "Lat": 47.6181081,
+        "Lon": -122.29990100000002,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61080715,
+        "Lon": -122.3001326,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6135447,
+        "Lon": -122.30009375,
+        "score": 0.5,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61588375,
+        "Lon": -122.30008475,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61729307499999,
+        "Lon": -122.300026075,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61472685,
+        "Lon": -122.3000936,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61226165,
+        "Lon": -122.3001075,
+        "score": 0.14804719803168948,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61289195,
+        "Lon": -122.28887357500001,
+        "score": 0.0004305570813246149,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 3,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61836108251275,
+        "Lon": -122.28812432770789,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62322094999999,
+        "Lon": -122.306806875,
+        "score": 0.995929862284104,
+        "CurbRamp": 10,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62324293333333,
+        "Lon": -122.3080158,
+        "score": 0.43782349911420193,
+        "CurbRamp": 5,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62320686666666,
+        "Lon": -122.30536286666667,
+        "score": 0.320821300824607,
+        "CurbRamp": 7,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.622767233350174,
+        "Lon": -122.29618097752791,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62260720001684,
+        "Lon": -122.29614424419458,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61854619258984,
+        "Lon": -122.29127278242105,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.618750792589836,
+        "Lon": -122.29126828242104,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.622511499999995,
+        "Lon": -122.29063998,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62251323957795,
+        "Lon": -122.29548535847528,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6225,
+        "Lon": -122.29346865,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622492575,
+        "Lon": -122.29258347499999,
+        "score": 0.8519528019683106,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62250605,
+        "Lon": -122.2943076,
+        "score": 0.0002611903190957194,
+        "CurbRamp": 1,
+        "NoCurbRamp": 7,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.622489,
+        "Lon": -122.29159655000001,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.622532279999994,
+        "Lon": -122.28921577999999,
+        "score": 0.320821300824607,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62251796666667,
+        "Lon": -122.28763263333333,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62251768957795,
+        "Lon": -122.29612220847528,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62388896666666,
+        "Lon": -122.28816768333331,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62449655555556,
+        "Lon": -122.29042155555557,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.625175141666666,
+        "Lon": -122.29178530833333,
+        "score": 0.5621765008857981,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.612924750000005,
+        "Lon": -122.3043083,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 3,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61292153333333,
+        "Lon": -122.30574966666666,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623177999999996,
+        "Lon": -122.30301315,
+        "score": 0.9399133498259924,
+        "CurbRamp": 9,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62329353333333,
+        "Lon": -122.30117786666666,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62200336666666,
+        "Lon": -122.30118713333333,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62062516666666,
+        "Lon": -122.30119453333333,
+        "score": 0.8519528019683106,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.624789500000006,
+        "Lon": -122.3011534,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62556396666667,
+        "Lon": -122.30113469999999,
+        "score": 0.0003353501304664781,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.619174901004236,
+        "Lon": -122.30254594315014,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.619065425502114,
+        "Lon": -122.30255359657507,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6137503,
+        "Lon": -122.29377256666668,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61205663333333,
+        "Lon": -122.2938173,
+        "score": 4.5397868702434395e-05,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 4,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61212403333334,
+        "Lon": -122.29372226666668,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 2,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.614440925,
+        "Lon": -122.29361975,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.6170294,
+        "Lon": -122.29354235,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61586235,
+        "Lon": -122.29355825,
+        "score": 0.014063627043245475,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61816339999999,
+        "Lon": -122.29352463333333,
+        "score": 0.005220125693558397,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 8
+    },
+    {
+        "Lat": 47.61949991428571,
+        "Lon": -122.30208172857144,
+        "score": 0.07585818002124355,
+        "CurbRamp": 6,
+        "NoCurbRamp": 2,
+        "Obstacle": 3,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.624413759999996,
+        "Lon": -122.30533872000001,
+        "score": 0.04742587317756678,
+        "CurbRamp": 4,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62442146666666,
+        "Lon": -122.30799806666666,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.624418199999994,
+        "Lon": -122.30668735,
+        "score": 0.02931223075135632,
+        "CurbRamp": 6,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.62439545,
+        "Lon": -122.3018016,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.624403699999995,
+        "Lon": -122.3029929,
+        "score": 0.9890130573694068,
+        "CurbRamp": 6,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62438775,
+        "Lon": -122.30051004999999,
+        "score": 0.04742587317756678,
+        "CurbRamp": 4,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.624367199999995,
+        "Lon": -122.2971288,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.624381099999994,
+        "Lon": -122.2992739,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62437355,
+        "Lon": -122.2982035,
+        "score": 0.0007096703991005881,
+        "CurbRamp": 1,
+        "NoCurbRamp": 8,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.624408933333335,
+        "Lon": -122.30410826666666,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6249212,
+        "Lon": -122.29660005,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.625416400000006,
+        "Lon": -122.29647888,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.624037433333335,
+        "Lon": -122.29661206666667,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62133565,
+        "Lon": -122.29332655,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6213262,
+        "Lon": -122.2921676,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62133216666666,
+        "Lon": -122.29284526666667,
+        "score": 0.9770226300899744,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62134503022961,
+        "Lon": -122.29543590744755,
+        "score": 0.00012339457598623172,
+        "CurbRamp": 0,
+        "NoCurbRamp": 6,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6213382,
+        "Lon": -122.29362445000001,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62134265,
+        "Lon": -122.2942822,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62132605,
+        "Lon": -122.291628,
+        "score": 0.03732688734412946,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.621353799999994,
+        "Lon": -122.29805002,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62134559534442,
+        "Lon": -122.29610126117133,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.621348766666664,
+        "Lon": -122.29670526666666,
+        "score": 0.022977369910025615,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.623441549999995,
+        "Lon": -122.296489225,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623697933333325,
+        "Lon": -122.29659243333333,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.618111366666675,
+        "Lon": -122.29858456666666,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.610805299999996,
+        "Lon": -122.2988383,
+        "score": 9.610241549947396e-05,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.6134965,
+        "Lon": -122.29880253333333,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61587915,
+        "Lon": -122.2987717,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.617195833333334,
+        "Lon": -122.29869856666669,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61472165,
+        "Lon": -122.29879115,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61232953333333,
+        "Lon": -122.29882006666666,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.618935556264205,
+        "Lon": -122.30255383038025,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61892473333334,
+        "Lon": -122.30053376666667,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61893272813211,
+        "Lon": -122.30199889019013,
+        "score": 0.5,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6189078,
+        "Lon": -122.2966973,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.618911233333336,
+        "Lon": -122.29791196666666,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.618917266666664,
+        "Lon": -122.29921623333333,
+        "score": 0.0015011822567369917,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.610865700000005,
+        "Lon": -122.28937553333333,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.60972253333333,
+        "Lon": -122.28939876666668,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61166795,
+        "Lon": -122.29578707499999,
+        "score": 0.0005527786369235996,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.611619652629315,
+        "Lon": -122.29621469902219,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6116617,
+        "Lon": -122.29319895,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61165235,
+        "Lon": -122.29205355,
+        "score": 0.320821300824607,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.611640599999994,
+        "Lon": -122.29076239999999,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61167365,
+        "Lon": -122.2943509,
+        "score": 0.03732688734412946,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6115761,
+        "Lon": -122.3020947,
+        "score": 0.9399133498259924,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.611571133333335,
+        "Lon": -122.29817276666665,
+        "score": 0.0005527786369235996,
+        "CurbRamp": 2,
+        "NoCurbRamp": 6,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61158357631466,
+        "Lon": -122.2967524245111,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.611580000000004,
+        "Lon": -122.29947544999999,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.611579500000005,
+        "Lon": -122.30079185,
+        "score": 0.008577485413711984,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6182647,
+        "Lon": -122.29614175,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61598276666667,
+        "Lon": -122.29617486666666,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6169207,
+        "Lon": -122.29616753333333,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6152284,
+        "Lon": -122.28978655,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.615219749999994,
+        "Lon": -122.2887154,
+        "score": 0.060086650174007626,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61527685,
+        "Lon": -122.2929865,
+        "score": 0.014063627043245475,
+        "CurbRamp": 1,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61526795,
+        "Lon": -122.29188295,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6152825,
+        "Lon": -122.29422413333334,
+        "score": 0.0015011822567369917,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61528958044921,
+        "Lon": -122.29552277830338,
+        "score": 0.0015011822567369917,
+        "CurbRamp": 2,
+        "NoCurbRamp": 6,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6152473,
+        "Lon": -122.2908333,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.615305910915446,
+        "Lon": -122.30312475316359,
+        "score": 0.6224593312018546,
+        "CurbRamp": 6,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61529935,
+        "Lon": -122.3042489,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61528835,
+        "Lon": -122.30683005,
+        "score": 0.8519528019683106,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61529075,
+        "Lon": -122.30555165,
+        "score": 0.09534946489910949,
+        "CurbRamp": 5,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6153033,
+        "Lon": -122.3020119,
+        "score": 0.09534946489910949,
+        "CurbRamp": 5,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.615299033333336,
+        "Lon": -122.29813226666666,
+        "score": 0.03732688734412946,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.6152957,
+        "Lon": -122.29683836666668,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 4,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.61529492067382,
+        "Lon": -122.29617236745506,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6153057,
+        "Lon": -122.29942726666667,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.615301,
+        "Lon": -122.300736875,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61530511091544,
+        "Lon": -122.30264080316357,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.616471700000005,
+        "Lon": -122.29081625,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 2,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.616450155616974,
+        "Lon": -122.29551475949381,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 4,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61644593333333,
+        "Lon": -122.2942071,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6164398,
+        "Lon": -122.29187304999999,
+        "score": 0.060086650174007626,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61644335,
+        "Lon": -122.2929756,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6165001,
+        "Lon": -122.288666,
+        "score": 0.0005527786369235996,
+        "CurbRamp": 2,
+        "NoCurbRamp": 8,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6165036,
+        "Lon": -122.28975270000001,
+        "score": 0.004070137715896128,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6164737,
+        "Lon": -122.3019829,
+        "score": 0.991422514586288,
+        "CurbRamp": 9,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.616460625,
+        "Lon": -122.2992813,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61645368342546,
+        "Lon": -122.29616613924074,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.616455800000004,
+        "Lon": -122.29681950000001,
+        "score": 0.8519528019683106,
+        "CurbRamp": 5,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61645813333333,
+        "Lon": -122.29809993333333,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.616470500000005,
+        "Lon": -122.30073164999999,
+        "score": 0.43782349911420193,
+        "CurbRamp": 5,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62324206666667,
+        "Lon": -122.29197723333333,
+        "score": 0.5621765008857981,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62393263333333,
+        "Lon": -122.29196013333335,
+        "score": 0.014063627043245475,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62204156666667,
+        "Lon": -122.29200326666667,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.612947672656766,
+        "Lon": -122.29620805694196,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6129417,
+        "Lon": -122.3006902,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61294245,
+        "Lon": -122.29816539999999,
+        "score": 0.0019267346633274757,
+        "CurbRamp": 1,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61294477265677,
+        "Lon": -122.29686105694196,
+        "score": 0.14804719803168948,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6129426,
+        "Lon": -122.299454,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61293485270735,
+        "Lon": -122.30314404816721,
+        "score": 0.9241418199787566,
+        "CurbRamp": 6,
+        "NoCurbRamp": 0,
+        "Obstacle": 2,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61294157906102,
+        "Lon": -122.30270537225081,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61291428,
+        "Lon": -122.29101776,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.614636860000005,
+        "Lon": -122.28928774,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6171737,
+        "Lon": -122.28919765999999,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.61600893333334,
+        "Lon": -122.28923626666666,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61800338181818,
+        "Lon": -122.2889980090909,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62076285,
+        "Lon": -122.2961051,
+        "score": 0.0024726231566347743,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.62182275,
+        "Lon": -122.2961358,
+        "score": 0.014063627043245475,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 3,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.619763750000004,
+        "Lon": -122.29610775,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6185039,
+        "Lon": -122.30674986666668,
+        "score": 0.9994472213630764,
+        "CurbRamp": 10,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6185005,
+        "Lon": -122.30544233333335,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6252757,
+        "Lon": -122.29353714999999,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6214745125,
+        "Lon": -122.2886771125,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.62372406666666,
+        "Lon": -122.30600806666666,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622522159999995,
+        "Lon": -122.30604048000001,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62491856666666,
+        "Lon": -122.30601333333334,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6188817,
+        "Lon": -122.29309206666666,
+        "score": 0.022977369910025615,
+        "CurbRamp": 7,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.61887800820041,
+        "Lon": -122.29181197778735,
+        "score": 8.764247451323235e-08,
+        "CurbRamp": 1,
+        "NoCurbRamp": 6,
+        "Obstacle": 3,
+        "SurfaceProblem": 8
+    },
+    {
+        "Lat": 47.61888713333334,
+        "Lon": -122.29416973333333,
+        "score": 0.7772998611746911,
+        "CurbRamp": 7,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.618898520311724,
+        "Lon": -122.29538409074458,
+        "score": 0.0024726231566347743,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.618905278061646,
+        "Lon": -122.29611924696617,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6172587794121,
+        "Lon": -122.30615757792,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.617203179412094,
+        "Lon": -122.30615817792001,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.617070999999996,
+        "Lon": -122.3061596,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6177181,
+        "Lon": -122.30612623333333,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61712046666667,
+        "Lon": -122.30432486666666,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6171267,
+        "Lon": -122.30535505,
+        "score": 0.8519528019683106,
+        "CurbRamp": 5,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61711396505367,
+        "Lon": -122.30311089057925,
+        "score": 0.9706877692486436,
+        "CurbRamp": 6,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.617113215053664,
+        "Lon": -122.30258574057925,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.617117433333334,
+        "Lon": -122.30594256666666,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61706447500001,
+        "Lon": -122.306094675,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6202102,
+        "Lon": -122.30111155,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62355356794083,
+        "Lon": -122.29608112638618,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62340265,
+        "Lon": -122.29630485,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62411006666667,
+        "Lon": -122.29525676666667,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 2,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.624448433333335,
+        "Lon": -122.29475818333334,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62385196794083,
+        "Lon": -122.2956386597195,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61712505,
+        "Lon": -122.306105925,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.618933303004255,
+        "Lon": -122.30290007125055,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.618934503004255,
+        "Lon": -122.30272382125054,
+        "score": 0.2689414213699951,
+        "CurbRamp": 4,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6182262,
+        "Lon": -122.30398695000001,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 2,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61764674285714,
+        "Lon": -122.30526388571431,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.617011725,
+        "Lon": -122.30677069999999,
+        "score": 0.9525741268224334,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.618633200000005,
+        "Lon": -122.30336635,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61164285,
+        "Lon": -122.28994662500001,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61227995,
+        "Lon": -122.2903818,
+        "score": 0.022977369910025615,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61273193333333,
+        "Lon": -122.28933513333334,
+        "score": 0.11920292202211755,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.611632400000005,
+        "Lon": -122.2888047,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.612899366666674,
+        "Lon": -122.28972146666666,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 4,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.6180431625,
+        "Lon": -122.2900754,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6146496,
+        "Lon": -122.29031649999999,
+        "score": 1.12535162055095e-07,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 1,
+        "SurfaceProblem": 11
+    },
+    {
+        "Lat": 47.6170736,
+        "Lon": -122.29026735,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6158691,
+        "Lon": -122.2902974,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6134864,
+        "Lon": -122.29034759999999,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 2,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.614511066666665,
+        "Lon": -122.2924438,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6170231,
+        "Lon": -122.2923949,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61585785,
+        "Lon": -122.29240385,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.612294250000005,
+        "Lon": -122.29260450000001,
+        "score": 0.07585818002124355,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.613667099999994,
+        "Lon": -122.29255046666667,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.618195899999996,
+        "Lon": -122.29236853333333,
+        "score": 0.04742587317756678,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.611040349999996,
+        "Lon": -122.29263865,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6098571,
+        "Lon": -122.29263985,
+        "score": 0.320821300824607,
+        "CurbRamp": 3,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.617646533333335,
+        "Lon": -122.29951666666666,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61765805,
+        "Lon": -122.300611675,
+        "score": 0.22270013882530884,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.6236347,
+        "Lon": -122.29651545,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.612941379999995,
+        "Lon": -122.30204896000001,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61887725,
+        "Lon": -122.30299930000001,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.612796,
+        "Lon": -122.29620234999999,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622815349999996,
+        "Lon": -122.2971717,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623120381355534,
+        "Lon": -122.29672343956922,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6229170480222,
+        "Lon": -122.29702187290256,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.622667199999995,
+        "Lon": -122.29739165000001,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6227673,
+        "Lon": -122.29724250000001,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6225663,
+        "Lon": -122.2975421,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61368913333333,
+        "Lon": -122.2936768,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.612938299999996,
+        "Lon": -122.29306526666666,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6129258,
+        "Lon": -122.2920073,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.612946725,
+        "Lon": -122.29408777500001,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61951515,
+        "Lon": -122.30253787500001,
+        "score": 0.09534946489910949,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61325925,
+        "Lon": -122.289324925,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.6162085,
+        "Lon": -122.30488805,
+        "score": 0.07585818002124355,
+        "CurbRamp": 6,
+        "NoCurbRamp": 3,
+        "Obstacle": 3,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.611471550000005,
+        "Lon": -122.304992,
+        "score": 2.2603242979035746e-06,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 8,
+        "SurfaceProblem": 8
+    },
+    {
+        "Lat": 47.61410725,
+        "Lon": -122.30492895,
+        "score": 0.0015011822567369917,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 7
+    },
+    {
+        "Lat": 47.6120649,
+        "Lon": -122.28934605,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61220625,
+        "Lon": -122.30271579999999,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.610793900000004,
+        "Lon": -122.3027398,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6232818,
+        "Lon": -122.2964857,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62012823333333,
+        "Lon": -122.30114863333334,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.620212499999994,
+        "Lon": -122.301729225,
+        "score": 0.9947798743064417,
+        "CurbRamp": 7,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6219926,
+        "Lon": -122.30472376666667,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.620799,
+        "Lon": -122.30474964999999,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6231935,
+        "Lon": -122.30413535,
+        "score": 0.43782349911420193,
+        "CurbRamp": 5,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62380795,
+        "Lon": -122.30468785,
+        "score": 0.22270013882530884,
+        "CurbRamp": 1,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.625264400000006,
+        "Lon": -122.3047409,
+        "score": 0.9046505351008906,
+        "CurbRamp": 3,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62492423333333,
+        "Lon": -122.30467913333332,
+        "score": 0.43782349911420193,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62514676666666,
+        "Lon": -122.29589856666666,
+        "score": 0.9241418199787566,
+        "CurbRamp": 6,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62514703333333,
+        "Lon": -122.295384,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62519935,
+        "Lon": -122.3017845,
+        "score": 0.0011695102650555148,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.625212266666665,
+        "Lon": -122.30299826666668,
+        "score": 0.9994472213630764,
+        "CurbRamp": 10,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.625187,
+        "Lon": -122.30046755,
+        "score": 0.01798620996209156,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62516495,
+        "Lon": -122.29711195,
+        "score": 0.005220125693558397,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.6251774,
+        "Lon": -122.2992575,
+        "score": 0.0009110511944006454,
+        "CurbRamp": 0,
+        "NoCurbRamp": 5,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.62516985,
+        "Lon": -122.29819549999999,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62521796666667,
+        "Lon": -122.3041247,
+        "score": 0.9626731126558706,
+        "CurbRamp": 7,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61809047010212,
+        "Lon": -122.30415499789747,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.617642430025526,
+        "Lon": -122.30380828697436,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 3,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6116275,
+        "Lon": -122.30368793333332,
+        "score": 1.670142184809518e-05,
+        "CurbRamp": 4,
+        "NoCurbRamp": 0,
+        "Obstacle": 11,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.61648686666666,
+        "Lon": -122.30360283333334,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61411685,
+        "Lon": -122.30362825,
+        "score": 0.01098694263059318,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    },
+    {
+        "Lat": 47.61824263333333,
+        "Lon": -122.30439259999999,
+        "score": 0.8175744761936437,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61163945,
+        "Lon": -122.3062904,
+        "score": 0.07585818002124355,
+        "CurbRamp": 6,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.6141052,
+        "Lon": -122.3062411,
+        "score": 0.5621765008857981,
+        "CurbRamp": 3,
+        "NoCurbRamp": 2,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61622036,
+        "Lon": -122.30618046,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61291633333334,
+        "Lon": -122.30675386666667,
+        "score": 0.679178699175393,
+        "CurbRamp": 5,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.617949933333335,
+        "Lon": -122.29129743333333,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6146682,
+        "Lon": -122.2913715,
+        "score": 0.0066928509242848554,
+        "CurbRamp": 0,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 2
+    },
+    {
+        "Lat": 47.61702625,
+        "Lon": -122.29133225,
+        "score": 1.670142184809518e-05,
+        "CurbRamp": 0,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 8
+    },
+    {
+        "Lat": 47.6158499,
+        "Lon": -122.29135215,
+        "score": 0.0002611903190957194,
+        "CurbRamp": 1,
+        "NoCurbRamp": 1,
+        "Obstacle": 2,
+        "SurfaceProblem": 6
+    },
+    {
+        "Lat": 47.6134968,
+        "Lon": -122.29140985000001,
+        "score": 0.3775406687981454,
+        "CurbRamp": 2,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.62323445,
+        "Lon": -122.29559505,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.6233274420599,
+        "Lon": -122.29641448096751,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.62312592102995,
+        "Lon": -122.29632574048375,
+        "score": 0.679178699175393,
+        "CurbRamp": 1,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.623656100000005,
+        "Lon": -122.29491155,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.619077033333326,
+        "Lon": -122.30270313333334,
+        "score": 0.7310585786300049,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.626037749999995,
+        "Lon": -122.30606135,
+        "score": 0.6224593312018546,
+        "CurbRamp": 2,
+        "NoCurbRamp": 1,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.6176416,
+        "Lon": -122.2897153,
+        "score": 0.18242552380635635,
+        "CurbRamp": 2,
+        "NoCurbRamp": 3,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61764096666667,
+        "Lon": -122.28847496666667,
+        "score": 7.484622751061123e-05,
+        "CurbRamp": 2,
+        "NoCurbRamp": 2,
+        "Obstacle": 4,
+        "SurfaceProblem": 5
+    },
+    {
+        "Lat": 47.61760915,
+        "Lon": -122.29296165,
+        "score": 0.02931223075135632,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61760626666666,
+        "Lon": -122.29171436666667,
+        "score": 0.060086650174007626,
+        "CurbRamp": 3,
+        "NoCurbRamp": 3,
+        "Obstacle": 1,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61761606666666,
+        "Lon": -122.29419386666666,
+        "score": 0.004070137715896128,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 2,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61762176636801,
+        "Lon": -122.29549868672773,
+        "score": 0.060086650174007626,
+        "CurbRamp": 3,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 1
+    },
+    {
+        "Lat": 47.61763096666667,
+        "Lon": -122.29093226666667,
+        "score": 0.004070137715896128,
+        "CurbRamp": 2,
+        "NoCurbRamp": 4,
+        "Obstacle": 0,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.6176378,
+        "Lon": -122.29868975,
+        "score": 0.2689414213699951,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 1,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61762404955201,
+        "Lon": -122.29615208009159,
+        "score": 0.5,
+        "CurbRamp": 0,
+        "NoCurbRamp": 0,
+        "Obstacle": 0,
+        "SurfaceProblem": 0
+    },
+    {
+        "Lat": 47.61762733333333,
+        "Lon": -122.29677673333333,
+        "score": 0.11920292202211755,
+        "CurbRamp": 4,
+        "NoCurbRamp": 1,
+        "Obstacle": 1,
+        "SurfaceProblem": 3
+    },
+    {
+        "Lat": 47.617633325,
+        "Lon": -122.298006825,
+        "score": 0.01798620996209156,
+        "CurbRamp": 4,
+        "NoCurbRamp": 2,
+        "Obstacle": 1,
+        "SurfaceProblem": 4
+    }
+]

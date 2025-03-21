@@ -93,6 +93,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
   
       // Initialize aggregation results for each attribute
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
       const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
                           "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
                           "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -149,6 +150,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       // Perform aggregation for each environmental attribute
       let aggregatedValues = [];
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+      // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
       const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
                           "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
                           "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -240,6 +242,7 @@ const findClosestPoints = (distances, thematicData, numberOfPoints = 100) => {
 // Function to aggregate data based on type for area
 const aggregateData = (points, aggregationType) => {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
   const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
                           "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
                           "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -299,6 +302,7 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
 // Function to aggregate environmental data based on given points and aggregation type for segment line
 function aggregateAttributes(points, aggregationType) {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
   const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
                           "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
                           "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -389,6 +393,7 @@ const filterPointsInBuffer = (buffer, points) => {
 
 // Function to filter points within buffer
 function filterPointsWithinBufferSegment(buffer, environmentalData) {
+  // console.log("environmentalData checkkk", updatedGeoJsonData)
   return environmentalData.filter(point => {
       const pointFeature = turf.point([point.Lon, point.Lat]);
       return turf.booleanPointInPolygon(pointFeature, buffer);
@@ -399,6 +404,7 @@ function filterPointsWithinBufferSegment(buffer, environmentalData) {
 // Function to aggregate values based on the selected aggregation type
 const aggregateValues = (points, aggregationType) => {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
+  // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
   const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
                           "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
                           "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -520,6 +526,14 @@ function getCardinalDirection(bearing: number): string {
   return directions[index];
 }
 
+// let alignmentCounters = {
+//   center: 0,
+//   left: 0,
+//   right: 0
+// };
+
+
+
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }> = ({ parsedSpec, applyFlag }) => {
 
   // console.log('applyFlag check', applyFlag)
@@ -552,6 +566,33 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       setAddressCoords(null);
     }
   }, [parsedSpec[0].address]);
+
+
+  // useEffect(() => {
+  //   if (!mapRef.current) return;
+
+  //   if (!mapInstanceRef.current) {
+  //     // Create the Leaflet map only once
+  //     mapInstanceRef.current = L.map(mapRef.current, {
+  //       center: [41.8781, -87.6298], // Example: Chicago
+  //       zoom: 14
+  //     });
+
+  //     L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+  //       maxZoom: 19,
+  //       attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  //     }).addTo(mapInstanceRef.current);
+
+  //     // Allow multiple popups (so we can open multiple mini-maps)
+  //     mapInstanceRef.current.options.closePopupOnClick = false;
+
+  //     // Right-click => open a mini-map popup
+  //     mapInstanceRef.current.on('contextmenu', (e) => {
+  //       e.originalEvent.preventDefault(); // hide browser's default context menu
+  //       openMiniMapPopup(e.latlng);
+  //     });
+  //   }
+  // }, []);
   
 
   // Initialize the map on the first render
@@ -561,22 +602,24 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       if(parsedSpec[0].unit == 'area'){
         Lat = 41.8781;
         Lon = -87.6298;
+        // Lat = 47.61902970588908;
+        // Lon = -122.29361573322541;
       } else if(parsedSpec[0].unit == 'segment'){
-        // Lat = 41.80159035804221;
-        // Lon = -87.64538029790135;
-        Lat = 47.61902970588908;
-        Lon = -122.29361573322541;
+        Lat = 41.80159035804221;
+        Lon = -87.64538029790135;
+        // Lat = 47.61902970588908;
+        // Lon = -122.29361573322541;
       } else if(parsedSpec[0].unit == 'node'){
-        // Lat = 41.80159035804221;
-        // Lon = -87.64538029790135;
-        Lat = 47.61902970588908;
-        Lon = -122.29361573322541;
+        Lat = 41.80159035804221;
+        Lon = -87.64538029790135;
+        // Lat = 47.61902970588908;
+        // Lon = -122.29361573322541;
       }
      
       let zoomVar;
 
       if (!mapInstanceRef.current) {
-        console.log('zoom is', parsedSpec)
+        // console.log('zoom is', parsedSpec)
         // Initial map creation
         mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom); // Use zoom of first layer
         
@@ -589,8 +632,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         // Update zoom level when parsedSpec changes
         mapInstanceRef.current.setView([Lat, Lon], parsedSpec[0].zoom);
       }
+
     }
   }, [parsedSpec]);
+
+
+
+    // ================== 2) RIGHT-CLICK => OPEN MINI-MAP POPUP ==================
+    
+
 
     // NEW: Add the mimic street layer in its own pane.
     useEffect(() => {
@@ -602,7 +652,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         }
         // Only add the mimic layer if it hasn't been added yet.
         if (!mimicLayerRef.current) {
-          d3.json(`/SeattleStreets.json`)
+          d3.json(`/filtered_data.json`)
             .then((data: any) => {
               // Transform your data into a GeoJSON FeatureCollection
               const features = data.edges.map(edge => ({
@@ -673,6 +723,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         }
       }, [mimicWidth, parsedSpec, addressCoords]);
 
+  let alignmentCounters = {
+    center: 0,
+    left: 0,
+    right: 0
+  };
+
   // Clear previous visualizations and render the new one
   useEffect(() => {
     if (mapInstanceRef.current) {
@@ -691,6 +747,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         }
       });
       currentLayersRef.current = [];
+      
 
       parsedSpec.forEach((layerSpec, index) => {
         console.log("Initial Checking", layerSpec)
@@ -700,24 +757,119 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
         if (layerSpec.unit === 'segment'){
           if (layerSpec.method === 'line') {
+
+            // Helper function to offset a point by a given bearing and distance (in meters)
+            function offsetPoint(lat, lon, bearing, distance) {
+              const R = 6378137; // Earth's radius in meters
+              const toRad = Math.PI / 180;
+              const toDeg = 180 / Math.PI;
+              const lat1 = lat * toRad;
+              const lon1 = lon * toRad;
+              const brng = bearing * toRad;
+              const dR = distance / R;
+              
+              const lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) + Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+              const lon2 = lon1 + Math.atan2(
+                Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2)
+              );
+              
+              return [lat2 * toDeg, lon2 * toDeg];
+            }
+            // Helper function to calculate bearing between two points (in degrees)
+            function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+              const toRad = Math.PI / 180;
+              const toDeg = 180 / Math.PI;
+              const φ1 = lat1 * toRad;
+              const φ2 = lat2 * toRad;
+              const Δλ = (lon2 - lon1) * toRad;
+              
+              const y = Math.sin(Δλ) * Math.cos(φ2);
+              const x = Math.cos(φ1) * Math.sin(φ2) -
+                        Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+              let brng = Math.atan2(y, x) * toDeg;
+              return (brng + 360) % 360;
+            }
+
+            function getOffsetDistance() {
+              const zoom = mapInstanceRef.current.getZoom();
+              if (zoom >= 18) return 15;
+              if (zoom <= 17) return 25;
+              // Smooth linear interpolation between 5 (zoom 18) and 20 (zoom 16)
+              return 5 + ((18 - zoom) / (18 - 17)) * (25 - 15);
+            }
+
+            function getLineWidth(baseWidth) {
+              // baseWidth is your “default” stroke at low zoom
+              const zoom = mapInstanceRef.current.getZoom();
+              // console.log("zoom and basewidth", zoom, baseWidth)
+              
+              if (zoom <= 16) {
+                // Zoom 1–5: just use base width
+                return baseWidth; 
+              } else if (zoom > 16 && zoom <= 17) {
+                // Zoom 6–8: a little wider
+                return baseWidth * 1.5; 
+              } else if (zoom > 17 && zoom <= 18) {
+                // Zoom 9–12: more wide
+                return baseWidth * 3;
+              } else {
+                // Zoom above 12: even wider
+                return baseWidth * 3.5;
+              }
+            }
+
+
             let updatedGeoJsonData;
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
               if (data && data.edges) {
                   var subdividedEdges = [];
+                  // Offset the original start and end points by 5 meters
+                  let multiplier = 0;
+                  if(layerSpec.alignment === "left"){
+                    multiplier = alignmentCounters.left + 1
+                    alignmentCounters.left++
+                  }else if(layerSpec.alignment === "right"){
+                    multiplier = alignmentCounters.right + 1
+                    alignmentCounters.right++
+                  }
+                  
+                  console.log("multiplier:", multiplier);
 
                   // Loop through each edge in the original array
                   data.edges.forEach(function(edge) {
-                    // Get the start and end coordinates
-                    var start = edge[0]; // [lat, lon]
-                    var end = edge[1];   // [lat, lon]
-                    // Get the extra values (indices 2 to 12)
-                    var extras = edge.slice(2);
+                     // Extract the original start and end points and any extra attributes
+                      const originalStart = edge[0];
+                      const originalEnd = edge[1];
+                      const extras = edge.slice(2);
+
+                      // Determine the points to use for subdivision based on alignment
+                      let startPoint, endPoint;
+                      if (layerSpec.alignment === "center") {
+                        // Use the original centerline
+                        startPoint = originalStart;
+                        endPoint = originalEnd;
+                      } else if (layerSpec.alignment === "left" || layerSpec.alignment === "right") {
+                        // Calculate the bearing of the original street segment
+                        const bearing = bearingBetweenPoints(originalStart.lat, originalStart.lon, originalEnd.lat, originalEnd.lon);
+                        // For left, subtract 90°; for right, add 90°
+                        const offsetAngle = layerSpec.alignment === "left" ? bearing - 90 : bearing + 90;
+
+                        
+
+                        const baseDistance = getOffsetDistance();
+                        const distance = baseDistance * multiplier;
+                        
+
+                        const offsetStartCoords = offsetPoint(originalStart.lat, originalStart.lon, offsetAngle, distance);
+                        const offsetEndCoords = offsetPoint(originalEnd.lat, originalEnd.lon, offsetAngle, distance);
+                        startPoint = { lat: offsetStartCoords[0], lon: offsetStartCoords[1] };
+                        endPoint = { lat: offsetEndCoords[0], lon: offsetEndCoords[1] };
+                      }
 
                     // Destructure the coordinates
-                    var lat0 = start["lat"],
-                        lon0 = start["lon"],
-                        lat1 = end["lat"],
-                        lon1 = end["lon"];
+                    const lat0 = startPoint.lat, lon0 = startPoint.lon;
+                    const lat1 = endPoint.lat, lon1 = endPoint.lon;
 
                     // Calculate the total difference between the start and end points
                     var dLat = lat1 - lat0;
@@ -831,20 +983,37 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         edges: updatedGeoJsonData
                       };
 
+                  // console.log("updatedGeoJsonData checkkk", updatedGeoJsonData)
 
-                  mapInstanceRef.current?.eachLayer((layer) => {
-                    if (!(layer instanceof L.TileLayer)) {
+
+                  //     const currentLayerGroup = layerSpec.alignment; // "center", "left", or "right"
+                  //     mapInstanceRef.current?.eachLayer((layer) => {
+                  //   if (!(layer instanceof L.TileLayer) && layer.layerGroup === currentLayerGroup) {
                       
-                      // Check if the layer's pane is NOT the mimic street pane before removing
-                      if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
-                        mapInstanceRef.current!.removeLayer(layer);
+                  //     // Check if the layer's pane is NOT the mimic street pane before removing
+                  //     if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                  //       mapInstanceRef.current!.removeLayer(layer);
+                  //     }
+                  //   }
+                  // });
+
+                  // [CHANGED] For center layers, we remove any previous center layers.
+                  // For left/right, we want to keep them all.
+                  if (layerSpec.alignment === "center") {
+                    mapInstanceRef.current?.eachLayer((layer) => {
+                      if (!(layer instanceof L.TileLayer) && layer.layerGroup === "center") {
+                        // Check if the layer's pane is NOT the mimic street pane before removing
+                        if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                          mapInstanceRef.current!.removeLayer(layer);
+                        }
                       }
-                    }
-                  });
+                    });
+                  }
 
 
                   // Create a new SVG layer for lines
                   const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  svgLayer.layerGroup = layerSpec.alignment; // "center", "left", or "right"
                   const svgGroup = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select("svg").append("g").attr("class", "leaflet-zoom-hide");
     
                   const lineGenerator = d3.line<any>()
@@ -973,7 +1142,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const attributeValue = edge[attributeIndex][lineWidth];
                         if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
                           // Map attribute values between 2 and 15
-                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 20]);
                           lineWidth = lineWidthScale(attributeValue)
                         }
                       } else {
@@ -986,6 +1155,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       // Default to 5 if undefined
                       lineWidth = 5;
                     }
+
+                    // console.log("lineWidth before:", lineWidth)
+
+                    lineWidth = getLineWidth(lineWidth)
+                    // console.log("lineWidth after:", lineWidth)
 
                     ///line random color-->
                     // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
@@ -1126,64 +1300,180 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     //   .attr("fill", "none");
     
                     function updateLines() {
-                      if (layerSpec.lineType === 'squiggle') {
-                        svgGroup.selectAll("path")
-                            .each(function (d: any, i: number) {
-                                // Retrieve the original data points from the edge object
-                                const edge = updatedGeoJsonData.edges[i];
-                                if (edge) {
-                                    const points = [
-                                        { lat: edge[0].lat, lon: edge[0].lon },
-                                        { lat: edge[1].lat, lon: edge[1].lon }
-                                    ];
-                                    const point1 = projectPoint(points[0].lat, points[0].lon);
-                                    const point2 = projectPoint(points[1].lat, points[1].lon);
-                
-                                    // Recalculate squiggle amplitude and frequency for each edge
-                                    let squiggleAmplitude = 25;
-                                    let squiggleFrequency = 10;
-                                    if (layerSpec.lineTypeVal) {
-                                        const squiggleIndex = edge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
-                                        if (squiggleIndex !== -1) {
-                                            const attributeValue = edge[squiggleIndex][layerSpec.lineTypeVal];
-                                            if (attributeValue !== undefined) {
-                                                const attributeValues = updatedGeoJsonData.edges
-                                                    .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(layerSpec.lineTypeVal)).map((entry: any) => entry[layerSpec.lineTypeVal]))
-                                                    .filter((v: any) => v !== undefined);
-                                                const minValue = d3.min(attributeValues);
-                                                const maxValue = d3.max(attributeValues);
-                                                const range = maxValue - minValue;
-                                                const stepSize = range / 3;
-                                                const boundary1 = minValue + stepSize;
-                                                const boundary2 = minValue + 2 * stepSize;
-                
-                                                if (attributeValue >= minValue && attributeValue < boundary1) {
-                                                    squiggleAmplitude = 25;
-                                                    squiggleFrequency = 60;
-                                                } else if (attributeValue >= boundary1 && attributeValue < boundary2) {
-                                                    squiggleAmplitude = 25;
-                                                    squiggleFrequency = 20;
-                                                } else {
-                                                    squiggleAmplitude = 25;
-                                                    squiggleFrequency = 5;
-                                                }
-                                              }
-                                          }
-                                      }
-                
-                                    const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
-                                    d3.select(this).attr("d", squigglyPath);
-                                  }
-                              });
-                      } else {
-                          svgGroup.selectAll("path")
-                              .attr("d", lineGenerator);
-                      }
+                      // We update geometry AND style each time the map moves/zooms:
+                      svgGroup.selectAll("path").each((d: any, idx: number, nodes) => {
+                        // “idx” is the path index => get the matching edge
+                        const thisEdge = updatedGeoJsonData.edges[idx];
+                        if (!thisEdge) return;
+          
+                        // Recompute style exactly like above:
+                        // --- lineColor ---
+                        let lineColor = layerSpec.lineColor || "red";
+                        const colorAttrIndex = thisEdge.findIndex((e: any) => e.hasOwnProperty(lineColor));
+                        if (colorAttrIndex !== -1) {
+                          const attributeValues = updatedGeoJsonData.edges
+                            .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineColor))
+                                                  .map((entry: any) => entry[lineColor]))
+                            .filter((v: any) => v !== undefined);
+                          const minValue = d3.min(attributeValues);
+                          const maxValue = d3.max(attributeValues);
+                          const attributeValue = thisEdge[colorAttrIndex][lineColor];
+                          if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                            const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                            lineColor = colorScale(attributeValue);
+                          }
+                        }
+          
+                        // --- lineWidth ---
+                        let lineWidth = layerSpec.lineStrokeWidth;
+                        if (typeof lineWidth === "string") {
+                          const wIndex = thisEdge.findIndex((e: any) => e.hasOwnProperty(lineWidth));
+                          if (wIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineWidth))
+                                                    .map((entry: any) => entry[lineWidth]))
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = thisEdge[wIndex][lineWidth];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 20]);
+                              lineWidth = lineWidthScale(attributeValue);
+                            } else {
+                              lineWidth = 5;
+                            }
+                          } else {
+                            lineWidth = 5;
+                          }
+                        } else if (typeof lineWidth === "number") {
+                          lineWidth = layerSpec.lineStrokeWidth;
+                        } else {
+                          lineWidth = 5;
+                        }
+                        lineWidth = getLineWidth(lineWidth);
+          
+                        // --- lineOpacity ---
+                        let lineOpacity = layerSpec.strokeOpacity || 1;
+                        if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                          // use directly
+                        } else if (typeof lineOpacity === "string") {
+                          const opacityIndex = thisEdge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                          if (opacityIndex !== -1) {
+                            const attributeValues = updatedGeoJsonData.edges
+                              .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity))
+                                                    .map((entry: any) => entry[lineOpacity]))
+                              .filter((v: any) => v !== undefined);
+                            const minValue = d3.min(attributeValues);
+                            const maxValue = d3.max(attributeValues);
+                            const attributeValue = thisEdge[opacityIndex][lineOpacity];
+                            if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                              const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                              lineOpacity = opacityScale(attributeValue);
+                            }
+                          }
+                        }
+          
+                        // --- dashArray ---
+                        let dashArray = null;
+                        if (layerSpec.lineType === "dashed" && layerSpec.lineTypeVal) {
+                          const dashIndex = thisEdge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
+                          if (dashIndex !== -1) {
+                            const attributeValue = thisEdge[dashIndex][layerSpec.lineTypeVal];
+                            if (attributeValue !== undefined) {
+                              const attributeValues = updatedGeoJsonData.edges
+                                .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(layerSpec.lineTypeVal))
+                                                      .map((entry: any) => entry[layerSpec.lineTypeVal]))
+                                .filter((v: any) => v !== undefined);
+                              const minValue = d3.min(attributeValues);
+                              const maxValue = d3.max(attributeValues);
+                              if (attributeValue < minValue + (maxValue - minValue) / 3) {
+                                dashArray = "2, 5";
+                              } else if (
+                                attributeValue >= minValue + (maxValue - minValue) / 3 &&
+                                attributeValue < minValue + 2 * ((maxValue - minValue) / 3)
+                              ) {
+                                dashArray = "10, 10";
+                              } else {
+                                dashArray = "15, 10";
+                              }
+                            }
+                          }
+                        }
+          
+                        // Now re‐compute geometry:
+                        if (layerSpec.lineType === 'squiggle') {
+                          const points = [
+                            { lat: thisEdge[0].lat, lon: thisEdge[0].lon },
+                            { lat: thisEdge[1].lat, lon: thisEdge[1].lon }
+                          ];
+          
+                          // Recompute squiggle amplitude/freq
+                          let squiggleAmplitude = 25;
+                          let squiggleFrequency = 10;
+                          if (layerSpec.lineTypeVal) {
+                            const sqIndex = thisEdge.findIndex((e: any) => e.hasOwnProperty(layerSpec.lineTypeVal));
+                            if (sqIndex !== -1) {
+                              const attributeValue = thisEdge[sqIndex][layerSpec.lineTypeVal];
+                              if (attributeValue !== undefined) {
+                                const attributeValues = updatedGeoJsonData.edges
+                                  .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(layerSpec.lineTypeVal))
+                                                        .map((entry: any) => entry[layerSpec.lineTypeVal]))
+                                  .filter((v: any) => v !== undefined);
+                                const minValue = d3.min(attributeValues);
+                                const maxValue = d3.max(attributeValues);
+                                const range = maxValue - minValue;
+                                const stepSize = range / 3;
+                                const boundary1 = minValue + stepSize;
+                                const boundary2 = minValue + 2 * stepSize;
+                                if (attributeValue >= minValue && attributeValue < boundary1) {
+                                  squiggleAmplitude = 25;
+                                  squiggleFrequency = 60;
+                                } else if (attributeValue >= boundary1 && attributeValue < boundary2) {
+                                  squiggleAmplitude = 25;
+                                  squiggleFrequency = 20;
+                                } else {
+                                  squiggleAmplitude = 25;
+                                  squiggleFrequency = 5;
+                                }
+                              }
+                            }
+                          }
+          
+                          const point1 = projectPoint(points[0].lat, points[0].lon);
+                          const point2 = projectPoint(points[1].lat, points[1].lon);
+                          const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
+          
+                          d3.select(nodes[idx])
+                            .attr("d", squigglyPath)
+                            .style("stroke", lineColor)
+                            .style("stroke-width", lineWidth)
+                            .style("stroke-opacity", lineOpacity)
+                            .style("stroke-dasharray", dashArray || null);
+          
+                        } else {
+                          // Normal line
+                          const points = [
+                            { lat: thisEdge[0].lat, lon: thisEdge[0].lon },
+                            { lat: thisEdge[1].lat, lon: thisEdge[1].lon }
+                          ];
+                          d3.select(nodes[idx])
+                            .datum(points)
+                            .attr("d", lineGenerator)
+                            .style("stroke", lineColor)
+                            .style("stroke-width", lineWidth)
+                            .style("stroke-opacity", lineOpacity)
+                            .style("stroke-dasharray", dashArray || null);
+                        }
+                      });
                     }
 
                     mapInstanceRef.current!.on("moveend", updateLines);
                   });
     
+                  // [CHANGED] Now that this layer is drawn, update the counter for this alignment
+                  // alignmentCounters[layerSpec.alignment]++;
+                  console.log("alignmentCounters:", alignmentCounters)
+
                   // Add the SVG layer to the reference list for later removal
                   currentLayersRef.current.push(svgLayer);
 
@@ -1199,7 +1489,220 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             }).catch(error => {
               console.error("Failed to load JSON data:", error);
             });
-          }else if (layerSpec.method === 'rect') {
+          }
+
+
+
+          else if(layerSpec.method === 'grid'){
+            let updatedGeoJsonData;
+            d3.json(layerSpec.physicalLayerPath).then(function(data) {
+              if (!data || !data.edges) {
+                console.error("Data is missing edges or is invalid.");
+                return;
+              }
+
+              // 1) Subdivide each edge along its length (already done in your code).
+              //    We'll keep your logic but remove left/right skipping, etc.
+              let subdividedEdges = [];
+              data.edges.forEach(function(edge) {
+                let start = edge[0]; // {lat, lon}
+                let end   = edge[1]; // {lat, lon}
+                let extras = edge.slice(2);
+
+                let lat0 = start.lat, lon0 = start.lon;
+                let lat1 = end.lat,   lon1 = end.lon;
+
+                let dLat = lat1 - lat0;
+                let dLon = lon1 - lon0;
+
+                for (let i = 0; i < layerSpec.unitDivide; i++) {
+                  // If you want to skip endpoints, etc., do it here:
+                  // if (i < 2 || i >= layerSpec.unitDivide - 2) continue;
+
+                  let segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+                  let segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+                  let segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+                  let segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+
+                  let newStart = { lat: segStartLat, lon: segStartLon };
+                  let newEnd   = { lat: segEndLat,   lon: segEndLon   };
+
+                  let newEdge = [ newStart, newEnd ].concat(extras);
+                  subdividedEdges.push(newEdge);
+                }
+              });
+              subdividedEdges = { edges: subdividedEdges };
+
+              // 2) Load thematic data and do your aggregator if needed.
+              d3.json(layerSpec.thematicLayerPath).then(function(thematicData) {
+                // Example aggregator step (adapt to your real aggregator):
+                // updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, ...);
+                // For demo, just keep the subdivided edges:
+                updatedGeoJsonData = { edges: subdividedEdges.edges };
+
+                // 3) Create an SVG layer
+                if (!mapInstanceRef.current.getPane("streetGridPane")) {
+                  mapInstanceRef.current.createPane("streetGridPane");
+                  mapInstanceRef.current.getPane("streetGridPane").style.zIndex = 400;
+                }
+                const svgLayer = L.svg({
+                  pane: "streetGridPane",
+                  className: "gMap-streetGrid"
+                }).addTo(mapInstanceRef.current);
+
+                // 4) Create an SVG <g> for drawing
+                const svgGroup = d3.select(mapInstanceRef.current.getPanes()["streetGridPane"])
+                                  .select("svg")
+                                  .append("g")
+                                  .attr("class", "leaflet-zoom-hide");
+                // We'll store all NxN cells here:
+                const gridGroup = svgGroup.append("g").attr("class", "street-grid-group");
+
+                // --- Helper functions ---
+                function offsetPoint(lat, lon, bearingDeg, distanceMeters) {
+                  const R = 6378137; // Earth radius in meters
+                  const toRad = Math.PI / 180;
+                  let lat1 = lat * toRad;
+                  let lon1 = lon * toRad;
+                  let brng = bearingDeg * toRad;
+                  let dR = distanceMeters / R;
+
+                  let lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) +
+                                      Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+                  let lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                                              Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+                  return [ lat2 / toRad, lon2 / toRad ];
+                }
+
+                function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+                  const toRad = Math.PI / 180;
+                  let phi1 = lat1 * toRad, phi2 = lat2 * toRad;
+                  let dLon = (lon2 - lon1) * toRad;
+                  let y = Math.sin(dLon) * Math.cos(phi2);
+                  let x = Math.cos(phi1) * Math.sin(phi2) -
+                          Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLon);
+                  let brng = Math.atan2(y, x) * (180 / Math.PI);
+                  return (brng + 360) % 360;
+                }
+
+                function projectPoint(lat, lon) {
+                  let point = mapInstanceRef.current.latLngToLayerPoint([lat, lon]);
+                  return [ point.x, point.y ];
+                }
+
+                // This is your existing getColor function, adapted to take a numeric value.
+                // You can shape it however you like:
+                function getColor(val) {
+                  // Example: define domain from min->max of your aggregator
+                  // (In real usage, store minVal/maxVal from the data, or pass them in.)
+                  const minVal = 0, maxVal = 100; // placeholder
+                  let colorScale = d3.scaleSequential(d3.interpolateBuGn)
+                                    .domain([minVal, maxVal]);
+                  return colorScale(val);
+                }
+
+                // For a simple NxN approach, let crossDivide = layerSpec.unitDivide (so total NxN):
+                let crossDivide = layerSpec.unitDivide;
+
+                // Suppose each street has a fixed total width (in meters). 
+                // You could also read from an attribute in `segment` if you have a “streetWidth” property.
+                let streetWidth = 20;
+
+                // 5) Draw NxN cells for each subdivided segment
+                function drawGridCells() {
+                  gridGroup.selectAll("*").remove(); // Clear old cells
+
+                  updatedGeoJsonData.edges.forEach(function(segment) {
+                    let start = segment[0];
+                    let end   = segment[1];
+
+                    // Bearing along the street
+                    let bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+
+                    // We'll offset perpendicular to the street’s centerline:
+                    let outward = (bearing + 90) % 360;
+
+                    // The length of the segment in meters (optional if you want length-based aggregator)
+                    // Could compute distance using haversine or offsetPoint logic. Not strictly needed here.
+
+                    // 6) For each sub-segment, we have exactly 1 row in the NxN grid.
+                    //    We now slice across the width into crossDivide columns:
+                    for (let j = 0; j < crossDivide; j++) {
+                      // fraction of street width for this column
+                      let w1 = (j / crossDivide)     * streetWidth;
+                      let w2 = ((j + 1) / crossDivide) * streetWidth;
+
+                      // Corner #1: offset the start point by w1
+                      let [sLat1, sLon1] = offsetPoint(start.lat, start.lon, outward, w1);
+                      // Corner #2: offset the start point by w2
+                      let [sLat2, sLon2] = offsetPoint(start.lat, start.lon, outward, w2);
+
+                      // Corner #3: offset the end point by w1
+                      let [eLat1, eLon1] = offsetPoint(end.lat, end.lon, outward, w1);
+                      // Corner #4: offset the end point by w2
+                      let [eLat2, eLon2] = offsetPoint(end.lat, end.lon, outward, w2);
+
+                      // Convert to screen coords
+                      let s1XY = projectPoint(sLat1, sLon1);
+                      let s2XY = projectPoint(sLat2, sLon2);
+                      let e1XY = projectPoint(eLat1, eLon1);
+                      let e2XY = projectPoint(eLat2, eLon2);
+
+                      // 7) Compute aggregator value for this cell.
+                      //    In real usage, you might do:
+                      //      let aggregatorVal = myCellAggregator(segment, iIndex, jIndex);
+                      //    or just read from segment extras. For demo, use a random:
+                      let aggregatorVal = Math.random() * 100; // 0..100
+
+                      // 8) Get color from aggregator
+                      let cellColor = getColor(aggregatorVal);
+
+                      // 9) Draw the cell polygon
+                      gridGroup.append("polygon")
+                        .attr("points", [
+                          s1XY, e1XY, e2XY, s2XY // going around corners
+                        ].map(pt => pt.join(",")).join(" "))
+                        .style("fill", cellColor)
+                        .style("fill-opacity", 0.7)
+                        .style("stroke", "#222")
+                        .style("stroke-width", 0.5);
+                    }
+                  });
+                }
+
+                // Draw once initially
+                drawGridCells();
+
+                // 10) Redraw on map zoom/pan
+                mapInstanceRef.current.on("moveend", drawGridCells);
+
+              }).catch(error => {
+                console.error("Failed to load thematic JSON data:", error);
+              });
+
+            }).catch(error => {
+              console.error("Failed to load physical JSON data:", error);
+            });
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          else if (layerSpec.method === 'rect') {
             if(layerSpec.orientation === 'parallel'){
               let updatedGeoJsonData;
               d3.json(layerSpec.physicalLayerPath).then(function (data) {
@@ -1673,7 +2176,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }else{
                         Gap = 6
                       }
-                      if (i < 2 || i >= layerSpec.unitDivide - 2) {
+                      if (i < 2 || i >= layerSpec.unitDivide - 2 ) {
                         continue; // Do not push these subdivided segments
                       }
                       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
@@ -1784,6 +2287,26 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       segment[2].Bearing = bearing;
                     }
 
+                    function getLineWidth(baseWidth) {
+                      // baseWidth is your “default” stroke at low zoom
+                      const zoom = mapInstanceRef.current.getZoom();
+                      // console.log("zoom and basewidth", zoom, baseWidth)
+                      
+                      if (zoom <= 16) {
+                        // Zoom 1–5: just use base width
+                        return baseWidth; 
+                      } else if (zoom > 16 && zoom <= 17) {
+                        // Zoom 6–8: a little wider
+                        return baseWidth * 1.5; 
+                      } else if (zoom > 17 && zoom <= 18) {
+                        // Zoom 9–12: more wide
+                        return baseWidth * 2;
+                      } else {
+                        // Zoom above 12: even wider
+                        return baseWidth * 3;
+                      }
+                    }
+
                     // Function to get "height" for each line from layerSpec.height
                     function getLineHeight(segment, updatedGeoJsonData) {
                       let height = layerSpec.height;
@@ -1802,7 +2325,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const attributeValue = segment[attributeIndex][height];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
                             // Map attribute values to [5..30], for example
-                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([5, 30]);
+                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([1, 15]);
                             height = heightScale(attributeValue);
                           } else {
                             height = 5; // default if not found or invalid
@@ -1930,7 +2453,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const p1 = projectPoint(mLeftLat,  mLeftLon);
                         const p2 = projectPoint(mLeft2Lat, mLeft2Lon);
 
-                        console.log("checkinh LineWidth for each", lineWidth)
+                        // console.log("checkinh LineWidth for each", lineWidth)
 
                         // draw line
                         leftGroup.append("line")
@@ -2128,7 +2651,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     let end = edge[1];
                     let bearing = edge[2].Bearing;
                     let angle = edge[2].Bearing + 90;
-                    const midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+                    let midpoint;
+                    if(layerSpec.alignment === 'center'){
+                      midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+                    } else if(layerSpec.alignment === 'top'){
+                      midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+                      midpoint = { lat: (start.lat + midpoint.lat) / 2, lon: (start.lon + midpoint.lon) / 2 };
+                    }else if(layerSpec.alignment === 'bottom'){
+                      midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
+                      midpoint = { lat: (midpoint.lat + end.lat) / 2, lon: (midpoint.lon + end.lon) / 2 };
+                    }
+                    
                     if(layerSpec.orientation=='perpendicular'){
                       angle = angle + 90;
                     }
@@ -2199,6 +2732,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         point = mapInstanceRef.current!.latLngToLayerPoint([leftPoint.lat, leftPoint.lon]);
                       }else if(layerSpec.alignment=="right"){
                         point = mapInstanceRef.current!.latLngToLayerPoint([rightPoint.lat, rightPoint.lon]);
+                      }else if(layerSpec.alignment=="top"){
+                        point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                      }else if(layerSpec.alignment=="bottom"){
+                        point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
                       }
                       // const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
                       // const tempID = `t${midpoint.lat}${midpoint.lon}`.replace('.', '').replace('-', '') + 'svg';
@@ -2808,7 +3345,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                 d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
                   if(layerSpec.spatialRelation == 'contains'){
                     updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                    console.log("data is:", updatedGeoJsonData)
+                    // console.log("data is:", updatedGeoJsonData)
                   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
                     updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
                   }else if(layerSpec.spatialRelation == 'buffer'){
@@ -2941,7 +3478,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                             .node()
                             .appendChild(vegaSVG.cloneNode(true));
                         } else {
-                          temp.attr('transform', `translate(${point.x - svgWidth / 1.5}, ${point.y - svgHeight / 1.5})`);
+                          temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`);
                         }
                       };
           
