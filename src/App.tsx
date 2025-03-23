@@ -149,9 +149,9 @@ const App: React.FC = () => {
       const zoom = zoomMatch
       ? parseInt(zoomMatch[1], 10)
       : unit === 'segment'
-        ? 18
+        ? 17
         : unit === 'node'
-          ? 18
+          ? 17
           : 10;  // Default zoom: 10 for other cases
 
       // Parse method (e.g., fill or line)

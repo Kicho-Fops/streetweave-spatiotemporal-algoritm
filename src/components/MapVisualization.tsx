@@ -5,8 +5,8 @@ import * as d3 from 'd3';
 import 'leaflet.heat'; // Import the heatmap plugin
 import vegaEmbed from 'vega-embed';
 import * as turf from '@turf/turf';
-// import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
-// import maplibregl from 'maplibre-gl';
+import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
+import maplibregl from 'maplibre-gl';
 
 
 interface ParsedSpec {
@@ -93,15 +93,16 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
   
       // Initialize aggregation results for each attribute
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-      // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
-      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
-                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
-                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
-                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
-                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
-                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
-                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
-                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+      const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+      // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+      //                     "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+      //                     "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+      //                     "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+      //                     "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+      //                     "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+      //                     "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+      //                     "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+
       let aggregatedValues = {};
   
       attributes.forEach((attr) => {
@@ -150,15 +151,15 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       // Perform aggregation for each environmental attribute
       let aggregatedValues = [];
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-      // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
-      const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
-                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
-                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
-                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
-                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
-                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
-                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
-                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+      const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+      // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+      //                     "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+      //                     "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+      //                     "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+      //                     "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+      //                     "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+      //                     "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+      //                     "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
 
       attributes.forEach(attr => {
         const values = pointsInBoundingBox.map(point => point[attr]);
@@ -242,15 +243,15 @@ const findClosestPoints = (distances, thematicData, numberOfPoints = 100) => {
 // Function to aggregate data based on type for area
 const aggregateData = (points, aggregationType) => {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
-  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
-                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
-                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
-                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
-                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
-                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
-                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
-                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+  const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+  // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+  //                         "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+  //                         "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+  //                         "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+  //                         "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+  //                         "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+  //                         "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+  //                         "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -302,15 +303,15 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
 // Function to aggregate environmental data based on given points and aggregation type for segment line
 function aggregateAttributes(points, aggregationType) {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
-  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
-                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
-                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
-                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
-                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
-                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
-                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
-                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+  const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+  // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+  //                         "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+  //                         "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+  //                         "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+  //                         "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+  //                         "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+  //                         "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+  //                         "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
   let aggregatedValues = [];
 
   attributes.forEach(attr => {
@@ -404,15 +405,15 @@ function filterPointsWithinBufferSegment(buffer, environmentalData) {
 // Function to aggregate values based on the selected aggregation type
 const aggregateValues = (points, aggregationType) => {
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  // const attributes = ["score", "CurbRamp", "NoCurbRamp", "Obstacle", "SurfaceProblem"]
-  const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
-                          "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
-                          "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
-                          "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
-                          "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
-                          "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
-                          "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
-                          "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+  const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+  // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
+  //                         "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
+  //                         "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
+  //                         "Damage", "Trespass", "GAMBLING", "HOMICIDE", "HUMAN TRAFFICKING",
+  //                         "KIDNAPPING", "MOTOR VEHICLE THEFT", "NON-CRIMINAL", "OBSCENITY",
+  //                         "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
+  //                         "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
+  //                         "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -624,9 +625,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom); // Use zoom of first layer
         
         
-        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
           maxZoom: 19,
-          attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          attribution: '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
         }).addTo(mapInstanceRef.current);
       } else {
         // Update zoom level when parsedSpec changes
@@ -635,6 +636,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
     }
   }, [parsedSpec]);
+  
 
 
 
@@ -791,6 +793,22 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               return (brng + 360) % 360;
             }
 
+            // Normalize the segment by swapping start and end if needed (assumes a Bearing property in extras)
+            function normalizeSegment(segment) {
+              const start = segment[0];
+              const end = segment[1];
+              let bearing = segment[2].Bearing;
+              bearing = ((bearing % 360) + 360) % 360;
+              if (bearing >= 180) {
+                // Swap start & end
+                const temp = { lat: start.lat, lon: start.lon };
+                start.lat = end.lat;   start.lon = end.lon;
+                end.lat = temp.lat;    end.lon = temp.lon;
+                bearing -= 180;
+              }
+              segment[2].Bearing = bearing;
+            }
+
             function getOffsetDistance() {
               const zoom = mapInstanceRef.current.getZoom();
               if (zoom >= 18) return 15;
@@ -798,6 +816,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               // Smooth linear interpolation between 5 (zoom 18) and 20 (zoom 16)
               return 5 + ((18 - zoom) / (18 - 17)) * (25 - 15);
             }
+
+            
 
             function getLineWidth(baseWidth) {
               // baseWidth is your “default” stroke at low zoom
@@ -838,6 +858,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                   // Loop through each edge in the original array
                   data.edges.forEach(function(edge) {
+
+                    edge[2].Bearing = bearingBetweenPoints(edge[0].lat, edge[0].lon,
+                        edge[1].lat, edge[1].lon);
+                      normalizeSegment(edge);
                      // Extract the original start and end points and any extra attributes
                       const originalStart = edge[0];
                       const originalEnd = edge[1];
@@ -1104,6 +1128,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
     
                   updatedGeoJsonData.edges.forEach((edge: any) => {
+
+                    // edge[2].Bearing = bearingBetweenPoints(edge[0].lat, edge[0].lon,
+                    //   edge[1].lat, edge[1].lon);
+                    // normalizeSegment(edge);
                     const points = [
                       { lat: edge[0].lat, lon: edge[0].lon },
                       { lat: edge[1].lat, lon: edge[1].lon }
@@ -1777,26 +1805,33 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // updatedGeoJsonData = [updatedGeoJsonData.edges[0]]
 
                     console.log("data check for rect2", updatedGeoJsonData)
+                    const paneName = layerSpec.alignment + "-" + layerSpec.orientation;
 
             
             
                     // Create separate panes for left and right if not already created.
-                    if (!mapInstanceRef.current.getPane("leftPane")) {
-                      mapInstanceRef.current.createPane("leftPane");
-                      mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
-                    }
-                    if (!mapInstanceRef.current.getPane("rightPane")) {
-                      mapInstanceRef.current.createPane("rightPane");
-                      mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
+                    // if (!mapInstanceRef.current.getPane("leftPane")) {
+                    //   mapInstanceRef.current.createPane("leftPane");
+                    //   mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
+                    // }
+                    // if (!mapInstanceRef.current.getPane("rightPane")) {
+                    //   mapInstanceRef.current.createPane("rightPane");
+                    //   mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
+                    // }
+                    if (!mapInstanceRef.current.getPane(paneName)) {
+                      mapInstanceRef.current.createPane(paneName);
+                      mapInstanceRef.current.getPane(paneName).style.zIndex = 400; 
+                      // Or 410, etc., as needed
                     }
                     // Determine the pane name based on alignment.
-                    const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
+                    // const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
+                    // const paneName = layerSpec.alignment + "-" + layerSpec.orientation;
 
                     // Remove only layers in the current pane (unless they belong to mimicStreetPane)
                     mapInstanceRef.current?.eachLayer((layer) => {
                       if (!(layer instanceof L.TileLayer)) {
                         if (!(layer.options && layer.options.pane === 'mimicStreetPane') &&
-                            (layer.options && layer.options.pane === paneName)) {
+                        layer.options?.pane === paneName) {
                           mapInstanceRef.current.removeLayer(layer);
                         }
                       }
@@ -2210,23 +2245,33 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                    
 
                     // 4) Create separate panes for left and right (if not existing)
-                    if (!mapInstanceRef.current.getPane("leftPane")) {
-                      mapInstanceRef.current.createPane("leftPane");
-                      mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
-                    }
-                    if (!mapInstanceRef.current.getPane("rightPane")) {
-                      mapInstanceRef.current.createPane("rightPane");
-                      mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
-                    }
+                    const paneName = layerSpec.alignment + "-" + layerSpec.orientation;
 
-                    // Determine which pane to use based on alignment
-                    const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
+            
+            
+                    // Create separate panes for left and right if not already created.
+                    // if (!mapInstanceRef.current.getPane("leftPane")) {
+                    //   mapInstanceRef.current.createPane("leftPane");
+                    //   mapInstanceRef.current.getPane("leftPane").style.zIndex = 400;
+                    // }
+                    // if (!mapInstanceRef.current.getPane("rightPane")) {
+                    //   mapInstanceRef.current.createPane("rightPane");
+                    //   mapInstanceRef.current.getPane("rightPane").style.zIndex = 410;
+                    // }
+                    if (!mapInstanceRef.current.getPane(paneName)) {
+                      mapInstanceRef.current.createPane(paneName);
+                      mapInstanceRef.current.getPane(paneName).style.zIndex = 400; 
+                      // Or 410, etc., as needed
+                    }
+                    // Determine the pane name based on alignment.
+                    // const paneName = layerSpec.alignment === "left" ? "leftPane" : "rightPane";
+                    // const paneName = layerSpec.alignment + "-" + layerSpec.orientation;
 
-                    // Remove only layers in the current pane (unless mimicStreetPane)
+                    // Remove only layers in the current pane (unless they belong to mimicStreetPane)
                     mapInstanceRef.current?.eachLayer((layer) => {
                       if (!(layer instanceof L.TileLayer)) {
                         if (!(layer.options && layer.options.pane === 'mimicStreetPane') &&
-                            (layer.options && layer.options.pane === paneName)) {
+                        layer.options?.pane === paneName) {
                           mapInstanceRef.current.removeLayer(layer);
                         }
                       }
@@ -2325,7 +2370,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const attributeValue = segment[attributeIndex][height];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
                             // Map attribute values to [5..30], for example
-                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([1, 15]);
+                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 5]);
                             height = heightScale(attributeValue);
                           } else {
                             height = 5; // default if not found or invalid
@@ -2339,6 +2384,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       } else {
                         height = 5; // default
                       }
+                      height = getLineWidth(height)
                       return height;
                     }
 
@@ -2357,7 +2403,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           // console.log("min and max width val check:", minValue, maxValue)
                           const attributeValue = segment[attrIndexWidth][lineWidth];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
+                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 5]);
                             lineWidth = lineWidthScale(attributeValue);
                           }
                         } else {
@@ -2368,6 +2414,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       } else {
                         lineWidth = 5;
                       }
+                      lineWidth = getLineWidth(lineWidth)
                       return lineWidth
                     }
                     function getColor(segment, updatedGeoData){
