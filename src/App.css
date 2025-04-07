@@ -54,7 +54,7 @@ textarea {
   margin-top: 10px;
   padding: 10px;
   font-size: 16px;
-  background-color: #4CAF50;
+  background-color: #68645f;
   color: white;
   border: none;
   border-radius: 4px;
@@ -62,7 +62,7 @@ textarea {
 }
 
 .apply-button:hover {
-  background-color: #45a049;
+  background-color: #463d32;
 }
 
 #map {

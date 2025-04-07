@@ -42,6 +42,10 @@ interface ParsedSpec {
   address?: string;
   roadRadius?: number; 
   radiusUnit?: string; 
+  background?: string; 
+  streetName?: string; 
+  streetColor?: string; 
+  streetWidth?: number;
 }
 
 const App: React.FC = () => {
@@ -263,6 +267,33 @@ const App: React.FC = () => {
         }
       }
 
+      let background, streetName, streetColor;
+      // Attempt to locate the `.map(...)` portion
+      const mapMatch = spec.match(/\.map\(([^)]+)\)/);
+      if (mapMatch) {
+        const mapContent = mapMatch[1];
+
+        // Parse background
+        const bgMatch = mapContent.match(/background\s*=\s*([^,]+)/);
+        if (bgMatch) {
+          background = bgMatch[1].trim();
+        }
+
+        // Parse street-name
+        const snMatch = mapContent.match(/street-name\s*=\s*([^,]+)/);
+        if (snMatch) {
+          streetName = snMatch[1].trim();
+        }
+
+        // Parse street-color
+        const scMatch = mapContent.match(/street-color\s*=\s*([^,]+)/);
+        if (scMatch) {
+          streetColor = scMatch[1].trim();
+        }
+      }
+
+      console.log("mapMatch:", mapMatch)
+
        // Parse for `point` method
       if (method === 'point') {
         // Parse x and y positions for point data
@@ -307,7 +338,8 @@ const App: React.FC = () => {
       let roadDirection = undefined;
       let address = undefined;
       let roadRadius = undefined;
-      let radiusUnit = undefined
+      let radiusUnit = undefined;
+      let streetWidth = undefined;
 
       // Extract the content inside .query( ... )
       const queryMatch = spec.match(/\.query\(([^)]+)\)/);
@@ -332,9 +364,16 @@ const App: React.FC = () => {
           roadRadius = radiusMatch[1].trim();
           radiusUnit = radiusMatch[2].trim();
         }
+
+        // Capture "street_width" if it exists
+        const streetWidthMatch = queryContent.match(/street_width\s*=\s*(\d+(?:\.\d+)?)/);
+        if (streetWidthMatch) {
+          streetWidth = parseFloat(streetWidthMatch[1].trim());
+        }
+
       }
 
-      console.log(roadDirection, address, roadRadius, radiusUnit);
+      console.log(roadDirection, address, roadRadius, radiusUnit, streetWidth);
     
 
       // Return the parsed specification for this layer
@@ -374,7 +413,11 @@ const App: React.FC = () => {
         roadDirection,
         address,
         roadRadius,
-        radiusUnit
+        radiusUnit,
+        background, 
+        streetName,
+        streetColor,
+        streetWidth,
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);

@@ -46,6 +46,10 @@ interface ParsedSpec {
   address?: string;
   roadRadius?: number; 
   radiusUnit?: string;
+  background?: string; 
+  streetName?: string; 
+  streetColor?: string;
+  streetWidth?: number; 
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -234,7 +238,7 @@ const calculateDistances = (centroid, thematicData) => {
 };
 
 // Function to find the closest points based on distance
-const findClosestPoints = (distances, thematicData, numberOfPoints = 100) => {
+const findClosestPoints = (distances, thematicData, numberOfPoints = 50) => {
   distances.sort((a, b) => a.distance - b.distance);
   return distances.slice(0, numberOfPoints).map(d => thematicData[d.index]);
 };
@@ -548,6 +552,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
   const currentLayersRef = useRef<L.Layer[]>([]);
   // New state to control mimic street width
   const [mimicWidth, setMimicWidth] = useState<number>(0);
+  console.log("mimicWidth is:", mimicWidth)
   // New state for the geocoded address coordinates.
   const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
 
@@ -567,6 +572,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       setAddressCoords(null);
     }
   }, [parsedSpec[0].address]);
+
+  // If parsedSpec[0].streetWidth exists, update mimicWidth and the slider value.
+  useEffect(() => {
+    if (parsedSpec[0] && parsedSpec[0].streetWidth !== undefined) {
+      setMimicWidth(parsedSpec[0].streetWidth);
+    }
+  }, [parsedSpec]);
 
 
   // useEffect(() => {
@@ -620,17 +632,37 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       let zoomVar;
 
       if (!mapInstanceRef.current) {
-        // console.log('zoom is', parsedSpec)
         // Initial map creation
-        mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom); // Use zoom of first layer
-        
-        
-        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-          maxZoom: 19,
-          attribution: '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+        mapInstanceRef.current = L.map(mapRef.current).setView([Lat, Lon], parsedSpec[0].zoom);
+      
+        // Decide which tile layer to use based on parsedSpec[0].background
+        const backgroundValue = parsedSpec[0]?.background || "";
+        let tileUrl = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png";
+        let maxZoom = 20;
+      
+        if (backgroundValue === "dark") {
+          tileUrl = "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
+          maxZoom = 19;
+        } else if (backgroundValue === "light") {
+          // In case you want a separate URL for 'light' (currently the same as default)
+          tileUrl = "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png";
+          maxZoom = 20;
+        } 
+        // If backgroundValue is empty or any other string, 
+        // you can keep the default tileUrl and maxZoom = 20.
+      
+        // Add the chosen tile layer
+        L.tileLayer(tileUrl, {
+          maxZoom,
+          attribution:
+            '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> ' +
+            '&copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> ' +
+            '&copy; <a href="https://www.openstreetmap.org/copyright" ' +
+            'target="_blank">OpenStreetMap</a>',
         }).addTo(mapInstanceRef.current);
+      
       } else {
-        // Update zoom level when parsedSpec changes
+        // Update zoom level if parsedSpec changes
         mapInstanceRef.current.setView([Lat, Lon], parsedSpec[0].zoom);
       }
 
@@ -679,7 +711,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               mimicLayerRef.current = L.geoJSON(geojson, {
                 pane: 'mimicStreetPane',
                 style: {
-                  color: '#d3d3d6',
+                  color: '#d3d3d6', //'#808080',
                   weight: 0,
                   opacity: 0.8
                 }
@@ -692,11 +724,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       }
     }, []);
 
+
       // Update mimic street width based on the slider value and filtering conditions.
       useEffect(() => {
         if (mimicLayerRef.current) {
           mimicLayerRef.current.eachLayer((layer: any) => {
-            const defaultWeight = 50;
+            const defaultWeight = parsedSpec[0].streetWidth;
             let shouldUpdate = true;
             // If a roadDirection is provided, check the feature's cardinal direction.
             if (parsedSpec[0].roadDirection) {
@@ -717,7 +750,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             }
             // If neither condition is provided, or if all provided conditions are met, update the width.
             layer.setStyle({
-              color: '#d3d3d6',
+              color: parsedSpec[0].streetColor ? parsedSpec[0].streetColor : '#d3d3d6', //'#808080',
               weight: shouldUpdate ? mimicWidth : defaultWeight,
               opacity: 0.8
             });
@@ -816,6 +849,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               // Smooth linear interpolation between 5 (zoom 18) and 20 (zoom 16)
               return 5 + ((18 - zoom) / (18 - 17)) * (25 - 15);
             }
+
+            // function getOffsetDistance() {
+            //   const zoom = mapInstanceRef.current.getZoom();
+            //   if (zoom >= 18) return 0; // attached
+            //   if (zoom <= 16) return 15; // max offset
+            //   // interpolate between 0 (zoom 18) and 15 (zoom 16)
+            //   return ((18 - zoom) / (18 - 16)) * 15;
+            // }
 
             
 
@@ -1149,8 +1190,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       const maxValue = d3.max(attributeValues);
                       const attributeValue = edge[attributeIndex][lineColor];
                       if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                        // const colorScale = d3.scaleSequential(d3.interpolateInferno).domain([minValue, maxValue]);
-                        const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                        const step = (maxValue - minValue) / 5;
+                          const thresholds = [
+                            minValue + step,
+                            minValue + 2 * step,
+                            minValue + 3 * step,
+                            minValue + 4 * step
+                          ];
+                          // const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          const colorScale = d3.scaleThreshold()
+                                        .domain(thresholds) // 4 thresholds create 5 bins
+                                        .range(["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]);
                         lineColor = colorScale(attributeValue);
                       }
                     }
@@ -1347,7 +1397,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const maxValue = d3.max(attributeValues);
                           const attributeValue = thisEdge[colorAttrIndex][lineColor];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                            const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                            const step = (maxValue - minValue) / 5;
+                            const thresholds = [
+                              minValue + step,
+                              minValue + 2 * step,
+                              minValue + 3 * step,
+                              minValue + 4 * step
+                            ];
+                            // const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                            const colorScale = d3.scaleThreshold()
+                                          .domain(thresholds) // 4 thresholds create 5 bins
+                                          .range(["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]);
                             lineColor = colorScale(attributeValue);
                           }
                         }
@@ -1758,7 +1818,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     for (var i = 0; i < layerSpec.unitDivide; i++) {
 
                       // Skip the first two (i < 2) and last two (i >= layerSpec.unitDivide - 2)
-                      if (i < 2 || i >= layerSpec.unitDivide - 2) {
+                      if (i < 5 || i >= layerSpec.unitDivide - 5) {
                         continue; // Do not push these subdivided segments
                       }
                       // Calculate the start coordinate of the new segment
@@ -1906,6 +1966,26 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }
                       segment[2].Bearing = bearing;
                     }
+
+                    function getLineWidth(baseWidth) {
+                      // baseWidth is your “default” stroke at low zoom
+                      const zoom = mapInstanceRef.current.getZoom();
+                      // console.log("zoom and basewidth", zoom, baseWidth)
+                      
+                      if (zoom <= 16) {
+                        // Zoom 1–5: just use base width
+                        return baseWidth; 
+                      } else if (zoom > 16 && zoom <= 17) {
+                        // Zoom 6–8: a little wider
+                        return baseWidth * 1.5; 
+                      } else if (zoom > 17 && zoom <= 18) {
+                        // Zoom 9–12: more wide
+                        return baseWidth * 2;
+                      } else {
+                        // Zoom above 12: even wider
+                        return baseWidth * 3;
+                      }
+                    }
             
                     // Draw a polygon using an array of [x, y] coordinates
                     function drawPolygon(g, corners, color) {
@@ -1941,8 +2021,25 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           // console.log("min and max width val check:", minValue, maxValue)
                           const attributeValue = segment[attrIndexWidth][lineWidth];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                            const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
-                            lineWidth = lineWidthScale(attributeValue);
+                            // Calculate the step based on a min of 0.
+                            const step = (maxValue - minValue) / 3;
+                            const thresholds = [
+                              minValue + step,      // end of first window (values >0 up to this)
+                              minValue + 2 * step   // end of second window
+                            ];
+
+                            // Create a threshold scale for nonzero values
+                            const lwScale = d3.scaleThreshold()
+                            .domain(thresholds)
+                            .range([0.5, 0.75, 1]);
+
+                            function getLineWidth2(value) {
+                              return value === 0 ? 0 : lwScale(value);
+                            }
+
+                            // const lineWidthScale = d3.scaleLinear().domain(thresholds).range([0, 0.5, 1]);
+                            lineWidth = getLineWidth2(attributeValue);
+                            // console.log("checking final width at night", lineWidth)
                           }
                         } else {
                           lineWidth = 5;
@@ -1952,9 +2049,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       } else {
                         lineWidth = 5;
                       }
+                      lineWidth = getLineWidth(lineWidth)
+                      // console.log("checking final width at night", lineWidth)
                       return lineWidth
                     }
                     function getColor(segment, updatedGeoData){
+                      let colors;
                       // (A) lineColor
                       let lineColor   = layerSpec.lineColor   || "red";
                       const attrIndexColor = segment.findIndex((e) => e.hasOwnProperty(lineColor));
@@ -1968,7 +2068,26 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         // console.log("min and max col val check:", minValue, maxValue)
                         const attributeValue = segment[attrIndexColor][lineColor];
                         if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                          const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          const step = (maxValue - minValue) / 5;
+                          const thresholds = [
+                            minValue + step,
+                            minValue + 2 * step,
+                            minValue + 3 * step,
+                            minValue + 4 * step
+                          ];
+                          if(layerSpec.lineColor == "NoSidewalk"){
+                            colors = ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"];
+                          }
+                          else if(layerSpec.lineColor == "Obstacle"){
+                            colors = ["#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b"];
+                          }
+                          else{
+                            colors = ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"];
+                          }
+                          // const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          const colorScale = d3.scaleThreshold()
+                                        .domain(thresholds) // 4 thresholds create 5 bins
+                                        .range(colors);
                           lineColor = colorScale(attributeValue);
                         }
                       }
@@ -2034,6 +2153,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360
                         const outwardLeft = (bLeftLine + 90) % 360;
                         const wLeft = segment._leftWidth;
+                        // const wLeft = lineWidth*6
             
                         // Outer corners for LEFT side
                         const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
@@ -2073,6 +2193,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360 
                         const outwardRight = (bRightLine + 270) % 360;
                         const wRight = segment._rightWidth;
+                        // const wRight = lineWidth*6;
             
                         // Outer corners for RIGHT side
                         const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
@@ -2124,6 +2245,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
                           const outwardLeft = (bLeftLine + 90) % 360;
                           const wLeft = segment._leftWidth;
+                          // const wLeft = lineWidth*6;
                           const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
                         const [eLeft2Lat, eLeft2Lon] = offsetPoint(eLeftLat, eLeftLon, outwardLeft, wLeft);
                         const sLeftXY  = projectPoint(sLeftLat, sLeftLon);
@@ -2150,6 +2272,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const outwardRight = (bRightLine + 270) % 360;
                           
                           const wRight = segment._rightWidth;
+                          // const wRight = lineWidth*6;
                           
                           const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
                           const [eRight2Lat, eRight2Lon] = offsetPoint(eRightLat, eRightLon, outwardRight, wRight);
@@ -2211,7 +2334,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }else{
                         Gap = 6
                       }
-                      if (i < 2 || i >= layerSpec.unitDivide - 2 ) {
+                      if (i < 3 || i >= layerSpec.unitDivide - 3 ) {
                         continue; // Do not push these subdivided segments
                       }
                       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
@@ -2355,6 +2478,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // Function to get "height" for each line from layerSpec.height
                     function getLineHeight(segment, updatedGeoJsonData) {
                       let height = layerSpec.height;
+                      let minValue;
+                      let maxValue;
                       if (typeof height === "string") {
                         // Interpret as an attribute name
                         const attributeIndex = segment.findIndex((e) => e.hasOwnProperty(height));
@@ -2364,13 +2489,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                               edg.filter((entry) => entry.hasOwnProperty(height)).map((entry) => entry[height])
                             )
                             .filter((v) => v !== undefined);
-                          const minValue = d3.min(attributeValues);
-                          const maxValue = d3.max(attributeValues);
+                          minValue = d3.min(attributeValues);
+                          maxValue = d3.max(attributeValues);
                           // console.log("min and max height val check:", minValue, maxValue)
                           const attributeValue = segment[attributeIndex][height];
                           if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
                             // Map attribute values to [5..30], for example
-                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 5]);
+                            const heightScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 7]);
                             height = heightScale(attributeValue);
                           } else {
                             height = 5; // default if not found or invalid
@@ -2384,7 +2509,18 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       } else {
                         height = 5; // default
                       }
+                      // let avg =  ((maxValue + minValue)/2)
+                      // if(height <= 2){
+                      //   height = height
+                      // }
+                      // else if(height > 2 && height <= 5){
+                      //   height = height +2
+                      // }else if(height > 5 && height <= 7){
+                      //   height = height +4
+                      // }
+                      // console.log("night1", height)
                       height = getLineWidth(height)
+                      // console.log("night2", height)
                       return height;
                     }
 
@@ -2418,6 +2554,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       return lineWidth
                     }
                     function getColor(segment, updatedGeoData){
+                      let colors;
                       // (A) lineColor
                       let lineColor   = layerSpec.lineColor   || "red";
                       const attrIndexColor = segment.findIndex((e) => e.hasOwnProperty(lineColor));
@@ -2431,8 +2568,25 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         // console.log("min and max col val check:", minValue, maxValue)
                         const attributeValue = segment[attrIndexColor][lineColor];
                         if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                          const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          const step = (maxValue - minValue) / 5;
+                          const thresholds = [
+                            minValue + step,
+                            minValue + 2 * step,
+                            minValue + 3 * step,
+                            minValue + 4 * step
+                          ];
+                          // const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
+                          if(layerSpec.lineColor == "NoSidewalk"){
+                            colors = ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"];
+                          }
+                          else if(layerSpec.lineColor == "Crosswalk"){
+                            colors = ["#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b"];
+                          }
+                          const colorScale = d3.scaleThreshold()
+                                        .domain(thresholds) // 4 thresholds create 5 bins
+                                        .range(colors);
                           lineColor = colorScale(attributeValue);
+                          // lineColor = colorScale(attributeValue);
                         }
                       }
                       return lineColor
@@ -2686,8 +2840,25 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                 }
 
+                const chartSpec = JSON.parse(JSON.stringify(layerSpec.chart));
+                chartSpec.data = {
+                  "values": [
+                    {"x": 1,  "y": 28}, {"x": 2,  "y": 55},
+                    {"x": 3,  "y": 43}, {"x": 4,  "y": 91},
+                    {"x": 5,  "y": 81}, {"x": 6,  "y": 53},
+                    {"x": 7,  "y": 19}, {"x": 8,  "y": 87},
+                    {"x": 9,  "y": 52}, {"x": 10, "y": 48},
+                    {"x": 11, "y": 24}, {"x": 12, "y": 49},
+                    {"x": 13, "y": 87}, {"x": 14, "y": 66},
+                    {"x": 15, "y": 17}, {"x": 16, "y": 27},
+                    {"x": 17, "y": 68}, {"x": 18, "y": 16},
+                    {"x": 19, "y": 49}, {"x": 20, "y": 15}
+                  ],
+                };
+          
+
   
-                vegaEmbed('#vis', layerSpec.chart, {renderer: 'svg', actions: false}).then(result => {
+                vegaEmbed('#vis', chartSpec, {renderer: 'svg', actions: false}).then(result => {
                   const vegaSVG = result.view._el.querySelector('svg');
                   const svgWidth = 150;
                   const svgHeight = 70;
@@ -3399,76 +3570,76 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                     // console.log("checking updatedGeoData inside", updatedGeoJsonData)
                   }
-                // })
+                  // })
 
-                updatedGeoJsonData = {
-                  edges: updatedGeoJsonData
-                };
-                // console.log("checking updatedGeoData outside", updatedGeoJsonData)
-          
-                // 2) Accumulate node data in a dictionary keyed by lat,lon
-                const NodesMap: Record<string, any> = {};
-          
-                // Helper function to add data for a node
-                function addNodeData(lat: number, lon: number, edgeData: Record<string, any>) {
-                  const key = `${lat},${lon}`;
-          
-                  if (!NodesMap[key]) {
-                    NodesMap[key] = {
-                      lat,
-                      lon,
-                      sums: {},  // sums of numeric attributes
-                      count: 0
+                    updatedGeoJsonData = {
+                      edges: updatedGeoJsonData
                     };
-                  }
+                  // console.log("checking updatedGeoData outside", updatedGeoJsonData)
           
-                  // For each attribute in edgeData, if it's numeric, accumulate it
-                  for (const [attrKey, attrValue] of Object.entries(edgeData)) {
-                    if (typeof attrValue === 'number') {
-                      if (!NodesMap[key].sums[attrKey]) {
-                        NodesMap[key].sums[attrKey] = 0;
-                      }
-                      NodesMap[key].sums[attrKey] += attrValue;
+                  // 2) Accumulate node data in a dictionary keyed by lat,lon
+                  const NodesMap: Record<string, any> = {};
+          
+                  // Helper function to add data for a node
+                  function addNodeData(lat: number, lon: number, edgeData: Record<string, any>) {
+                    const key = `${lat},${lon}`;
+            
+                    if (!NodesMap[key]) {
+                      NodesMap[key] = {
+                        lat,
+                        lon,
+                        sums: {},  // sums of numeric attributes
+                        count: 0
+                      };
                     }
+            
+                    // For each attribute in edgeData, if it's numeric, accumulate it
+                    for (const [attrKey, attrValue] of Object.entries(edgeData)) {
+                      if (typeof attrValue === 'number') {
+                        if (!NodesMap[key].sums[attrKey]) {
+                          NodesMap[key].sums[attrKey] = 0;
+                        }
+                        NodesMap[key].sums[attrKey] += attrValue;
+                      }
+                    }
+            
+                    NodesMap[key].count += 1;
                   }
-          
-                  NodesMap[key].count += 1;
-                }
           
                 // 3) Go through each edge, gather the node data
-                const edges = updatedGeoJsonData.edges;
-                console.log("edges:", edges)
+                  const edges = updatedGeoJsonData.edges;
+                  console.log("edges:", edges)
                 // console.log("checking the data for edge", updatedGeoJsonData)
-                edges.forEach((edge: any) => {
-                  // edge[0] = first node { lat, lon }
-                  // edge[1] = second node { lat, lon }
-                  const firstNode = edge[0];
-                  const secondNode = edge[1];
+                  edges.forEach((edge: any) => {
+                    // edge[0] = first node { lat, lon }
+                    // edge[1] = second node { lat, lon }
+                    const firstNode = edge[0];
+                    const secondNode = edge[1];
+            
+                    // The rest of the edge array items are objects with numeric attributes
+                    // e.g. { bearing: 88.8 }, { length: 101.731 }, { speed: 40 }, etc.
+                    // Merge them into a single object
+                    const mergedAttributes = Object.assign({}, ...edge.slice(2));
+                    // Example mergedAttributes => { bearing: 88.8, length: 101.731, speed: 40, ... }
+            
+                    addNodeData(firstNode.lat, firstNode.lon, mergedAttributes);
+                    addNodeData(secondNode.lat, secondNode.lon, mergedAttributes);
+                  });
           
-                  // The rest of the edge array items are objects with numeric attributes
-                  // e.g. { bearing: 88.8 }, { length: 101.731 }, { speed: 40 }, etc.
-                  // Merge them into a single object
-                  const mergedAttributes = Object.assign({}, ...edge.slice(2));
-                  // Example mergedAttributes => { bearing: 88.8, length: 101.731, speed: 40, ... }
-          
-                  addNodeData(firstNode.lat, firstNode.lon, mergedAttributes);
-                  addNodeData(secondNode.lat, secondNode.lon, mergedAttributes);
-                });
-          
-                // 4) Convert the NodesMap to a final array (averaging the numeric sums)
-                const NodesList = Object.values(NodesMap).map((node: any) => {
-                  const averagedAttrs: Record<string, number> = {};
-          
-                  for (const [attrKey, sumValue] of Object.entries(node.sums)) {
-                    averagedAttrs[attrKey] = (sumValue as number) / node.count;
-                  }
-          
-                  return {
-                    lat: node.lat,
-                    lon: node.lon,
-                    ...averagedAttrs  // e.g. bearing, length, speed, etc.
-                  };
-                });
+                  // 4) Convert the NodesMap to a final array (averaging the numeric sums)
+                  const NodesList = Object.values(NodesMap).map((node: any) => {
+                    const averagedAttrs: Record<string, number> = {};
+            
+                    for (const [attrKey, sumValue] of Object.entries(node.sums)) {
+                      averagedAttrs[attrKey] = (sumValue as number) / node.count;
+                    }
+            
+                    return {
+                      lat: node.lat,
+                      lon: node.lon,
+                      ...averagedAttrs  // e.g. bearing, length, speed, etc.
+                    };
+                  });
           
                 // console.log('Unique NodesList with averaged attributes:', NodesList);
           
@@ -3505,8 +3676,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // 5d) Render the chart in a hidden container (#vis), then move the SVG
                     await vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false }).then((result) => {
                       const vegaSVG = result.view._el.querySelector('svg');
-                      const svgWidth = 120;
-                      const svgHeight = 120;
+                      const svgWidth = 150;
+                      const svgHeight = 150;
           
                       // Function to position the chart on the map
                       const updateSvgPosition = () => {
@@ -3968,7 +4139,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         style={{
           position: 'absolute',
           right: '20px',
-          top: '50%',
+          top: '5%',
           zIndex: 500,
           background: 'rgba(255,255,255,0.8)',
           padding: '10px',
