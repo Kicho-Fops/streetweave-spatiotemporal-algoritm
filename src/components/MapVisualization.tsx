@@ -107,6 +107,11 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       //                     "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
       //                     "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
 
+
+      // const attributes = ["CCVI_Score", "CCVI Category", "Socioeconomic_Status", "Household_Composition_and_Disability", "Adults_with_no_PCP",
+      //                     "Cumulative_Mobility_Ratio", "Frontline_Essential_Workers", "Age_65+", "Comorbid_Conditions", 
+      //                     "COVID19_Incidence_Rate", "Hospital_Admission_Rate", "Crude_Mortality_Rate"]
+
       let aggregatedValues = {};
   
       attributes.forEach((attr) => {
@@ -164,6 +169,10 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       //                     "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
       //                     "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
       //                     "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+
+      // const attributes = ["CCVI_Score", "CCVI Category", "Socioeconomic_Status", "Household_Composition_and_Disability", "Adults_with_no_PCP",
+      //   "Cumulative_Mobility_Ratio", "Frontline_Essential_Workers", "Age_65+", "Comorbid_Conditions", 
+      //   "COVID19_Incidence_Rate", "Hospital_Admission_Rate", "Crude_Mortality_Rate"]
 
       attributes.forEach(attr => {
         const values = pointsInBoundingBox.map(point => point[attr]);
@@ -256,6 +265,11 @@ const aggregateData = (points, aggregationType) => {
   //                         "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
   //                         "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
   //                         "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+
+  // const attributes = ["CCVI_Score", "CCVI Category", "Socioeconomic_Status", "Household_Composition_and_Disability", "Adults_with_no_PCP",
+  //   "Cumulative_Mobility_Ratio", "Frontline_Essential_Workers", "Age_65+", "Comorbid_Conditions", 
+  //   "COVID19_Incidence_Rate", "Hospital_Admission_Rate", "Crude_Mortality_Rate"]
+
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -316,6 +330,11 @@ function aggregateAttributes(points, aggregationType) {
   //                         "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
   //                         "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
   //                         "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+
+  // const attributes = ["CCVI_Score", "CCVI Category", "Socioeconomic_Status", "Household_Composition_and_Disability", "Adults_with_no_PCP",
+  //   "Cumulative_Mobility_Ratio", "Frontline_Essential_Workers", "Age_65+", "Comorbid_Conditions", 
+  //   "COVID19_Incidence_Rate", "Hospital_Admission_Rate", "Crude_Mortality_Rate"]
+
   let aggregatedValues = [];
 
   attributes.forEach(attr => {
@@ -418,6 +437,11 @@ const aggregateValues = (points, aggregationType) => {
   //                         "OFFENSE INVOLVING CHILDREN", "OTHER NARCOTIC VIOLATION", "OTHER OFFENSE",
   //                         "PUBLIC PEACE VIOLATION", "ROBBERY", "SEX OFFENSE", "STALKING", "THEFT",
   //                         "WEAPONS VIOLATION", "Summer", "Winter", "Spring"]
+
+  // const attributes = ["CCVI_Score", "CCVI Category", "Socioeconomic_Status", "Household_Composition_and_Disability", "Adults_with_no_PCP",
+  //   "Cumulative_Mobility_Ratio", "Frontline_Essential_Workers", "Age_65+", "Comorbid_Conditions", 
+  //   "COVID19_Incidence_Rate", "Hospital_Admission_Rate", "Crude_Mortality_Rate"]
+
   let aggregatedValues = {};
 
   attributes.forEach(attr => {
@@ -618,10 +642,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         // Lat = 47.61902970588908;
         // Lon = -122.29361573322541;
       } else if(parsedSpec[0].unit == 'segment'){
-        Lat = 41.80159035804221;
-        Lon = -87.64538029790135;
+        // Lat = 41.80159035804221;
+        // Lon = -87.64538029790135;
+
         // Lat = 47.61902970588908;
         // Lon = -122.29361573322541;
+
+        Lat = 41.802515601319314;
+        Lon = -87.64537972052756;
+        //41.802515601319314, -87.64537972052756
       } else if(parsedSpec[0].unit == 'node'){
         Lat = 41.80159035804221;
         Lon = -87.64538029790135;
@@ -842,21 +871,21 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               segment[2].Bearing = bearing;
             }
 
-            function getOffsetDistance() {
-              const zoom = mapInstanceRef.current.getZoom();
-              if (zoom >= 18) return 15;
-              if (zoom <= 17) return 25;
-              // Smooth linear interpolation between 5 (zoom 18) and 20 (zoom 16)
-              return 5 + ((18 - zoom) / (18 - 17)) * (25 - 15);
-            }
-
             // function getOffsetDistance() {
             //   const zoom = mapInstanceRef.current.getZoom();
-            //   if (zoom >= 18) return 0; // attached
-            //   if (zoom <= 16) return 15; // max offset
-            //   // interpolate between 0 (zoom 18) and 15 (zoom 16)
-            //   return ((18 - zoom) / (18 - 16)) * 15;
+            //   if (zoom >= 18) return 15;
+            //   if (zoom <= 17) return 25;
+            //   // Smooth linear interpolation between 5 (zoom 18) and 20 (zoom 16)
+            //   return 5 + ((18 - zoom) / (18 - 17)) * (25 - 15);
             // }
+
+            function getOffsetDistance() {
+              const zoom = mapInstanceRef.current.getZoom();
+              if (zoom >= 18) return 6; // attached
+              if (zoom <= 16) return 15; // max offset
+              // interpolate between 0 (zoom 18) and 15 (zoom 16)
+              return ((18 - zoom) / (18 - 16)) * 15;
+            }
 
             
 
@@ -1220,7 +1249,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const attributeValue = edge[attributeIndex][lineWidth];
                         if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
                           // Map attribute values between 2 and 15
-                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 20]);
+                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
                           lineWidth = lineWidthScale(attributeValue)
                         }
                       } else {
@@ -1425,7 +1454,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                             const maxValue = d3.max(attributeValues);
                             const attributeValue = thisEdge[wIndex][lineWidth];
                             if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
-                              const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 20]);
+                              const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
                               lineWidth = lineWidthScale(attributeValue);
                             } else {
                               lineWidth = 5;
@@ -2152,8 +2181,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             
                         // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360
                         const outwardLeft = (bLeftLine + 90) % 360;
-                        const wLeft = segment._leftWidth;
-                        // const wLeft = lineWidth*6
+                        // const wLeft = segment._leftWidth;
+                        const wLeft = lineWidth*6
             
                         // Outer corners for LEFT side
                         const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
@@ -2192,8 +2221,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             
                         // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360 
                         const outwardRight = (bRightLine + 270) % 360;
-                        const wRight = segment._rightWidth;
-                        // const wRight = lineWidth*6;
+                        // const wRight = segment._rightWidth;
+                        const wRight = lineWidth*6;
             
                         // Outer corners for RIGHT side
                         const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
@@ -2244,8 +2273,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           const [eLeftLat, eLeftLon] = offsetPoint(end.lat, end.lon, leftBearing, inset);
                           const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
                           const outwardLeft = (bLeftLine + 90) % 360;
-                          const wLeft = segment._leftWidth;
-                          // const wLeft = lineWidth*6;
+                          // const wLeft = segment._leftWidth;
+                          const wLeft = lineWidth*6;
                           const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
                         const [eLeft2Lat, eLeft2Lon] = offsetPoint(eLeftLat, eLeftLon, outwardLeft, wLeft);
                         const sLeftXY  = projectPoint(sLeftLat, sLeftLon);
@@ -2271,8 +2300,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           
                           const outwardRight = (bRightLine + 270) % 360;
                           
-                          const wRight = segment._rightWidth;
-                          // const wRight = lineWidth*6;
+                          // const wRight = segment._rightWidth;
+                          const wRight = lineWidth*6;
                           
                           const [sRight2Lat, sRight2Lon] = offsetPoint(sRightLat, sRightLon, outwardRight, wRight);
                           const [eRight2Lat, eRight2Lon] = offsetPoint(eRightLat, eRightLon, outwardRight, wRight);
