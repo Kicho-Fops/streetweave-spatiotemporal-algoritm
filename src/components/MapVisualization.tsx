@@ -49,7 +49,9 @@ interface ParsedSpec {
   background?: string; 
   streetName?: string; 
   streetColor?: string;
-  streetWidth?: number; 
+  streetWidth?: number;
+  methodRow?: number;
+  methodColumn?: number; 
 }
 
 // Helper function to parse rand[min,max] and return a random value between min and max
@@ -84,6 +86,10 @@ const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: ParsedSpec): 
 
 // 1. CONTAINS FILL METHOD-->
 function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal) {
+  // dynamically grab every key except Lat & Lon
+  const attributes = thematicData.length > 0
+    ? Object.keys(thematicData[0]).filter(k => k !== 'Lat' && k !== 'Lon')
+    : [];
   if(UnitVal == 'area'){
     geojsonData.features.forEach(function (feature) {
       const polygon = feature.geometry;
@@ -97,7 +103,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
   
       // Initialize aggregation results for each attribute
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-      const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+      // const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
       // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
       //                     "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
       //                     "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -137,6 +143,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
     // console.log("function data check: ", geojsonData)
     return geojsonData;
   } else if(UnitVal == 'segment'){
+    console.log("checking thematic data here", thematicData)
     // console.log('check if data is passed to the function:', geojsonData)
     const bboxWidth = 5000;
     const aggregatedEdges = geojsonData.edges.map( edge => {
@@ -160,7 +167,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
       // Perform aggregation for each environmental attribute
       let aggregatedValues = [];
       // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-      const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+      // const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
       // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
       //                     "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
       //                     "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -254,9 +261,14 @@ const findClosestPoints = (distances, thematicData, numberOfPoints = 50) => {
 
 
 // Function to aggregate data based on type for area
-const aggregateData = (points, aggregationType) => {
+const aggregateData = (points, aggregationType, thematicData) => {
+  // dynamically grab every key except Lat & Lon
+  const attributes = thematicData.length > 0
+    ? Object.keys(thematicData[0]).filter(k => k !== 'Lat' && k !== 'Lon')
+    : [];
+
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+  // const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
   // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
   //                         "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
   //                         "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -305,7 +317,7 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
       const closestPoints = findClosestPoints(distances, thematicData);
 
       // Aggregate the data from the closest points
-      const aggregatedValues = aggregateData(closestPoints, aggregationType);
+      const aggregatedValues = aggregateData(closestPoints, aggregationType, thematicData);
       // console.log('check data geojsonData2', aggregatedValues)
       // Add the aggregated values to the feature properties
       feature.properties = {
@@ -319,9 +331,13 @@ const createNewDataset = (geojsonData, thematicData, aggregationType) => {
 
 
 // Function to aggregate environmental data based on given points and aggregation type for segment line
-function aggregateAttributes(points, aggregationType) {
+function aggregateAttributes(points, aggregationType, thematicData) {
+  // dynamically grab every key except Lat & Lon
+  const attributes = thematicData.length > 0
+    ? Object.keys(thematicData[0]).filter(k => k !== 'Lat' && k !== 'Lon')
+    : [];
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+  // const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
   // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
   //                         "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
   //                         "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -359,6 +375,7 @@ function aggregateAttributes(points, aggregationType) {
 
 // Main function to aggregate data for each edge segment lines
 function aggregateEdgeData(edgesData, environmentalData, aggregationType) {
+  console.log("checking envdata", environmentalData)
   return edgesData.map(edge => {
       const [pointA, pointB] = [edge[0], edge[1]];
 
@@ -373,7 +390,7 @@ function aggregateEdgeData(edgesData, environmentalData, aggregationType) {
       const closestPoints = findClosestPoints(distances, environmentalData);
 
       // Aggregate the environmental attributes based on the selected aggregation type
-      const aggregatedValues = aggregateAttributes(closestPoints, aggregationType);
+      const aggregatedValues = aggregateAttributes(closestPoints, aggregationType, environmentalData);
 
       // Construct the final data for the edge
       let updatedEdge = [];
@@ -426,9 +443,13 @@ function filterPointsWithinBufferSegment(buffer, environmentalData) {
 
 
 // Function to aggregate values based on the selected aggregation type
-const aggregateValues = (points, aggregationType) => {
+const aggregateValues = (points, aggregationType, thematicData) => {
+  // dynamically grab every key except Lat & Lon
+  const attributes = thematicData.length > 0
+    ? Object.keys(thematicData[0]).filter(k => k !== 'Lat' && k !== 'Lon')
+    : [];
   // const attributes = ["temperature", "PM2_5", "CO", "CO2", "humidity", "wind", "traffic", "Ozone", "N2O"];
-  const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
+  // const attributes = ["Crosswalk", "CurbRamp", "NoCurbRamp", "NoSidewalk", "Obstacle", "Signal", "SurfaceProblem", "Other"]
   // const attributes = ["NTAscoree", "Walkabilit", "MarketScor", "LibScore", "SchoolsSco","MetraScore", 
   //                         "PaceScore", "CTAScore", "Amenities", "TreeScore", "TransitAcc", "TotalScore",
   //                         "Total_Crimes", "Total_Arrests", "ASSAULT", "BATTERY", "BURGLARY",
@@ -482,7 +503,7 @@ const createAggregatedDataset = (geojsonData, environmentalData, bufferDistance,
       // console.log('checking pointsInBuffer', pointsInBuffer)
 
       // Aggregate the values based on the selected aggregation type
-      const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType);
+      const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
       // console.log('checking aggregatedValues', aggregatedValues)
 
       // Add the aggregated values to the feature properties
@@ -515,7 +536,7 @@ function BufferDataAggregationSegment(edgesData, environmentalData, bufferDistan
       const pointsInBuffer = filterPointsWithinBufferSegment(buffer, environmentalData);
 
       // Calculate aggregated values
-      const aggregatedValues = aggregateAttributes(pointsInBuffer, aggregationType);
+      const aggregatedValues = aggregateAttributes(pointsInBuffer, aggregationType, environmentalData);
 
       // Construct the updated edge with aggregated values
       let updatedEdge = [];
@@ -1609,7 +1630,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           }
 
 
-
+          //here the grid matrix
           else if(layerSpec.method === 'grid'){
             let updatedGeoJsonData;
             d3.json(layerSpec.physicalLayerPath).then(function(data) {
@@ -1652,9 +1673,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
               // 2) Load thematic data and do your aggregator if needed.
               d3.json(layerSpec.thematicLayerPath).then(function(thematicData) {
-                // Example aggregator step (adapt to your real aggregator):
-                // updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, ...);
-                // For demo, just keep the subdivided edges:
+                // if(layerSpec.spatialRelation == 'contains'){
+                //     updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                //     console.log("data is:", updatedGeoJsonData)
+                //   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
+                //     updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
+                //   }else if(layerSpec.spatialRelation == 'buffer'){
+                //     updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                //   }
                 updatedGeoJsonData = { edges: subdividedEdges.edges };
 
                 // 3) Create an SVG layer
@@ -1801,6 +1827,206 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               console.error("Failed to load physical JSON data:", error);
             });
           }
+
+
+
+          else if (layerSpec.method === 'matrix') {
+            function offsetPoint(lat, lon, bearing, distance) {
+              const R = 6378137;
+              const toRad = Math.PI / 180;
+              const toDeg = 180 / Math.PI;
+              const lat1 = lat * toRad;
+              const lon1 = lon * toRad;
+              const brng = bearing * toRad;
+              const dR = distance / R;
+
+              const lat2 = Math.asin(
+                Math.sin(lat1) * Math.cos(dR) +
+                Math.cos(lat1) * Math.sin(dR) * Math.cos(brng)
+              );
+              const lon2 = lon1 + Math.atan2(
+                Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+                Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2)
+              );
+
+              return [lat2 * toDeg, lon2 * toDeg];
+            }
+
+            function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+              const toRad = Math.PI / 180;
+              const toDeg = 180 / Math.PI;
+              const φ1 = lat1 * toRad;
+              const φ2 = lat2 * toRad;
+              const Δλ = (lon2 - lon1) * toRad;
+
+              const y = Math.sin(Δλ) * Math.cos(φ2);
+              const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+              return (Math.atan2(y, x) * toDeg + 360) % 360;
+            }
+
+            function getLineWidth(baseWidth) {
+              const zoom = mapInstanceRef.current.getZoom();
+              if (zoom <= 16) return baseWidth;
+              if (zoom > 16 && zoom <= 17) return baseWidth * 1.5;
+              if (zoom > 17 && zoom <= 18) return baseWidth * 3;
+              return baseWidth * 3.5;
+            }
+
+           function getOffsetDistance() {
+              const zoom = mapInstanceRef.current.getZoom();
+              if (zoom >= 18) return 6; // attached
+              if (zoom <= 16) return 15; // max offset
+              // interpolate between 0 (zoom 18) and 15 (zoom 16)
+              return ((18 - zoom) / (18 - 16)) * 15;
+            }
+
+            d3.json(layerSpec.physicalLayerPath).then(function (data) {
+              if (!data || !data.edges) {
+                console.error("Invalid data");
+                return;
+              }
+
+              const methodColumn = layerSpec.methodColumn;
+              const methodRow = layerSpec.methodRow;
+              const offsetDistance = getOffsetDistance();
+              const subdividedEdges = [];
+
+              data.edges.forEach(edge => {
+                const bearing = bearingBetweenPoints(edge[0].lat, edge[0].lon, edge[1].lat, edge[1].lon);
+
+                for (let row = 0; row < methodRow; row++) {
+                  const offsetAngle = bearing - 90;
+                  const offsetMultiplier = row - Math.floor(methodRow / 2);
+
+                  const startOffset = offsetPoint(edge[0].lat, edge[0].lon, offsetAngle, offsetDistance * offsetMultiplier);
+                  const endOffset = offsetPoint(edge[1].lat, edge[1].lon, offsetAngle, offsetDistance * offsetMultiplier);
+
+                  const dLat = endOffset[0] - startOffset[0];
+                  const dLon = endOffset[1] - startOffset[1];
+
+                  for (let col = 0; col < methodColumn; col++) {
+                    const segStartLat = startOffset[0] + (dLat * col) / methodColumn;
+                    const segStartLon = startOffset[1] + (dLon * col) / methodColumn;
+                    const segEndLat = startOffset[0] + (dLat * (col + 1)) / methodColumn;
+                    const segEndLon = startOffset[1] + (dLon * (col + 1)) / methodColumn;
+
+                    subdividedEdges.push([
+                      { lat: segStartLat, lon: segStartLon },
+                      { lat: segEndLat, lon: segEndLon },
+                      ...edge.slice(2)
+                    ]);
+                  }
+                }
+              });
+
+              let updatedGeoJsonData = { edges: subdividedEdges };
+              console.log("matrix data is", updatedGeoJsonData)
+
+              d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
+                if (layerSpec.spatialRelation === 'contains') {
+                  updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                  updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
+                } else if (layerSpec.spatialRelation === 'buffer') {
+                  updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                }
+
+                updatedGeoJsonData = { edges: updatedGeoJsonData };
+                console.log("matrix data is2", updatedGeoJsonData)
+
+                const svgLayer = L.svg().addTo(mapInstanceRef.current);
+                const svgGroup = d3.select(mapInstanceRef.current.getPanes().overlayPane).select("svg").append("g");
+
+                function drawLines() {
+                  svgGroup.selectAll("path").remove();
+
+                  updatedGeoJsonData.edges.forEach(edge => {
+                    let lineColor = layerSpec.lineColor || "red";
+                    const attributeIndex = edge.findIndex(e => e.hasOwnProperty(lineColor));
+                    if (attributeIndex !== -1) {
+                      const attributeValues = updatedGeoJsonData.edges.flatMap(e => e.filter(entry => entry[lineColor]).map(entry => entry[lineColor]));
+                      const minValue = d3.min(attributeValues);
+                      const maxValue = d3.max(attributeValues);
+                      const attributeValue = edge[attributeIndex][lineColor];
+                      if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                        const step = (maxValue - minValue) / 5;
+                        const thresholds = [minValue + step, minValue + 2 * step, minValue + 3 * step, minValue + 4 * step];
+                        const colorScale = d3.scaleThreshold().domain(thresholds).range(["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]);
+                        lineColor = colorScale(attributeValue);
+                      }
+                    }
+
+                    let lineWidth = layerSpec.lineStrokeWidth;
+                    if (typeof lineWidth === "string") {
+                      const attributeIndex = edge.findIndex(e => e.hasOwnProperty(lineWidth));
+                      if (attributeIndex !== -1) {
+                        const attributeValues = updatedGeoJsonData.edges.flatMap(e => e.filter(entry => entry[lineWidth]).map(entry => entry[lineWidth]));
+                        const minValue = d3.min(attributeValues);
+                        const maxValue = d3.max(attributeValues);
+                        const attributeValue = edge[attributeIndex][lineWidth];
+                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                          const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
+                          lineWidth = lineWidthScale(attributeValue);
+                        } else {
+                          lineWidth = 5;
+                        }
+                      } else {
+                        lineWidth = 5;
+                      }
+                    } else if (typeof lineWidth !== "number") {
+                      lineWidth = 5;
+                    }
+
+                    lineWidth = getLineWidth(lineWidth);
+
+
+                    // Set opacity based on attribute value or specific value
+                    let lineOpacity = layerSpec.strokeOpacity || 1;
+                    // console.log('lineOpacity check:', lineOpacity)
+                    if (typeof lineOpacity === "number" && lineOpacity >= 0 && lineOpacity <= 1) {
+                      // Directly use the specified opacity value if it's between 0 and 1
+                      lineOpacity = lineOpacity;
+                    } else if (typeof lineOpacity === "string") {
+                      // Treat lineOpacity as an attribute name and map its values from 0 to 1
+                      const opacityIndex = edge.findIndex((e: any) => e.hasOwnProperty(lineOpacity));
+                      if (opacityIndex !== -1) {
+                        const attributeValues = updatedGeoJsonData.edges
+                          .flatMap((e: any) => e.filter((entry: any) => entry.hasOwnProperty(lineOpacity)).map((entry: any) => entry[lineOpacity]))
+                          .filter((v: any) => v !== undefined);
+                        const minValue = d3.min(attributeValues);
+                        const maxValue = d3.max(attributeValues);
+                        const attributeValue = edge[opacityIndex][lineOpacity];
+                        if (minValue !== undefined && maxValue !== undefined && attributeValue !== undefined) {
+                          const opacityScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 1]);
+                          lineOpacity = opacityScale(attributeValue);
+                        }
+                      }
+                    }
+
+                    const points = [{ lat: edge[0].lat, lon: edge[0].lon }, { lat: edge[1].lat, lon: edge[1].lon }];
+
+                    const lineGenerator = d3.line().x(d => mapInstanceRef.current.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).x).y(d => mapInstanceRef.current.latLngToLayerPoint(new L.LatLng(d.lat, d.lon)).y);
+
+                    svgGroup.append("path")
+                            .datum(points)
+                            .attr("d", lineGenerator)
+                            .style("stroke", lineColor)
+                            .style("stroke-width", lineWidth)
+                            .style("stroke-opacity", lineOpacity)
+                            .attr("fill", "none");
+                  });
+                }
+
+                drawLines();
+
+                mapInstanceRef.current.on("moveend", drawLines);
+
+                currentLayersRef.current.push(svgLayer);
+              });
+            });
+          }
+
+
 
 
 
@@ -2792,7 +3018,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           }
 
 
-
+          //  need to change 311 service here.....!!
           else if(layerSpec.chart){
             // console.log(layerSpec)
             d3.json(layerSpec.physicalLayerPath).then((data: any) => {

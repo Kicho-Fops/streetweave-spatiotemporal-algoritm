@@ -46,6 +46,8 @@ interface ParsedSpec {
   streetName?: string; 
   streetColor?: string; 
   streetWidth?: number;
+  methodRow?: number;
+  methodColumn?: number;
 }
 
 const App: React.FC = () => {
@@ -159,8 +161,26 @@ const App: React.FC = () => {
           : 10;  // Default zoom: 10 for other cases
 
       // Parse method (e.g., fill or line)
-      const methodMatch = spec.match(/method\s*=\s*(\w+)/);
-      const method = methodMatch ? methodMatch[1] : '';
+      // const methodMatch = spec.match(/method\s*=\s*(\w+)/);
+      // const method = methodMatch ? methodMatch[1] : '';
+
+      let method;
+      let methodRow;
+      let methodColumn;
+      const methodRegex = /method\s*=\s*([a-zA-Z]\w*)(?:\(\s*(\d+)\s*,\s*(\d+)\s*\))?/;
+      const m = spec.match(methodRegex);
+
+      if (m) {
+        method = m[1];                   // "line", "fill" or "matrix"
+        methodRow = m[2] ? +m[2] : null; // e.g. 2 (or null)
+        methodColumn = m[3] ? +m[3] : null; // e.g. 5 (or null)
+
+        // console.log({ method, methodRow, methodColumn });
+        // spec="method=line"         → { method: "line",  matrixRows: null, matrixCols: null }
+        // spec="method=fill"         → { method: "fill",  matrixRows: null, matrixCols: null }
+        // spec="method=matrix(2,5)"  → { method: "matrix", matrixRows: 2,    matrixCols: 5    }
+      }
+      console.log({ method, methodRow, methodColumn });
 
       // Parse shape (e.g., fill or line)
       const shapeMatch = spec.match(/shape\s*=\s*(\w+)/);
@@ -223,7 +243,7 @@ const App: React.FC = () => {
       }
 
       // Parse for `line` method
-      if (method === 'line' || method === 'rect' || shape === 'spike' || shape === 'rect') {
+      if (method === 'line' || method === 'rect' || method === 'matrix' || shape === 'spike' || shape === 'rect') {
         // Parse line color (rand[min,max] or a specific color)
         const lineColorMatch = spec.match(/color\(([^)]+)\)/);
         lineColor = lineColorMatch ? lineColorMatch[1].trim() : 'red'; // Default to red
@@ -418,6 +438,8 @@ const App: React.FC = () => {
         streetName,
         streetColor,
         streetWidth,
+        methodRow,
+        methodColumn,
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);
