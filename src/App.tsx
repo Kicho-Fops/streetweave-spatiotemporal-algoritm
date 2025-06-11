@@ -64,7 +64,7 @@ const App: React.FC = () => {
       const unitMatch = spec.match(unitRegex);
 
       // The unit will always be the first capture group; if nothing is found, default to 'area'
-      const unit = unitMatch ? unitMatch[1] : 'area';
+      const unit = unitMatch ? unitMatch[1] : 'segment';
 
       // If the division part is provided, parse it as a number; otherwise, default to 1.
       const unitDivide = unitMatch && unitMatch[2] ? parseFloat(unitMatch[2]) : 1;
@@ -100,9 +100,9 @@ const App: React.FC = () => {
 
       const relationMatch = spec.match(/\.relation\(\s*spatialRelation\s*=\s*(.*?),\s*operation\s*=\s*(.*?),\s*type\s*=\s*(.*?)\)/);
         if (relationMatch) {
-            spatialRelation = relationMatch[1].trim();
-            operation = relationMatch[2].trim();
-            AggregationType = relationMatch[3].trim();
+            spatialRelation = relationMatch[1].trim() ? relationMatch[1].trim() : 'buffer(50)';
+            operation = relationMatch[2].trim() ? relationMatch[2].trim() : 'aggregation';
+            AggregationType = relationMatch[3].trim() ? relationMatch[3].trim() : 'mean';
 
             // Handling buffer case
             const bufferMatch = spatialRelation.match(/^buffer\((\d+)\)$/);
@@ -112,9 +112,14 @@ const App: React.FC = () => {
             } else {
               spatialRelation = spatialRelation;
             }
+        }else{
+          spatialRelation = 'buffer';
+          bufferValue = 50;
+          AggregationType = 'mean';
+          operation = 'aggregation';
         }
 
-        console.log(spatialRelation, operation, AggregationType, bufferValue)
+        // console.log(spatialRelation, operation, AggregationType, bufferValue)
 
 
 
@@ -174,11 +179,8 @@ const App: React.FC = () => {
         method = m[1];                   // "line", "fill" or "matrix"
         methodRow = m[2] ? +m[2] : null; // e.g. 2 (or null)
         methodColumn = m[3] ? +m[3] : null; // e.g. 5 (or null)
-
-        // console.log({ method, methodRow, methodColumn });
-        // spec="method=line"         → { method: "line",  matrixRows: null, matrixCols: null }
-        // spec="method=fill"         → { method: "fill",  matrixRows: null, matrixCols: null }
-        // spec="method=matrix(2,5)"  → { method: "matrix", matrixRows: 2,    matrixCols: 5    }
+      }else{
+        method = 'line';
       }
       console.log({ method, methodRow, methodColumn });
 
@@ -258,9 +260,11 @@ const App: React.FC = () => {
         const lineStrokeWidthMatch = spec.match(/width\s*=\s*([^)\s]+)\)/)
         if(lineStrokeWidthMatch){
           lineStrokeWidth = lineStrokeWidthMatch[1].trim();
+        }else{
+          lineStrokeWidth = 5;
         }
 
-        console.log("checking lineStrokeWidth", lineStrokeWidth)
+        // console.log("checking lineStrokeWidth", lineStrokeWidth)
 
         const heightMatch = spec.match(/height\(([^)]+)\)/);
         height = heightMatch ? heightMatch[1].trim() : 'red'; // Default to red
@@ -272,7 +276,7 @@ const App: React.FC = () => {
         // const lineOpacityMatch = spec.match(/opacity\s*=\s*(\w+|\d*\.?\d+)/);
         // strokeOpacity = lineOpacityMatch ? (isNaN(Number(lineOpacityMatch[1])) ? lineOpacityMatch[1] : parseFloat(lineOpacityMatch[1])) : undefined;
 
-        const lineOpacityMatch = spec.match(/opacity\s*=\s*([^\)\s]+)/);
+        const lineOpacityMatch = spec.match(/opacity\s*=\s*([^,\)\s]+)/);
         if (lineOpacityMatch) {
           const opacityValue = lineOpacityMatch[1].trim();
 
@@ -347,12 +351,16 @@ const App: React.FC = () => {
       const orientationMatch = spec.match(/\.orientation\(['"]([^'"]+)['"]\)/);
       if (orientationMatch) {
         orientation = orientationMatch[1];
+      }else{
+        orientation = 'parallel';
       }
 
       let alignment: string | undefined;
       const alignmentMatch = spec.match(/\.alignment\(['"]([^'"]+)['"]\)/);
       if (alignmentMatch) {
         alignment = alignmentMatch[1];
+      }else{
+        alignment = 'center';
       }
 
       let roadDirection = undefined;

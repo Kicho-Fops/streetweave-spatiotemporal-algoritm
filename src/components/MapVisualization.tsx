@@ -1274,14 +1274,24 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                           lineWidth = lineWidthScale(attributeValue)
                         }
                       } else {
-                        lineWidth = 5; // Default value if attribute not found
+                        if (layerSpec.lineType == "squiggle"){
+                          lineWidth = 2;
+                        }
+                        else{
+                          lineWidth = 5; // Default value if attribute not found
+                        }
                       }
                     } else if (typeof lineWidth === "number") {
                       // Use user-defined value if provided and it's a number
                       lineWidth = layerSpec.lineStrokeWidth;
                     } else {
                       // Default to 5 if undefined
-                      lineWidth = 5;
+                      if (layerSpec.lineType == "squiggle"){
+                          lineWidth = 2;
+                      }
+                      else{
+                          lineWidth = 5; // Default value if attribute not found
+                      }
                     }
 
                     // console.log("lineWidth before:", lineWidth)
@@ -1478,15 +1488,30 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                               const lineWidthScale = d3.scaleLinear().domain([minValue, maxValue]).range([0, 10]);
                               lineWidth = lineWidthScale(attributeValue);
                             } else {
-                              lineWidth = 5;
-                            }
+                                if (layerSpec.lineType == "squiggle"){
+                                  lineWidth = 2;
+                                }
+                                else{
+                                  lineWidth = 5; // Default value if attribute not found
+                                }
+                              }
                           } else {
-                            lineWidth = 5;
+                            if (layerSpec.lineType == "squiggle"){
+                              lineWidth = 2;
+                            }
+                            else{
+                              lineWidth = 5; // Default value if attribute not found
+                            }
                           }
                         } else if (typeof lineWidth === "number") {
                           lineWidth = layerSpec.lineStrokeWidth;
                         } else {
-                          lineWidth = 5;
+                          if (layerSpec.lineType == "squiggle"){
+                              lineWidth = 2;
+                            }
+                            else{
+                              lineWidth = 5; // Default value if attribute not found
+                            }
                         }
                         lineWidth = getLineWidth(lineWidth);
           
@@ -1631,202 +1656,202 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
 
           //here the grid matrix
-          else if(layerSpec.method === 'grid'){
-            let updatedGeoJsonData;
-            d3.json(layerSpec.physicalLayerPath).then(function(data) {
-              if (!data || !data.edges) {
-                console.error("Data is missing edges or is invalid.");
-                return;
-              }
+          // else if(layerSpec.method === 'grid'){
+          //   let updatedGeoJsonData;
+          //   d3.json(layerSpec.physicalLayerPath).then(function(data) {
+          //     if (!data || !data.edges) {
+          //       console.error("Data is missing edges or is invalid.");
+          //       return;
+          //     }
 
-              // 1) Subdivide each edge along its length (already done in your code).
-              //    We'll keep your logic but remove left/right skipping, etc.
-              let subdividedEdges = [];
-              data.edges.forEach(function(edge) {
-                let start = edge[0]; // {lat, lon}
-                let end   = edge[1]; // {lat, lon}
-                let extras = edge.slice(2);
+          //     // 1) Subdivide each edge along its length (already done in your code).
+          //     //    We'll keep your logic but remove left/right skipping, etc.
+          //     let subdividedEdges = [];
+          //     data.edges.forEach(function(edge) {
+          //       let start = edge[0]; // {lat, lon}
+          //       let end   = edge[1]; // {lat, lon}
+          //       let extras = edge.slice(2);
 
-                let lat0 = start.lat, lon0 = start.lon;
-                let lat1 = end.lat,   lon1 = end.lon;
+          //       let lat0 = start.lat, lon0 = start.lon;
+          //       let lat1 = end.lat,   lon1 = end.lon;
 
-                let dLat = lat1 - lat0;
-                let dLon = lon1 - lon0;
+          //       let dLat = lat1 - lat0;
+          //       let dLon = lon1 - lon0;
 
-                for (let i = 0; i < layerSpec.unitDivide; i++) {
-                  // If you want to skip endpoints, etc., do it here:
-                  // if (i < 2 || i >= layerSpec.unitDivide - 2) continue;
+          //       for (let i = 0; i < layerSpec.unitDivide; i++) {
+          //         // If you want to skip endpoints, etc., do it here:
+          //         // if (i < 2 || i >= layerSpec.unitDivide - 2) continue;
 
-                  let segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
-                  let segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
-                  let segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
-                  let segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
+          //         let segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
+          //         let segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
+          //         let segEndLat   = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
+          //         let segEndLon   = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
 
-                  let newStart = { lat: segStartLat, lon: segStartLon };
-                  let newEnd   = { lat: segEndLat,   lon: segEndLon   };
+          //         let newStart = { lat: segStartLat, lon: segStartLon };
+          //         let newEnd   = { lat: segEndLat,   lon: segEndLon   };
 
-                  let newEdge = [ newStart, newEnd ].concat(extras);
-                  subdividedEdges.push(newEdge);
-                }
-              });
-              subdividedEdges = { edges: subdividedEdges };
+          //         let newEdge = [ newStart, newEnd ].concat(extras);
+          //         subdividedEdges.push(newEdge);
+          //       }
+          //     });
+          //     subdividedEdges = { edges: subdividedEdges };
 
-              // 2) Load thematic data and do your aggregator if needed.
-              d3.json(layerSpec.thematicLayerPath).then(function(thematicData) {
-                // if(layerSpec.spatialRelation == 'contains'){
-                //     updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                //     console.log("data is:", updatedGeoJsonData)
-                //   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
-                //     updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
-                //   }else if(layerSpec.spatialRelation == 'buffer'){
-                //     updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
-                //   }
-                updatedGeoJsonData = { edges: subdividedEdges.edges };
+          //     // 2) Load thematic data and do your aggregator if needed.
+          //     d3.json(layerSpec.thematicLayerPath).then(function(thematicData) {
+          //       // if(layerSpec.spatialRelation == 'contains'){
+          //       //     updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
+          //       //     console.log("data is:", updatedGeoJsonData)
+          //       //   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
+          //       //     updatedGeoJsonData = aggregateEdgeData(updatedGeoJsonData.edges, thematicData, layerSpec.AggregationType);
+          //       //   }else if(layerSpec.spatialRelation == 'buffer'){
+          //       //     updatedGeoJsonData = BufferDataAggregationSegment(updatedGeoJsonData, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+          //       //   }
+          //       updatedGeoJsonData = { edges: subdividedEdges.edges };
 
-                // 3) Create an SVG layer
-                if (!mapInstanceRef.current.getPane("streetGridPane")) {
-                  mapInstanceRef.current.createPane("streetGridPane");
-                  mapInstanceRef.current.getPane("streetGridPane").style.zIndex = 400;
-                }
-                const svgLayer = L.svg({
-                  pane: "streetGridPane",
-                  className: "gMap-streetGrid"
-                }).addTo(mapInstanceRef.current);
+          //       // 3) Create an SVG layer
+          //       if (!mapInstanceRef.current.getPane("streetGridPane")) {
+          //         mapInstanceRef.current.createPane("streetGridPane");
+          //         mapInstanceRef.current.getPane("streetGridPane").style.zIndex = 400;
+          //       }
+          //       const svgLayer = L.svg({
+          //         pane: "streetGridPane",
+          //         className: "gMap-streetGrid"
+          //       }).addTo(mapInstanceRef.current);
 
-                // 4) Create an SVG <g> for drawing
-                const svgGroup = d3.select(mapInstanceRef.current.getPanes()["streetGridPane"])
-                                  .select("svg")
-                                  .append("g")
-                                  .attr("class", "leaflet-zoom-hide");
-                // We'll store all NxN cells here:
-                const gridGroup = svgGroup.append("g").attr("class", "street-grid-group");
+          //       // 4) Create an SVG <g> for drawing
+          //       const svgGroup = d3.select(mapInstanceRef.current.getPanes()["streetGridPane"])
+          //                         .select("svg")
+          //                         .append("g")
+          //                         .attr("class", "leaflet-zoom-hide");
+          //       // We'll store all NxN cells here:
+          //       const gridGroup = svgGroup.append("g").attr("class", "street-grid-group");
 
-                // --- Helper functions ---
-                function offsetPoint(lat, lon, bearingDeg, distanceMeters) {
-                  const R = 6378137; // Earth radius in meters
-                  const toRad = Math.PI / 180;
-                  let lat1 = lat * toRad;
-                  let lon1 = lon * toRad;
-                  let brng = bearingDeg * toRad;
-                  let dR = distanceMeters / R;
+          //       // --- Helper functions ---
+          //       function offsetPoint(lat, lon, bearingDeg, distanceMeters) {
+          //         const R = 6378137; // Earth radius in meters
+          //         const toRad = Math.PI / 180;
+          //         let lat1 = lat * toRad;
+          //         let lon1 = lon * toRad;
+          //         let brng = bearingDeg * toRad;
+          //         let dR = distanceMeters / R;
 
-                  let lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) +
-                                      Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
-                  let lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
-                                              Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
-                  return [ lat2 / toRad, lon2 / toRad ];
-                }
+          //         let lat2 = Math.asin(Math.sin(lat1) * Math.cos(dR) +
+          //                             Math.cos(lat1) * Math.sin(dR) * Math.cos(brng));
+          //         let lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
+          //                                     Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2));
+          //         return [ lat2 / toRad, lon2 / toRad ];
+          //       }
 
-                function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
-                  const toRad = Math.PI / 180;
-                  let phi1 = lat1 * toRad, phi2 = lat2 * toRad;
-                  let dLon = (lon2 - lon1) * toRad;
-                  let y = Math.sin(dLon) * Math.cos(phi2);
-                  let x = Math.cos(phi1) * Math.sin(phi2) -
-                          Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLon);
-                  let brng = Math.atan2(y, x) * (180 / Math.PI);
-                  return (brng + 360) % 360;
-                }
+          //       function bearingBetweenPoints(lat1, lon1, lat2, lon2) {
+          //         const toRad = Math.PI / 180;
+          //         let phi1 = lat1 * toRad, phi2 = lat2 * toRad;
+          //         let dLon = (lon2 - lon1) * toRad;
+          //         let y = Math.sin(dLon) * Math.cos(phi2);
+          //         let x = Math.cos(phi1) * Math.sin(phi2) -
+          //                 Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLon);
+          //         let brng = Math.atan2(y, x) * (180 / Math.PI);
+          //         return (brng + 360) % 360;
+          //       }
 
-                function projectPoint(lat, lon) {
-                  let point = mapInstanceRef.current.latLngToLayerPoint([lat, lon]);
-                  return [ point.x, point.y ];
-                }
+          //       function projectPoint(lat, lon) {
+          //         let point = mapInstanceRef.current.latLngToLayerPoint([lat, lon]);
+          //         return [ point.x, point.y ];
+          //       }
 
-                // This is your existing getColor function, adapted to take a numeric value.
-                // You can shape it however you like:
-                function getColor(val) {
-                  // Example: define domain from min->max of your aggregator
-                  // (In real usage, store minVal/maxVal from the data, or pass them in.)
-                  const minVal = 0, maxVal = 100; // placeholder
-                  let colorScale = d3.scaleSequential(d3.interpolateBuGn)
-                                    .domain([minVal, maxVal]);
-                  return colorScale(val);
-                }
+          //       // This is your existing getColor function, adapted to take a numeric value.
+          //       // You can shape it however you like:
+          //       function getColor(val) {
+          //         // Example: define domain from min->max of your aggregator
+          //         // (In real usage, store minVal/maxVal from the data, or pass them in.)
+          //         const minVal = 0, maxVal = 100; // placeholder
+          //         let colorScale = d3.scaleSequential(d3.interpolateBuGn)
+          //                           .domain([minVal, maxVal]);
+          //         return colorScale(val);
+          //       }
 
-                // For a simple NxN approach, let crossDivide = layerSpec.unitDivide (so total NxN):
-                let crossDivide = layerSpec.unitDivide;
+          //       // For a simple NxN approach, let crossDivide = layerSpec.unitDivide (so total NxN):
+          //       let crossDivide = layerSpec.unitDivide;
 
-                // Suppose each street has a fixed total width (in meters). 
-                // You could also read from an attribute in `segment` if you have a “streetWidth” property.
-                let streetWidth = 20;
+          //       // Suppose each street has a fixed total width (in meters). 
+          //       // You could also read from an attribute in `segment` if you have a “streetWidth” property.
+          //       let streetWidth = 20;
 
-                // 5) Draw NxN cells for each subdivided segment
-                function drawGridCells() {
-                  gridGroup.selectAll("*").remove(); // Clear old cells
+          //       // 5) Draw NxN cells for each subdivided segment
+          //       function drawGridCells() {
+          //         gridGroup.selectAll("*").remove(); // Clear old cells
 
-                  updatedGeoJsonData.edges.forEach(function(segment) {
-                    let start = segment[0];
-                    let end   = segment[1];
+          //         updatedGeoJsonData.edges.forEach(function(segment) {
+          //           let start = segment[0];
+          //           let end   = segment[1];
 
-                    // Bearing along the street
-                    let bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+          //           // Bearing along the street
+          //           let bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
 
-                    // We'll offset perpendicular to the street’s centerline:
-                    let outward = (bearing + 90) % 360;
+          //           // We'll offset perpendicular to the street’s centerline:
+          //           let outward = (bearing + 90) % 360;
 
-                    // The length of the segment in meters (optional if you want length-based aggregator)
-                    // Could compute distance using haversine or offsetPoint logic. Not strictly needed here.
+          //           // The length of the segment in meters (optional if you want length-based aggregator)
+          //           // Could compute distance using haversine or offsetPoint logic. Not strictly needed here.
 
-                    // 6) For each sub-segment, we have exactly 1 row in the NxN grid.
-                    //    We now slice across the width into crossDivide columns:
-                    for (let j = 0; j < crossDivide; j++) {
-                      // fraction of street width for this column
-                      let w1 = (j / crossDivide)     * streetWidth;
-                      let w2 = ((j + 1) / crossDivide) * streetWidth;
+          //           // 6) For each sub-segment, we have exactly 1 row in the NxN grid.
+          //           //    We now slice across the width into crossDivide columns:
+          //           for (let j = 0; j < crossDivide; j++) {
+          //             // fraction of street width for this column
+          //             let w1 = (j / crossDivide)     * streetWidth;
+          //             let w2 = ((j + 1) / crossDivide) * streetWidth;
 
-                      // Corner #1: offset the start point by w1
-                      let [sLat1, sLon1] = offsetPoint(start.lat, start.lon, outward, w1);
-                      // Corner #2: offset the start point by w2
-                      let [sLat2, sLon2] = offsetPoint(start.lat, start.lon, outward, w2);
+          //             // Corner #1: offset the start point by w1
+          //             let [sLat1, sLon1] = offsetPoint(start.lat, start.lon, outward, w1);
+          //             // Corner #2: offset the start point by w2
+          //             let [sLat2, sLon2] = offsetPoint(start.lat, start.lon, outward, w2);
 
-                      // Corner #3: offset the end point by w1
-                      let [eLat1, eLon1] = offsetPoint(end.lat, end.lon, outward, w1);
-                      // Corner #4: offset the end point by w2
-                      let [eLat2, eLon2] = offsetPoint(end.lat, end.lon, outward, w2);
+          //             // Corner #3: offset the end point by w1
+          //             let [eLat1, eLon1] = offsetPoint(end.lat, end.lon, outward, w1);
+          //             // Corner #4: offset the end point by w2
+          //             let [eLat2, eLon2] = offsetPoint(end.lat, end.lon, outward, w2);
 
-                      // Convert to screen coords
-                      let s1XY = projectPoint(sLat1, sLon1);
-                      let s2XY = projectPoint(sLat2, sLon2);
-                      let e1XY = projectPoint(eLat1, eLon1);
-                      let e2XY = projectPoint(eLat2, eLon2);
+          //             // Convert to screen coords
+          //             let s1XY = projectPoint(sLat1, sLon1);
+          //             let s2XY = projectPoint(sLat2, sLon2);
+          //             let e1XY = projectPoint(eLat1, eLon1);
+          //             let e2XY = projectPoint(eLat2, eLon2);
 
-                      // 7) Compute aggregator value for this cell.
-                      //    In real usage, you might do:
-                      //      let aggregatorVal = myCellAggregator(segment, iIndex, jIndex);
-                      //    or just read from segment extras. For demo, use a random:
-                      let aggregatorVal = Math.random() * 100; // 0..100
+          //             // 7) Compute aggregator value for this cell.
+          //             //    In real usage, you might do:
+          //             //      let aggregatorVal = myCellAggregator(segment, iIndex, jIndex);
+          //             //    or just read from segment extras. For demo, use a random:
+          //             let aggregatorVal = Math.random() * 100; // 0..100
 
-                      // 8) Get color from aggregator
-                      let cellColor = getColor(aggregatorVal);
+          //             // 8) Get color from aggregator
+          //             let cellColor = getColor(aggregatorVal);
 
-                      // 9) Draw the cell polygon
-                      gridGroup.append("polygon")
-                        .attr("points", [
-                          s1XY, e1XY, e2XY, s2XY // going around corners
-                        ].map(pt => pt.join(",")).join(" "))
-                        .style("fill", cellColor)
-                        .style("fill-opacity", 0.7)
-                        .style("stroke", "#222")
-                        .style("stroke-width", 0.5);
-                    }
-                  });
-                }
+          //             // 9) Draw the cell polygon
+          //             gridGroup.append("polygon")
+          //               .attr("points", [
+          //                 s1XY, e1XY, e2XY, s2XY // going around corners
+          //               ].map(pt => pt.join(",")).join(" "))
+          //               .style("fill", cellColor)
+          //               .style("fill-opacity", 0.7)
+          //               .style("stroke", "#222")
+          //               .style("stroke-width", 0.5);
+          //           }
+          //         });
+          //       }
 
-                // Draw once initially
-                drawGridCells();
+          //       // Draw once initially
+          //       drawGridCells();
 
-                // 10) Redraw on map zoom/pan
-                mapInstanceRef.current.on("moveend", drawGridCells);
+          //       // 10) Redraw on map zoom/pan
+          //       mapInstanceRef.current.on("moveend", drawGridCells);
 
-              }).catch(error => {
-                console.error("Failed to load thematic JSON data:", error);
-              });
+          //     }).catch(error => {
+          //       console.error("Failed to load thematic JSON data:", error);
+          //     });
 
-            }).catch(error => {
-              console.error("Failed to load physical JSON data:", error);
-            });
-          }
+          //   }).catch(error => {
+          //     console.error("Failed to load physical JSON data:", error);
+          //   });
+          // }
 
 
 
@@ -2073,9 +2098,16 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     for (var i = 0; i < layerSpec.unitDivide; i++) {
 
                       // Skip the first two (i < 2) and last two (i >= layerSpec.unitDivide - 2)
-                      if (i < 5 || i >= layerSpec.unitDivide - 5) {
-                        continue; // Do not push these subdivided segments
+                      if(layerSpec.unitDivide>20){
+                        if (i < 5 || i >= layerSpec.unitDivide - 5) {
+                          continue; // Do not push these subdivided segments
+                        }
+                      }else{
+                        if (i < 1 || i >= layerSpec.unitDivide - 1) {
+                          continue; // Do not push these subdivided segments
+                        }
                       }
+                      
                       // Calculate the start coordinate of the new segment
                       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
                       var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
@@ -2589,8 +2621,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }else{
                         Gap = 6
                       }
-                      if (i < 3 || i >= layerSpec.unitDivide - 3 ) {
-                        continue; // Do not push these subdivided segments
+                      if(layerSpec.unitDivide>20){
+                        if (i < 5 || i >= layerSpec.unitDivide - 5) {
+                          continue; // Do not push these subdivided segments
+                        }
+                      }else{
+                        if (i < 1 || i >= layerSpec.unitDivide - 1) {
+                          continue; // Do not push these subdivided segments
+                        }
                       }
                       var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
                       var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
