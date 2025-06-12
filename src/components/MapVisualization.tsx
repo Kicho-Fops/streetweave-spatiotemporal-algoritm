@@ -2098,11 +2098,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     for (var i = 0; i < layerSpec.unitDivide; i++) {
 
                       // Skip the first two (i < 2) and last two (i >= layerSpec.unitDivide - 2)
-                      if(layerSpec.unitDivide>20){
+                      if(layerSpec.unitDivide>=20){
                         if (i < 5 || i >= layerSpec.unitDivide - 5) {
                           continue; // Do not push these subdivided segments
                         }
-                      }else{
+                      }else if(layerSpec.unitDivide>=10 && layerSpec.unitDivide<20){
                         if (i < 1 || i >= layerSpec.unitDivide - 1) {
                           continue; // Do not push these subdivided segments
                         }
@@ -2621,11 +2621,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }else{
                         Gap = 6
                       }
-                      if(layerSpec.unitDivide>20){
+                      if(layerSpec.unitDivide>=20){
                         if (i < 5 || i >= layerSpec.unitDivide - 5) {
                           continue; // Do not push these subdivided segments
                         }
-                      }else{
+                      }else if(layerSpec.unitDivide>=10 && layerSpec.unitDivide<20){
                         if (i < 1 || i >= layerSpec.unitDivide - 1) {
                           continue; // Do not push these subdivided segments
                         }
@@ -3065,232 +3065,141 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
 
           //  need to change 311 service here.....!!
-          else if(layerSpec.chart){
-            // console.log(layerSpec)
+          else if (layerSpec.chart) {
+            // 1) load & clear physical data
             d3.json(layerSpec.physicalLayerPath).then((data: any) => {
-              if (data && data.edges){
-                mapInstanceRef.current?.eachLayer((layer) => {
-                  if (!(layer instanceof L.TileLayer)) {
-                    // Check if the layer's pane is NOT the mimic street pane before removing
-                    if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
-                      mapInstanceRef.current!.removeLayer(layer);
-                    }
+              if (!data?.edges) return;
+              mapInstanceRef.current?.eachLayer(layer => {
+                if (!(layer instanceof L.TileLayer)
+                    && layer.options?.pane !== 'mimicStreetPane') {
+                  mapInstanceRef.current!.removeLayer(layer);
+                }
+              });
+
+              // 2) subdivide if needed (same as your other code)…
+              let updatedGeoJsonData = data;
+              if (layerSpec.unitDivide !== 1) {
+                const subdivided: any[] = [];
+                data.edges.forEach((edge: any) => {
+                  const [start, end, ...extras] = edge;
+                  const lat0 = start.lat, lon0 = start.lon;
+                  const lat1 = end.lat,   lon1 = end.lon;
+                  const dLat = lat1 - lat0, dLon = lon1 - lon0;
+                  for (let i = 0; i < layerSpec.unitDivide; i++) {
+                    const segStart = {
+                      lat: lat0 + dLat * (i   / layerSpec.unitDivide),
+                      lon: lon0 + dLon * (i   / layerSpec.unitDivide)
+                    };
+                    const segEnd   = {
+                      lat: lat0 + dLat * ((i+1) / layerSpec.unitDivide),
+                      lon: lon0 + dLon * ((i+1) / layerSpec.unitDivide)
+                    };
+                    subdivided.push([segStart, segEnd, ...extras]);
                   }
                 });
+                updatedGeoJsonData = { edges: subdivided };
+              }
 
-
-                if (layerSpec.unitDivide == 1){
-                  data = data;
-                }else{
-                  var subdividedEdges = [];
-
-                  // Loop through each edge in the original array
-                  data.edges.forEach(function(edge) {
-                    // Get the start and end coordinates
-                    var start = edge[0]; // [lat, lon]
-                    var end = edge[1];   // [lat, lon]
-                    // Get the extra values (indices 2 to 12)
-                    var extras = edge.slice(2);
-
-                    // Destructure the coordinates
-                    var lat0 = start["lat"],
-                        lon0 = start["lon"],
-                        lat1 = end["lat"],
-                        lon1 = end["lon"];
-
-                    // Calculate the total difference between the start and end points
-                    var dLat = lat1 - lat0;
-                    var dLon = lon1 - lon0;
-
-                    // Subdivide this edge into `unitDivide` segments
-                    for (var i = 0; i < layerSpec.unitDivide; i++) {
-                      // Calculate the start coordinate of the new segment
-                      var segStartLat = lat0 + dLat * (i / layerSpec.unitDivide);
-                      var segStartLon = lon0 + dLon * (i / layerSpec.unitDivide);
-                      // console.log("calculation lat lon", segStartLat, segStartLon)
-
-                      // Calculate the end coordinate of the new segment
-                      var segEndLat = lat0 + dLat * ((i + 1) / layerSpec.unitDivide);
-                      var segEndLon = lon0 + dLon * ((i + 1) / layerSpec.unitDivide);
-
-                      // Build new coordinate objects
-                      var newStart = { lat: segStartLat, lon: segStartLon };
-                      var newEnd = { lat: segEndLat, lon: segEndLon };
-
-
-                      // Create the new edge. The new edge will contain:
-                      //  - The new start coordinate
-                      //  - The new end coordinate
-                      //  - The same extra values from the original edge
-                      var newEdge = [
-                        newStart,newEnd
-                      ].concat(extras);
-
-                      subdividedEdges.push(newEdge);
-                    }
-                  });
-
-                    console.log("data2 is:", subdividedEdges)
-
-
-
-
-                    data = {
-                    edges: subdividedEdges
+              // 3) load thematic & aggregate
+              d3.json(layerSpec.thematicLayerPath).then((thematicData: any) => {
+                if (layerSpec.spatialRelation === 'contains') {
+                  updatedGeoJsonData = aggregationContains(
+                    updatedGeoJsonData, thematicData,
+                    layerSpec.AggregationType, layerSpec.unit
+                  );
+                } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                  updatedGeoJsonData = {
+                    edges: aggregateEdgeData(
+                      updatedGeoJsonData.edges,
+                      thematicData,
+                      layerSpec.AggregationType
+                    )
                   };
-
+                } else if (layerSpec.spatialRelation === 'buffer') {
+                  updatedGeoJsonData = BufferDataAggregationSegment(
+                    updatedGeoJsonData, thematicData,
+                    layerSpec.bufferValue,
+                    layerSpec.AggregationType
+                  );
                 }
 
-                const chartSpec = JSON.parse(JSON.stringify(layerSpec.chart));
-                chartSpec.data = {
-                  "values": [
-                    {"x": 1,  "y": 28}, {"x": 2,  "y": 55},
-                    {"x": 3,  "y": 43}, {"x": 4,  "y": 91},
-                    {"x": 5,  "y": 81}, {"x": 6,  "y": 53},
-                    {"x": 7,  "y": 19}, {"x": 8,  "y": 87},
-                    {"x": 9,  "y": 52}, {"x": 10, "y": 48},
-                    {"x": 11, "y": 24}, {"x": 12, "y": 49},
-                    {"x": 13, "y": 87}, {"x": 14, "y": 66},
-                    {"x": 15, "y": 17}, {"x": 16, "y": 27},
-                    {"x": 17, "y": 68}, {"x": 18, "y": 16},
-                    {"x": 19, "y": 49}, {"x": 20, "y": 15}
-                  ],
-                };
-          
+                // 4) for each edge, embed a Vega-Lite chart
+                (async () => {
+                  const templateSpec = layerSpec.chart;
+                  const svgWidth = 150, svgHeight = 150;
+                  const pane = mapInstanceRef.current!.getPanes().overlayPane;
 
-  
-                vegaEmbed('#vis', chartSpec, {renderer: 'svg', actions: false}).then(result => {
-                  const vegaSVG = result.view._el.querySelector('svg');
-                  const svgWidth = 150;
-                  const svgHeight = 70;
-  
-                  // console.log(vegaSVG)
-                  data.edges.forEach(edge => {
-                    let start = edge[0];
-                    let end = edge[1];
-                    let bearing = edge[2].Bearing;
-                    let angle = edge[2].Bearing + 90;
-                    let midpoint;
-                    if(layerSpec.alignment === 'center'){
-                      midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
-                    } else if(layerSpec.alignment === 'top'){
-                      midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
-                      midpoint = { lat: (start.lat + midpoint.lat) / 2, lon: (start.lon + midpoint.lon) / 2 };
-                    }else if(layerSpec.alignment === 'bottom'){
-                      midpoint = { lat: (start.lat + end.lat) / 2, lon: (start.lon + end.lon) / 2 };
-                      midpoint = { lat: (midpoint.lat + end.lat) / 2, lon: (midpoint.lon + end.lon) / 2 };
-                    }
-                    
-                    if(layerSpec.orientation=='perpendicular'){
-                      angle = angle + 90;
-                    }
+                  for (const edge of updatedGeoJsonData) {
+                    const [start, end, ...extras] = edge;
+                    // merge all attribute objects into one
+                    const attrs = Object.assign({}, ...extras);
 
-                    let leftPoint;
-                    let rightPoint
-
-                    // Convert degrees to radians
-                    function toRad(deg) {
-                      return deg * Math.PI / 180;
-                    }
-
-                    // Convert radians to degrees
-                    function toDeg(rad) {
-                      return rad * 180 / Math.PI;
-                    }
-
-                    function destinationPoint(lat, lon, bearing, distance) {
-                      const R = 6371000; // Earth radius in meters
-                      const brng = toRad(bearing);
-                      const lat1 = toRad(lat);
-                      const lon1 = toRad(lon);
-                      const dR = distance / R; // angular distance in radians
-                
-                      const lat2 = Math.asin(
-                        Math.sin(lat1) * Math.cos(dR) +
-                        Math.cos(lat1) * Math.sin(dR) * Math.cos(brng)
-                      );
-                      const lon2 = lon1 + Math.atan2(
-                        Math.sin(brng) * Math.sin(dR) * Math.cos(lat1),
-                        Math.cos(dR) - Math.sin(lat1) * Math.sin(lat2)
-                      );
-                
-                      return { lat: toDeg(lat2), lon: toDeg(lon2) };
-                    }
-
-                    if(layerSpec.alignment=="left"){
-                      if (bearing > 180) {
-                        bearing = (bearing + 180) % 360;
-                        // Swap start/end
-                        const temp = start;
-                        start = end;
-                        end = temp;
-                      }
-                      const leftBearing = (bearing + 90) % 360;
-                      leftPoint = destinationPoint(midpoint.lat, midpoint.lon, leftBearing, 50);
-                    }
-                    else if(layerSpec.alignment=="right"){
-                      if (bearing > 180) {
-                        bearing = (bearing + 180) % 360;
-                        // Swap start/end
-                        const temp = start;
-                        start = end;
-                        end = temp;
-                      }
-                      const rightBearing = (bearing - 90 + 360) % 360;
-                      rightPoint = destinationPoint(midpoint.lat, midpoint.lon, rightBearing, 30);
-                    }
-
-
-                    let point;
-
-  
-                    const updateSvgPosition = () => {
-                      if(layerSpec.alignment=="center"){
-                        point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-                      }else if(layerSpec.alignment=="left"){
-                        point = mapInstanceRef.current!.latLngToLayerPoint([leftPoint.lat, leftPoint.lon]);
-                      }else if(layerSpec.alignment=="right"){
-                        point = mapInstanceRef.current!.latLngToLayerPoint([rightPoint.lat, rightPoint.lon]);
-                      }else if(layerSpec.alignment=="top"){
-                        point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-                      }else if(layerSpec.alignment=="bottom"){
-                        point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-                      }
-                      // const point = mapInstanceRef.current!.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-                      // const tempID = `t${midpoint.lat}${midpoint.lon}`.replace('.', '').replace('-', '') + 'svg';
-                      const alignmentSuffix = layerSpec.alignment; // "left", "right", or "center"
-                      const tempID = 't' + alignmentSuffix + '_' 
-                                  + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') 
-                                  + 'svg';
-                      // const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select(`#${tempID}`);
-                      const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
-                      // console.log(temp)
-  
-                      if (temp.empty()) {
-                        d3.select(mapInstanceRef.current!.getPanes().overlayPane)
-                          .append('svg')
-                          .attr('class', 'vega-lite-svg')
-                          .attr('id', tempID)
-                          .attr('width', svgWidth)
-                          .attr('height', svgHeight)
-                          .attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2}) rotate(${angle}, -5, -5)`)
-                          .node()
-                          .appendChild(vegaSVG.cloneNode(true));
-                      } else {
-                        temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2}) rotate(${angle}, -5, -5)`);
-                      }
+                    // midpoint (you can replay your top|bottom logic here if needed)
+                    const midpoint = {
+                      lat: (start.lat + end.lat) / 2,
+                      lon: (start.lon + end.lon) / 2
                     };
-  
-                    updateSvgPosition();
-                    mapInstanceRef.current!.on('move zoom', updateSvgPosition);
-                  })
-                })
-                .then(() => {
-                  const svgLayer1 = L.svg().addTo(mapInstanceRef.current!);
-                  currentLayersRef.current.push(svgLayer1);
-                });
-              }
-            })
+
+                    // bearing & angle
+                    let bearing = attrs.Bearing ?? 0;
+                    let angle   = bearing + 90;
+                    if (layerSpec.orientation === 'perpendicular') angle += 90;
+
+                    // build per-edge spec
+                    const chartSpec = JSON.parse(JSON.stringify(templateSpec));
+
+                    // const attrs = Object.assign({}, ...extras);
+                    chartSpec.data = {
+                      values: [
+                        {"category": "Total Crimes", "value": attrs.Total_Crimes},
+                        {"category": "Summer", "value": attrs.Summer},
+                        {"category": "Winter", "value": attrs.Winter},
+                        {"category": "Spring", "value": attrs.Spring},
+                      ]
+                    };
+
+                    // console.log("vegadata", chartSpec.data)
+
+                    // embed off the #vis container
+                    await vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false })
+                      .then(result => {
+                        const vegaSVG = result.view._el.querySelector('svg')!;
+                        const id = `edge_${midpoint.lat}_${midpoint.lon}`.replace(/[^\w]/g, '');
+
+                        // position function
+                        const updateSvgPosition = () => {
+                          const point = mapInstanceRef.current!
+                            .latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                          const transform = `translate(${point.x - svgWidth/3},${point.y - svgHeight/3})`
+                                          + ` rotate(${angle},${svgWidth/2.5},${svgHeight/2.5})`;
+
+                          const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
+                          if (sel.empty()) {
+                            d3.select(pane)
+                              .append('svg')
+                              .attr('class', 'vega-lite-svg')
+                              .attr('id', id)
+                              .attr('width', svgWidth)
+                              .attr('height', svgHeight)
+                              .attr('transform', transform)
+                              .node()
+                              .appendChild(vegaSVG.cloneNode(true));
+                          } else {
+                            sel.attr('transform', transform);
+                          }
+                        };
+
+                        updateSvgPosition();
+                        mapInstanceRef.current!.on('move zoom', updateSvgPosition);
+                      });
+                  }
+
+                  // 5) re-add an SVG layer so Leaflet handles it
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  currentLayersRef.current.push(svgLayer);
+                })();
+              });
+            });
           }
 
           else if (layerSpec.shape === 'spike') {
@@ -3910,7 +3819,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           
                 // 3) Go through each edge, gather the node data
                   const edges = updatedGeoJsonData.edges;
-                  console.log("edges:", edges)
+                  // console.log("edges:", edges)
                 // console.log("checking the data for edge", updatedGeoJsonData)
                   edges.forEach((edge: any) => {
                     // edge[0] = first node { lat, lon }
@@ -4299,6 +4208,133 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             }).catch(error => {
               console.error("Failed to load JSON data:", error);
             });
+          }
+
+
+
+
+          if(layerSpec.unit === "node" && !layerSpec.shape && !layerSpec.chart){
+            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
+              if (data && data.edges) {
+                // 2) Remove old layers (except tile or mimicStreetPane)
+                mapInstanceRef.current?.eachLayer((layer: any) => {
+                  if (!(layer instanceof L.TileLayer)) {
+                    if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+                      mapInstanceRef.current!.removeLayer(layer);
+                    }
+                  }
+                });
+          
+                // 3) Load the thematic data (if needed), then aggregate
+                d3.json(layerSpec.thematicLayerPath).then((thematicData: any) => {
+                  let updatedGeoJsonData: any;
+                  if (layerSpec.spatialRelation === 'contains') {
+                    updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
+                  } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+                    updatedGeoJsonData = aggregateEdgeData(data.edges, thematicData, layerSpec.AggregationType);
+                  } else if (layerSpec.spatialRelation === 'buffer') {
+                    updatedGeoJsonData = BufferDataAggregationSegment(data, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
+                  }
+          
+                  // No unitDivide here
+                  updatedGeoJsonData = { edges: updatedGeoJsonData };
+          
+                  // 4) Build a dictionary of nodes keyed by lat,lon
+                  const NodesMap: Record<string, any> = {};
+          
+                  function addNodeData(lat: number, lon: number, edgeData: Record<string, any>) {
+                    const key = `${lat},${lon}`;
+                    if (!NodesMap[key]) {
+                      NodesMap[key] = {
+                        lat,
+                        lon,
+                        sums: {},
+                        count: 0
+                      };
+                    }
+                    // Accumulate numeric attributes
+                    for (const [attrKey, attrValue] of Object.entries(edgeData)) {
+                      if (typeof attrValue === 'number') {
+                        if (!NodesMap[key].sums[attrKey]) {
+                          NodesMap[key].sums[attrKey] = 0;
+                        }
+                        NodesMap[key].sums[attrKey] += attrValue;
+                      }
+                    }
+                    NodesMap[key].count += 1;
+                  }
+          
+                  // 5) For each edge, gather node data
+                  const edges = updatedGeoJsonData.edges;
+                  edges.forEach((edge: any) => {
+                    const firstNode = edge[0]; 
+                    const secondNode = edge[1]; 
+                    // Merge any additional attributes (e.g. {Bearing, Length, Speed, ...})
+                    const mergedAttributes = Object.assign({}, ...edge.slice(2));
+                    addNodeData(firstNode.lat, firstNode.lon, mergedAttributes);
+                    addNodeData(secondNode.lat, secondNode.lon, mergedAttributes);
+                  });
+          
+                  // 6) Convert NodesMap -> array, computing average for each numeric field
+                  const NodesList = Object.values(NodesMap).map((node: any) => {
+                    const averagedAttrs: Record<string, number> = {};
+                    for (const [attrKey, sumValue] of Object.entries(node.sums)) {
+                      averagedAttrs[attrKey] = (sumValue as number) / node.count;
+                    }
+                    return {
+                      lat: node.lat,
+                      lon: node.lon,
+                      ...averagedAttrs
+                    };
+                  });
+
+                  // console.log("NodesList with aggregated attributes:", NodesList);
+          
+                  // 7) Create a Leaflet SVG overlay
+                  const svgLayer = L.svg().addTo(mapInstanceRef.current!);
+                  const svgGroup = d3
+                    .select(mapInstanceRef.current!.getPanes().overlayPane)
+                    .select("svg")
+                    .append("g")
+                    .attr("class", "leaflet-zoom-hide");
+          
+                  // Helpers
+                  function projectPoint(lat: number, lon: number) {
+                    return mapInstanceRef.current!.latLngToLayerPoint([lat, lon]);
+                  }
+                 
+                  // 8) Main draw function
+                  function updateShapes() {
+                    // const selection = svgGroup.selectAll("path.nodeShape").data(NodesList);
+                    const circles = svgGroup.selectAll<SVGCircleElement, any>('circle.nodeShape').data(NodesList);
+
+                    circles.join('circle')
+                      .attr('class', 'nodeShape')
+                      .attr('cx', d => projectPoint(d.lat, d.lon).x)
+                      .attr('cy', d => projectPoint(d.lat, d.lon).y)
+                      .attr('r', 5)
+                      .attr('fill', 'red')
+                      .attr('fill-opacity', 1)
+                      .attr('stroke', '#333')
+                      .attr('stroke-width', 0.5)
+                    
+                  }
+          
+                  // 9) Draw once
+                  updateShapes();
+                  // 10) Re-draw on zoom/pan
+                  mapInstanceRef.current!.on("zoomend moveend", updateShapes);
+          
+                  // 11) Store the new layer reference
+                  currentLayersRef.current.push(svgLayer);
+                });
+              } else {
+                console.error("Data is missing edges or invalid.");
+              }
+            }).catch(error => {
+              console.error("Failed to load JSON data:", error);
+            });
+
           }
 
         }

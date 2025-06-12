@@ -56,6 +56,7 @@ const App: React.FC = () => {
 
   // Function to parse a single layer specification
   const parseSingleLayer = (spec: string): ParsedSpec | null => {
+    // console.log("🔍 parseSingleLayer received:", JSON.stringify(spec));
     try {
       // Parse unit (either area or segment)
       // const unitMatch = spec.match(/unit\s*=\s*(\w+)/);
@@ -182,7 +183,7 @@ const App: React.FC = () => {
       }else{
         method = 'line';
       }
-      console.log({ method, methodRow, methodColumn });
+      // console.log({ method, methodRow, methodColumn });
 
       // Parse shape (e.g., fill or line)
       const shapeMatch = spec.match(/shape\s*=\s*(\w+)/);
@@ -248,7 +249,7 @@ const App: React.FC = () => {
       if (method === 'line' || method === 'rect' || method === 'matrix' || shape === 'spike' || shape === 'rect') {
         // Parse line color (rand[min,max] or a specific color)
         // const lineColorMatch = spec.match(/color\(([^)]+)\)/);
-        const lineColorMatch = spec.match(/color\s*=\s*([^,\)\s]+)/);
+        const lineColorMatch = spec.match(/color\s*=\s*([^,\)\s]+)/); 
         lineColor = lineColorMatch ? lineColorMatch[1].trim() : 'red'; // Default to red
 
         // Parse line type (dashed, etc.)
@@ -259,17 +260,15 @@ const App: React.FC = () => {
         }
 
         const lineStrokeWidthMatch = spec.match(/width\s*=\s*([^,\)\s]+)/)
-        console.log("width is", lineStrokeWidthMatch[1].trim())
         if(lineStrokeWidthMatch){
           lineStrokeWidth = lineStrokeWidthMatch[1].trim();
         }else{
           lineStrokeWidth = 5;
         }
 
-        // console.log("checking lineStrokeWidth", lineStrokeWidth)
 
         // const heightMatch = spec.match(/height\(([^)]+)\)/);
-        const heightMatch = spec.match(/height\s*=\s*([^,\)\s]+)/);
+        const heightMatch = spec.match(/height\s*=\s*([^,\)\s]+)/); 
         height = heightMatch ? heightMatch[1].trim() : 'red'; // Default to red
         // console.log('stroke width check',lineStrokeWidth)
 
@@ -319,7 +318,7 @@ const App: React.FC = () => {
         }
       }
 
-      console.log("mapMatch:", mapMatch)
+      // console.log("mapMatch:", mapMatch)
 
        // Parse for `point` method
       if (method === 'point') {
@@ -348,6 +347,8 @@ const App: React.FC = () => {
         }
       }
 
+      // console.log("chartMatch", chartMatch)
+
 
       // Parse orientation and alignment
       let orientation: string | undefined;
@@ -360,6 +361,7 @@ const App: React.FC = () => {
       }
 
       let alignment: string | undefined;
+      // const alignmentMatch = spec.match(/\.alignment\(['"]([^'"]+)['"]\)/);
       const alignmentMatch = spec.match(/\.alignment\(\s*([^,\)\s]+)\s*\)/);
       if (alignmentMatch) {
         alignment = alignmentMatch[1];
@@ -405,7 +407,7 @@ const App: React.FC = () => {
 
       }
 
-      console.log(roadDirection, address, roadRadius, radiusUnit, streetWidth);
+      // console.log(roadDirection, address, roadRadius, radiusUnit, streetWidth);
     
 
       // Return the parsed specification for this layer
@@ -468,6 +470,7 @@ const App: React.FC = () => {
   // Function to handle applying the spec from the text editor
   const applySpec = (spec: string) => {
     const parsedLayers = parseSpecification(spec);
+    // console.log("🔍 parsedLayers:", parsedLayers);
     if (parsedLayers.length > 0) {
       setParsedSpec(parsedLayers); // Set the parsed layers
       applyFlag.current = 1;
