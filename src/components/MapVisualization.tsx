@@ -143,7 +143,7 @@ function aggregationContains(geojsonData, thematicData, aggregationType, UnitVal
     // console.log("function data check: ", geojsonData)
     return geojsonData;
   } else if(UnitVal == 'segment'){
-    console.log("checking thematic data here", thematicData)
+    // console.log("checking thematic data here", thematicData)
     // console.log('check if data is passed to the function:', geojsonData)
     const bboxWidth = 5000;
     const aggregatedEdges = geojsonData.edges.map( edge => {
@@ -841,7 +841,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         mapInstanceRef.current.off('move zoom');
 
         if (layerSpec.unit === 'segment'){
-          if (layerSpec.method === 'line') {
+          if (layerSpec.method === 'line' && !layerSpec.chart && !layerSpec.shape) {
 
             // Helper function to offset a point by a given bearing and distance (in meters)
             function offsetPoint(lat, lon, bearing, distance) {
@@ -2138,7 +2138,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // Apply spatial aggregation
                     if (layerSpec.spatialRelation === 'contains') {
                       updatedGeoJsonData = aggregationContains(subdividedEdges, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                      console.log("data is:", updatedGeoJsonData);
+                      // console.log("data is:", updatedGeoJsonData);
                     } else if (layerSpec.spatialRelation === 'nearest neighbor') {
                       updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, layerSpec.AggregationType);
                     } else if (layerSpec.spatialRelation === 'buffer') {
@@ -2151,7 +2151,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     };
                     // updatedGeoJsonData = [updatedGeoJsonData.edges[0]]
 
-                    console.log("data check for rect2", updatedGeoJsonData)
+                    // console.log("data check for rect2", updatedGeoJsonData)
                     const paneName = layerSpec.alignment + "-" + layerSpec.orientation;
 
             
@@ -2426,7 +2426,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
 
                       if(layerSpec.alignment === "left"){
-                        const leftBearing = (bearing + 90) % 360;
+                        const leftBearing = (bearing + 270) % 360;
                         // Determine left/right insets
                         const inset = 5; // fixed inset distance in meters
             
@@ -2438,7 +2438,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
             
                         // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360
-                        const outwardLeft = (bLeftLine + 90) % 360;
+                        const outwardLeft = (bLeftLine + 270) % 360;
                         // const wLeft = segment._leftWidth;
                         const wLeft = lineWidth*6
             
@@ -2467,7 +2467,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                       }
                       if(layerSpec.alignment === "right"){
                         // Determine left/right insets
-                        const rightBearing = (bearing + 270) % 360;
+                        const rightBearing = (bearing + 90) % 360;
                         const inset = 5; // fixed inset distance in meters
             
                         // Inside edge offsets for RIGHT side
@@ -2478,7 +2478,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const bRightLine = bearingBetweenPoints(sRightLat, sRightLon, eRightLat, eRightLon);
             
                         // Outward offsets: for left side use (bLeftLine + 270) % 360, for right side use (bRightLine + 90) % 360 
-                        const outwardRight = (bRightLine + 270) % 360;
+                        const outwardRight = (bRightLine + 90) % 360;
                         // const wRight = segment._rightWidth;
                         const wRight = lineWidth*6;
             
@@ -2525,12 +2525,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         const lineOpacity = getOpacity(segment, updatedGeoJsonData)
 
                         if(layerSpec.alignment === "left"){
-                          const leftBearing = (bearing + 90) % 360;
+                          const leftBearing = (bearing + 270) % 360;
                           const inset = 5;
                           const [sLeftLat, sLeftLon] = offsetPoint(start.lat, start.lon, leftBearing, inset);
                           const [eLeftLat, eLeftLon] = offsetPoint(end.lat, end.lon, leftBearing, inset);
                           const bLeftLine = bearingBetweenPoints(sLeftLat, sLeftLon, eLeftLat, eLeftLon);
-                          const outwardLeft = (bLeftLine + 90) % 360;
+                          const outwardLeft = (bLeftLine + 270) % 360;
                           // const wLeft = segment._leftWidth;
                           const wLeft = lineWidth*6;
                           const [sLeft2Lat, sLeft2Lon] = offsetPoint(sLeftLat, sLeftLon, outwardLeft, wLeft);
@@ -2549,14 +2549,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                         }
                         if(layerSpec.alignment === "right"){
                           // rightGroup.selectAll("*").remove();
-                          const rightBearing = (bearing + 270) % 360;
+                          const rightBearing = (bearing + 90) % 360;
                           const inset = 5;
                           const [sRightLat, sRightLon] = offsetPoint(start.lat, start.lon, rightBearing, inset);
                           const [eRightLat, eRightLon] = offsetPoint(end.lat, end.lon, rightBearing, inset);
                           
                           const bRightLine = bearingBetweenPoints(sRightLat, sRightLon, eRightLat, eRightLon);
                           
-                          const outwardRight = (bRightLine + 270) % 360;
+                          const outwardRight = (bRightLine + 90) % 360;
                           
                           // const wRight = segment._rightWidth;
                           const wRight = lineWidth*6;
@@ -2642,20 +2642,23 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     }
                   });
                   subdividedEdges = { edges: subdividedEdges };
+                  // console.log("checking why thematic data is not loading", layerSpec.thematicLayerPath)
+                  // let thematicDataPath = layerSpec.thematicLayerPath
 
                   // 2) Aggregate with thematic data
-                  d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
+                  d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                    console.log("index value", parsedSpec[index].lineColor, index)
                     // Apply spatial aggregation
                     if (layerSpec.spatialRelation === 'contains') {
                       updatedGeoJsonData = aggregationContains(subdividedEdges, thematicData, layerSpec.AggregationType, layerSpec.unit);
-                      console.log("data is:", updatedGeoJsonData);
+                      // console.log("data is:", updatedGeoJsonData);
                     } else if (layerSpec.spatialRelation === 'nearest neighbor') {
                       updatedGeoJsonData = aggregateEdgeData(subdividedEdges.edges, thematicData, layerSpec.AggregationType);
                     } else if (layerSpec.spatialRelation === 'buffer') {
                       updatedGeoJsonData = BufferDataAggregationSegment(subdividedEdges, thematicData, layerSpec.bufferValue, layerSpec.AggregationType);
                     }
                     updatedGeoJsonData = { edges: updatedGeoJsonData };
-                    console.log("data check for rect2", updatedGeoJsonData);
+                    // console.log("data check for rect2", updatedGeoJsonData);
 
                     // 3) Prepare style parameters
                    
@@ -2869,12 +2872,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                             minValue + 4 * step
                           ];
                           // const colorScale = d3.scaleSequential(d3.interpolateBuGn).domain([minValue, maxValue]);
-                          if(layerSpec.lineColor == "NoSidewalk"){
-                            colors = ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"];
-                          }
-                          else if(layerSpec.lineColor == "Crosswalk"){
-                            colors = ["#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b"];
-                          }
+                          // if(layerSpec.lineColor == parsedSpec[index].lineColor){
+                          //   colors = ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"];
+                          // }
+                          // else if(layerSpec.lineColor == parsedSpec[index+1].lineColor){
+                          //   colors = ["#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b"];
+                          // }
+                          const colors = (index === 0)
+                            ? ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]
+                            : ["#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#034e7b"];
+
+                            
                           const colorScale = d3.scaleThreshold()
                                         .domain(thresholds) // 4 thresholds create 5 bins
                                         .range(colors);
@@ -3040,10 +3048,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
                     mapInstanceRef.current.on("moveend", updateRectangles);
                     currentLayersRef.current.push(svgLayer);
-
                   }).catch(error => {
                     console.error("Failed to load thematic JSON data:", error);
                   });
+                  
                 } else {
                   console.error("Data is missing edges or is invalid.");
                 }
@@ -3832,14 +3840,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           }
 
         }
+
+
         else if(layerSpec.unit === 'node'){
 
           let updatedGeoJsonData
-          
-
 
           let nodesSet = new Set();
           let NodesList = [];
+
           if (layerSpec.chart) {
             d3.json(layerSpec.physicalLayerPath).then((data: any) => {
               if (data && data.edges) {
@@ -4006,6 +4015,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               }
             });
           }
+
+          
           if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
             // 1) Load the physical-layer JSON (which has "edges")
             d3.json(layerSpec.physicalLayerPath).then((data: any) => {
@@ -4290,24 +4301,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             });
           }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }
+
+
+
+
+
         else if (layerSpec.unit === 'area'){
           // Handle the `fill` method
           if (layerSpec.method === 'fill') {

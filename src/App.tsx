@@ -247,7 +247,8 @@ const App: React.FC = () => {
       // Parse for `line` method
       if (method === 'line' || method === 'rect' || method === 'matrix' || shape === 'spike' || shape === 'rect') {
         // Parse line color (rand[min,max] or a specific color)
-        const lineColorMatch = spec.match(/color\(([^)]+)\)/);
+        // const lineColorMatch = spec.match(/color\(([^)]+)\)/);
+        const lineColorMatch = spec.match(/color\s*=\s*([^,\)\s]+)/);
         lineColor = lineColorMatch ? lineColorMatch[1].trim() : 'red'; // Default to red
 
         // Parse line type (dashed, etc.)
@@ -257,7 +258,8 @@ const App: React.FC = () => {
           lineTypeVal = lineTypeMatch[2]; // e.g., rand[0,10]
         }
 
-        const lineStrokeWidthMatch = spec.match(/width\s*=\s*([^)\s]+)\)/)
+        const lineStrokeWidthMatch = spec.match(/width\s*=\s*([^,\)\s]+)/)
+        console.log("width is", lineStrokeWidthMatch[1].trim())
         if(lineStrokeWidthMatch){
           lineStrokeWidth = lineStrokeWidthMatch[1].trim();
         }else{
@@ -266,7 +268,8 @@ const App: React.FC = () => {
 
         // console.log("checking lineStrokeWidth", lineStrokeWidth)
 
-        const heightMatch = spec.match(/height\(([^)]+)\)/);
+        // const heightMatch = spec.match(/height\(([^)]+)\)/);
+        const heightMatch = spec.match(/height\s*=\s*([^,\)\s]+)/);
         height = heightMatch ? heightMatch[1].trim() : 'red'; // Default to red
         // console.log('stroke width check',lineStrokeWidth)
 
@@ -348,7 +351,8 @@ const App: React.FC = () => {
 
       // Parse orientation and alignment
       let orientation: string | undefined;
-      const orientationMatch = spec.match(/\.orientation\(['"]([^'"]+)['"]\)/);
+      // const orientationMatch = spec.match(/\.orientation\(['"]([^'"]+)['"]\)/);
+      const orientationMatch = spec.match(/\.orientation\(\s*([^,\)\s]+)\s*\)/);
       if (orientationMatch) {
         orientation = orientationMatch[1];
       }else{
@@ -356,11 +360,11 @@ const App: React.FC = () => {
       }
 
       let alignment: string | undefined;
-      const alignmentMatch = spec.match(/\.alignment\(['"]([^'"]+)['"]\)/);
+      const alignmentMatch = spec.match(/\.alignment\(\s*([^,\)\s]+)\s*\)/);
       if (alignmentMatch) {
         alignment = alignmentMatch[1];
       }else{
-        alignment = 'center';
+        alignment = 'left';
       }
 
       let roadDirection = undefined;
