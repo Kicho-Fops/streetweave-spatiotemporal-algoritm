@@ -1945,7 +1945,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               });
 
               let updatedGeoJsonData = { edges: subdividedEdges };
-              console.log("matrix data is", updatedGeoJsonData)
+              // console.log("matrix data is", updatedGeoJsonData)
 
               d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
                 if (layerSpec.spatialRelation === 'contains') {
@@ -1957,7 +1957,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                 }
 
                 updatedGeoJsonData = { edges: updatedGeoJsonData };
-                console.log("matrix data is2", updatedGeoJsonData)
+                // console.log("matrix data is2", updatedGeoJsonData)
 
                 const svgLayer = L.svg().addTo(mapInstanceRef.current);
                 const svgGroup = d3.select(mapInstanceRef.current.getPanes().overlayPane).select("svg").append("g");
@@ -3903,11 +3903,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                             .attr('id', tempID)
                             .attr('width', svgWidth)
                             .attr('height', svgHeight)
-                            .attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`)
+                            .attr('transform', `translate(${point.x - svgWidth / 2.5}, ${point.y - svgHeight / 2.5})`)
                             .node()
                             .appendChild(vegaSVG.cloneNode(true));
                         } else {
-                          temp.attr('transform', `translate(${point.x - svgWidth / 2}, ${point.y - svgHeight / 2})`);
+                          temp.attr('transform', `translate(${point.x - svgWidth / 2.5}, ${point.y - svgHeight / 2.5})`);
                         }
                       };
           

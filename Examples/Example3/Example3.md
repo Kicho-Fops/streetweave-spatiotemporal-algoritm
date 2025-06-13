@@ -17,7 +17,7 @@ You should see the following:
 ## Step 2: Specifying data layers
 StreetWeave’s grammar allows users to load, visualize, and integrate physical layers (e.g., streets, intersections) and thematic layers (e.g., crime, pollution, pedestrian counts)
 
-`.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "SideWalk_data.json")`
+`.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "NewCrimeData.json")`
 
 You should see the following:
 
@@ -111,7 +111,23 @@ StreetWeave’s grammar allows to specify how data is visually encoded onto the 
 
 You should see the following:
 
-![UTK example](step4.png?raw=true)
+![StreetWeave example](step4.png?raw=true)
+
+## Step 5: Creating multilayer visualizations
+
+StreetWeave also supports adding multiple layers of visualization, enabling the integration of different data aspects in a single view.
+
+```
+Layer2 = gMap(unit = "segment/25")
+.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "SideWalk_data.json")
+.relation( spatialRelation = "contains", operation = "aggregation", type = "mean")
+.ft(method = "rect", color = "NoSidewalk", height = "SurfaceProblem", opacity = 1 , width = "NoCurbRamp").orientation("perpendicular").alignment("right")
+```
+
+
+You should see the following:
+
+![StreetWeave example](step5.png?raw=true)
 
 
 ## Final Specification
@@ -120,7 +136,7 @@ You should see the following:
 
 ```diff
 gMap(unit="node")
-.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "SideWalk_data.json")
+.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "NewCrimeData.json")
 .relation(spatialRelation = "contains", operation = "aggregation", type = "mean")
 .chart(
 {
@@ -189,6 +205,11 @@ gMap(unit="node")
   }
 }
 ).orientation("center").alignment("center")
+
+Layer2 = gMap(unit = "segment/25")
+.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "SideWalk_data.json")
+.relation( spatialRelation = "contains", operation = "aggregation", type = "mean")
+.ft(method = "rect", color = "NoSidewalk", height = "SurfaceProblem", opacity = 1 , width = "NoCurbRamp").orientation("perpendicular").alignment("right")
 ```
 </details>
 
