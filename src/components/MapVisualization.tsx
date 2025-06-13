@@ -1297,7 +1297,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // console.log("lineWidth before:", lineWidth)
 
                     lineWidth = getLineWidth(lineWidth)
-                    // console.log("lineWidth after:", lineWidth)
+                    console.log("lineWidth after:", lineWidth)
 
                     ///line random color-->
                     // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
@@ -1381,7 +1381,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                                 .filter((v: any) => v !== undefined);
                                   const minValue = d3.min(attributeValues);
                                   const maxValue = d3.max(attributeValues);
-                                  console.log('min and max is', minValue, maxValue)
+                                  // console.log('min and max is', minValue, maxValue)
                                   const range = maxValue - minValue;
                                   const stepSize = range/3;
                                   const boundary1 = minValue + stepSize;

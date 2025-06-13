@@ -8,11 +8,11 @@ Follow the steps below, and after each modification to the specification, click 
 
 At first we need to specify the unit level. The concept of a unit defines the spatial granularity at which data can be aggregated, analyzed, and visualized, providing users with flexible options for spatial analysis.
 
-`Layer1 = gMap(unit="segment/25")`
+`gMap(unit="segment/25")`
 
 You should see the following:
 
-![UTK example](step1.png?raw=true)
+![StreetWeave example](step1.png?raw=true)
 
 ## Step 2: Specifying data layers
 StreetWeave’s grammar allows users to load, visualize, and integrate physical layers (e.g., streets, intersections) and thematic layers (e.g., crime, pollution, pedestrian counts)
@@ -21,7 +21,7 @@ StreetWeave’s grammar allows users to load, visualize, and integrate physical 
 
 You should see the following:
 
-![UTK example](step2.png?raw=true)
+![StreetWeave example](step2.png?raw=true)
 
 ## Step 3: Specifying spatial relations
 
@@ -31,7 +31,7 @@ You should see the following:
 
 You should see the following:
 
-![UTK example](step2.png?raw=true)
+![StreetWeave example](step2.png?raw=true)
 
 ## Step 4: Visual encoding specification
 
@@ -42,17 +42,18 @@ StreetWeave’s grammar allows to specify how data is visually encoded onto the 
 
 You should see the following:
 
-![UTK example](step4.png?raw=true)
+![StreetWeave example](step4.png?raw=true)
 
 ## Step 5: Changing attribute
 
-StreetWeave’s grammar offers the flexibility to transform one visualization into another simply by tweaking a single attribute, here changing the `orientation` from parallel to perpendicular a new visualization can be created.
+StreetWeave’s grammar offers the flexibility to transform one visualization into another simply by tweaking a single attribute, here changing the `orientation` from `parallel` to `perpendicular` a new visualization can be created.
 
 `.ft(method = "rect", color = "NoSidewalk", opacity = 1 , width = "NoCurbRamp").orientation("perpendicular").alignment("left")`
 
 You should see the following:
 
-![UTK example](step5.png?raw=true)
+![StreetWeave example](step5.png?raw=true)
+
 
 ## Step 6: Creating multilayer visualizations
 
@@ -82,29 +83,27 @@ Layer2 = gMap(unit=segment/25)
 
 You should see the following:
 
-![UTK example](step6.png?raw=true)
+![StreetWeave example](step6.png?raw=true)
 
-<!-- ## Final Specification
+## Final Specification
 <details>
 <summary>StreetWeave specification (click to expand)</summary>
 
 ```diff
-Layer1 = gMap(unit="segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation(spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#31a354", opacity = "Crosswalk" , width = "CurbRamp")
-.alignment("center")
+Layer1 = gMap(unit=segment/25)
+.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "SideWalk_data.json")
+.relation( spatialRelation = "contains", operation = "aggregation", type = "mean")
+.ft(method = "rect", color = "NoSidewalk", height = "SurfaceProblem", opacity = 1 , width = "NoCurbRamp")
+.orientation("perpendicular")
+.alignment("right")
 
-Layer2 = gMap(unit = "segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation( spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#756bb1",  opacity = "NoCurbRamp", width = "NoSidewalk")
+Layer2 = gMap(unit=segment/25)
+.data(physicalLayer = "SmallChicago_filtered_data.json", thematicLayer = "SideWalk_data.json")
+.relation( spatialRelation = "contains", operation = "aggregation", type = "mean")
+.ft(method = "rect", color = "Crosswalk", height = "CurbRamp", opacity = 1 , width = "Obstacle")
+.orientation("perpendicular")
 .alignment("left")
 
-Layer3 = gMap(unit = "segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation( spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#d95f0e", opacity = "SurfaceProblem", width = "Obstacle")
-.alignment("right")
+
 ```
-</details> -->
+</details>
