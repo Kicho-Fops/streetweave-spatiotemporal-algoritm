@@ -738,7 +738,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
         }
         // Only add the mimic layer if it hasn't been added yet.
         if (!mimicLayerRef.current) {
-          d3.json(`/filtered_data.json`)
+          d3.json(`/data/filtered_data.json`)
             .then((data: any) => {
               // Transform your data into a GeoJSON FeatureCollection
               const features = data.edges.map(edge => ({
@@ -935,6 +935,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
             let updatedGeoJsonData;
             d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
+              console.log("data error checking:", layerSpec.physicalLayerPath)
               if (data && data.edges) {
                   var subdividedEdges = [];
                   // Offset the original start and end points by 5 meters

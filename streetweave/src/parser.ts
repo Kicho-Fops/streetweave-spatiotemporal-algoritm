@@ -78,9 +78,9 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
         dataParts.forEach(part => {
           const [key, value] = part.split('=').map(p => p.trim());
           if (key === 'physicalLayer') {
-            physicalLayerPath = `/data/${value}`;
+            physicalLayerPath = value;
           } else if (key === 'thematicLayer') {
-            thematicLayerPath =`/data/${value}`;
+            thematicLayerPath = value;
           }
         });
       }
