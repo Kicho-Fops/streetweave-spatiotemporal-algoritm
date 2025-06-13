@@ -934,8 +934,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
 
             let updatedGeoJsonData;
-            d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
-              console.log("data error checking:", layerSpec.physicalLayerPath)
+            
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (data: any) {
               if (data && data.edges) {
                   var subdividedEdges = [];
                   // Offset the original start and end points by 5 meters
@@ -1023,7 +1023,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   updatedGeoJsonData = {
                     edges: subdividedEdges
                   };
-                d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData){
                   if(layerSpec.spatialRelation == 'contains'){
                     updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                     console.log("data is:", updatedGeoJsonData)
@@ -1908,7 +1908,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               return ((18 - zoom) / (18 - 16)) * 15;
             }
 
-            d3.json(layerSpec.physicalLayerPath).then(function (data) {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (data) {
               if (!data || !data.edges) {
                 console.error("Invalid data");
                 return;
@@ -1950,7 +1950,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               let updatedGeoJsonData = { edges: subdividedEdges };
               // console.log("matrix data is", updatedGeoJsonData)
 
-              d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
+              d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData) {
                 if (layerSpec.spatialRelation === 'contains') {
                   updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                 } else if (layerSpec.spatialRelation === 'nearest neighbor') {
@@ -2076,7 +2076,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           else if (layerSpec.method === 'rect') {
             if(layerSpec.orientation === 'parallel'){
               let updatedGeoJsonData;
-              d3.json(layerSpec.physicalLayerPath).then(function (data) {
+              d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (data) {
                 if (data && data.edges) {
                   var subdividedEdges = [];
                   // Loop through each edge in the original array
@@ -2137,7 +2137,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   };
                   
 
-                  d3.json(layerSpec.thematicLayerPath).then(function (thematicData) {
+                  d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData) {
                     // Apply spatial aggregation
                     if (layerSpec.spatialRelation === 'contains') {
                       updatedGeoJsonData = aggregationContains(subdividedEdges, thematicData, layerSpec.AggregationType, layerSpec.unit);
@@ -2600,7 +2600,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             }
             else if(layerSpec.orientation === 'perpendicular'){
               let updatedGeoJsonData;
-              d3.json(layerSpec.physicalLayerPath).then(function (data) {
+              d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (data) {
                 if (data && data.edges) {
                   // 1) Subdivide edges if needed
                   var subdividedEdges = [];
@@ -2649,7 +2649,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   // let thematicDataPath = layerSpec.thematicLayerPath
 
                   // 2) Aggregate with thematic data
-                  d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                  d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData){
                     console.log("index value", parsedSpec[index].lineColor, index)
                     // Apply spatial aggregation
                     if (layerSpec.spatialRelation === 'contains') {
@@ -3070,7 +3070,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           //  need to change 311 service here.....!!
           else if (layerSpec.chart) {
             // 1) load & clear physical data
-            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then((data: any) => {
               if (!data?.edges) return;
               mapInstanceRef.current?.eachLayer(layer => {
                 if (!(layer instanceof L.TileLayer)
@@ -3104,7 +3104,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               }
 
               // 3) load thematic & aggregate
-              d3.json(layerSpec.thematicLayerPath).then((thematicData: any) => {
+              d3.json(`/data/${layerSpec.thematicLayerPath}`).then((thematicData: any) => {
                 if (layerSpec.spatialRelation === 'contains') {
                   updatedGeoJsonData = aggregationContains(
                     updatedGeoJsonData, thematicData,
@@ -3208,7 +3208,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           else if (layerSpec.shape === 'spike') {
             let updatedGeoJsonData;
           
-            d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (data: any) {
               if (data && data.edges) {
                 var subdividedEdges = [];
 
@@ -3260,7 +3260,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   updatedGeoJsonData = {
                     edges: subdividedEdges
                   };
-                d3.json(layerSpec.thematicLayerPath).then(function (thematicData: any) {
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData: any) {
                   // 1) Spatial Aggregation (unchanged)
                   if (layerSpec.spatialRelation === 'contains') {
                     updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
@@ -3485,7 +3485,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
             let updatedGeoJsonData;
           
             // 1) Load physical-layer JSON
-            d3.json(layerSpec.physicalLayerPath).then(function (data: any) {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (data: any) {
               if (data && data.edges) {
                 var subdividedEdges = [];
 
@@ -3538,7 +3538,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     edges: subdividedEdges
                   };
                 // 2) Load thematic data (if needed)
-                d3.json(layerSpec.thematicLayerPath).then(function (thematicData: any) {
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData: any) {
                   // 3) Perform spatial aggregation
                   if (layerSpec.spatialRelation === 'contains') {
                     updatedGeoJsonData = aggregationContains(updatedGeoJsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
@@ -3762,7 +3762,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           let NodesList = [];
 
           if (layerSpec.chart) {
-            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then((data: any) => {
               if (data && data.edges) {
                 // 1) Remove old layers except the mimicStreetPane
                 mapInstanceRef.current?.eachLayer((layer: any) => {
@@ -3774,7 +3774,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                   }
                 });
 
-                d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData){
                   if(layerSpec.spatialRelation == 'contains'){
                     updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
                     // console.log("data is:", updatedGeoJsonData)
@@ -3931,7 +3931,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           
           if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
             // 1) Load the physical-layer JSON (which has "edges")
-            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then((data: any) => {
               if (data && data.edges) {
                 // 2) Remove old layers (except tile or mimicStreetPane)
                 mapInstanceRef.current?.eachLayer((layer: any) => {
@@ -3943,7 +3943,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                 });
           
                 // 3) Load the thematic data (if needed), then aggregate
-                d3.json(layerSpec.thematicLayerPath).then((thematicData: any) => {
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then((thematicData: any) => {
                   let updatedGeoJsonData: any;
                   if (layerSpec.spatialRelation === 'contains') {
                     updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
@@ -4217,7 +4217,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
 
           if(layerSpec.unit === "node" && !layerSpec.shape && !layerSpec.chart){
-            d3.json(layerSpec.physicalLayerPath).then((data: any) => {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then((data: any) => {
               if (data && data.edges) {
                 // 2) Remove old layers (except tile or mimicStreetPane)
                 mapInstanceRef.current?.eachLayer((layer: any) => {
@@ -4229,7 +4229,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                 });
           
                 // 3) Load the thematic data (if needed), then aggregate
-                d3.json(layerSpec.thematicLayerPath).then((thematicData: any) => {
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then((thematicData: any) => {
                   let updatedGeoJsonData: any;
                   if (layerSpec.spatialRelation === 'contains') {
                     updatedGeoJsonData = aggregationContains(data, thematicData, layerSpec.AggregationType, layerSpec.unit);
@@ -4350,9 +4350,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
           // Handle the `fill` method
           if (layerSpec.method === 'fill') {
             let updatedGeoJsonData;
-            d3.json(layerSpec.physicalLayerPath).then(function (geojsonData) {
+            d3.json(`/data/${layerSpec.physicalLayerPath}`).then(function (geojsonData) {
               if (geojsonData && geojsonData.features) {
-                d3.json(layerSpec.thematicLayerPath).then(function (thematicData){
+                d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (thematicData){
                   if(layerSpec.spatialRelation == 'contains'){
                     updatedGeoJsonData = aggregationContains(geojsonData, thematicData, layerSpec.AggregationType, layerSpec.unit);
                   }else if(layerSpec.spatialRelation == 'nearest neighbor'){
@@ -4400,7 +4400,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
           // Handle the heatmap method
           else if (layerSpec.method === 'heatmap') {
-            d3.json(layerSpec.thematicLayerPath).then((data: any) => {
+            d3.json(`/data/${layerSpec.thematicLayerPath}`).then((data: any) => {
               if (data && Array.isArray(data)) {
                 const heatData = data.map((point: any) => [
                   point.lat, point.lon, point.value
@@ -4424,7 +4424,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
 
           // Handle the `point` method
           else if (layerSpec.method === 'point') {
-            d3.json(layerSpec.thematicLayerPath).then(function (data: any) {
+            d3.json(`/data/${layerSpec.thematicLayerPath}`).then(function (data: any) {
               if (data && Array.isArray(data)) {
                 // Parse the x and y fields (Lat and Lon)
                 const xField = layerSpec.xField;

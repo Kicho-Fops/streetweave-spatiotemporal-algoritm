@@ -454,3 +454,5 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
     }
   };
 
+  console.log("checking the parser", ParsedSpec)
+
