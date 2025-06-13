@@ -51,7 +51,7 @@ export function parseSpecification(spec: string): ParsedSpec[] {
 function parseSingleLayer(spec: string): ParsedSpec | null {
   // ... full parsing logic from original App.tsx goes here
 
-    
+  console.log(spec);
 
   return null;
 }

@@ -1,13 +1,18 @@
+/* eslint-disable no-undef */
+
+import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import path from 'path';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+  plugins: [dts()],
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'parser.ts'), // or index.ts
-      name: 'StreetWeave',
-      fileName: (format) => `streetweave.${format}.js`
+      entry: resolve(__dirname, 'src/index.ts'),
+      name: 'streetweave',
     },
-    outDir: 'dist',
+    copyPublicDir: false,
+    emptyOutDir: false,
+    sourcemap: true
   },
 });

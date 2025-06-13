@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import './MapVisualization.css';
-import { ParsedSpec } from '@streetweave/parser';
+import { ParsedSpec } from 'streetweave'
 
 interface MapVisualizationProps {
   parsedSpec: ParsedSpec[];
