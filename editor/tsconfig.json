@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@streetweave/*": ["../streetweave/*"],
+      "@data/*": ["../data/*"],
+      "@examples/*": ["../examples/*"]
+    }
+  },
+  "include": ["./**/*.tsx", "./**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}
