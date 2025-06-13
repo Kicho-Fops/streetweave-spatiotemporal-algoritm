@@ -1,0 +1,74 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: 30% 70%;  /* 30% for editor, 70% for map */
+  height: 100vh;  /* Make the container fill the full viewport height */
+  width: 100vw;   /* Make the container fill the full viewport width */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.grid-item {
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.editor {
+  background-color: #f0f0f0;
+}
+
+.visualization {
+  background-color: #fff;
+  height: 100%;
+  width: 100%;
+}
+
+.text-editor {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* To respect padding without exceeding boundaries */
+  overflow: hidden; /* Prevent text editor content from overflowing */
+}
+
+textarea {
+  height: 90%;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: both;
+  box-sizing: border-box;
+  background-color: #2e3440;  /* Dark background for code */
+  color: #d8dee9;              /* Light text color */
+  line-height: 1.5;
+  caret-color: #88c0d0;        /* Highlighted caret color */
+  overflow: auto;
+}
+
+.apply-button {
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 16px;
+  background-color: #68645f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.apply-button:hover {
+  background-color: #463d32;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+
+/* Last CSS 1*/

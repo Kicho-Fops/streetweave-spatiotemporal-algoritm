@@ -16,3 +16,27 @@ export default defineConfig({
     sourcemap: true
   },
 });
+
+
+// import { defineConfig } from 'vite';
+// import dts from 'vite-plugin-dts';
+// export default defineConfig({
+//   build: {
+//     lib: {
+//       entry: 'src/index.ts',
+//       name: 'streetweave',
+//       fileName: (format) => streetweave.${format}.js
+//     },
+//     rollupOptions: {
+//       // if you depend on react, react-dom, etc, mark them external:
+//       external: ['react', 'react-dom'],
+//       output: {
+//         globals: {
+//           react: 'React',
+//           'react-dom': 'ReactDOM'
+//         }
+//       }
+//     }
+//   },
+//   plugins: [dts()]
+// });
