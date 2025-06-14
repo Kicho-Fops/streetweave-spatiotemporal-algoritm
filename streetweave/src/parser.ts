@@ -164,8 +164,8 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
       // const method = methodMatch ? methodMatch[1] : '';
 
       let method;
-      let methodRow;
-      let methodColumn;
+      let methodRow: number | undefined;
+      let methodColumn: number | undefined;
       const methodRegex = /method\s*=\s*([a-zA-Z]\w*)(?:\(\s*(\d+)\s*,\s*(\d+)\s*\))?/;
       const m = spec.match(methodRegex);
 
@@ -265,25 +265,40 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
         height = heightMatch ? heightMatch[1].trim() : 'red'; // Default to red
         // console.log('stroke width check',lineStrokeWidth)
 
-        // Parse line opacity
-        // const lineOpacityMatch = spec.match(/opacity\s*=\s*(\d*\.?\d+)/);
-        // strokeOpacity = lineOpacityMatch ? parseFloat(lineOpacityMatch[1]) : undefined;
-        // const lineOpacityMatch = spec.match(/opacity\s*=\s*(\w+|\d*\.?\d+)/);
-        // strokeOpacity = lineOpacityMatch ? (isNaN(Number(lineOpacityMatch[1])) ? lineOpacityMatch[1] : parseFloat(lineOpacityMatch[1])) : undefined;
-
+        
         const lineOpacityMatch = spec.match(/opacity\s*=\s*([^,\)\s]+)/);
-        if (lineOpacityMatch) {
-          const opacityValue = lineOpacityMatch[1].trim();
+        // if (lineOpacityMatch) {
+        //   const opacityValue = lineOpacityMatch[1].trim();
 
-          // Check if the value is numeric
-          if (!isNaN(opacityValue) && opacityValue !== '') {
-            strokeOpacity = parseFloat(opacityValue); // Treat as a number
+        //   // Check if the value is numeric
+        //   if (!isNaN(opacityValue) && opacityValue !== '') {
+        //     strokeOpacity = parseFloat(opacityValue); // Treat as a number
+        //   } else {
+        //     strokeOpacity = opacityValue; // Treat as a string (attribute name or other identifier)
+        //   }
+        // } else {
+        //   strokeOpacity = undefined; // No opacity value found
+        // }
+
+        if (lineOpacityMatch) {
+          const raw = lineOpacityMatch[1].trim();
+          // coerce to a number
+          const asNum = Number(raw);
+
+          if (!Number.isNaN(asNum)) {
+            // raw was purely numeric
+            strokeOpacity = asNum;
           } else {
-            strokeOpacity = opacityValue; // Treat as a string (attribute name or other identifier)
+            // raw contains letters or other non-numeric chars
+            strokeOpacity = raw;
           }
         } else {
-          strokeOpacity = undefined; // No opacity value found
+          // no opacity=… in the spec → default to 1
+          strokeOpacity = 1;
         }
+
+
+
       }
 
       let background, streetName, streetColor;
@@ -362,11 +377,11 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
         alignment = 'left';
       }
 
-      let roadDirection = undefined;
-      let address = undefined;
-      let roadRadius = undefined;
-      let radiusUnit = undefined;
-      let streetWidth = undefined;
+      let roadDirection: string |undefined;
+      let address: string |undefined;
+      let roadRadius: number | undefined;
+      let radiusUnit: string |undefined;
+      let streetWidth: number |undefined;
 
       // Extract the content inside .query( ... )
       const queryMatch = spec.match(/\.query\(([^)]+)\)/);
@@ -388,7 +403,7 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
         // Capture "radius" if it exists, with numeric and unit parts
         const radiusMatch = queryContent.match(/radius\s*=\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)/);
         if (radiusMatch) {
-          roadRadius = radiusMatch[1].trim();
+          roadRadius = parseFloat(radiusMatch[1].trim());
           radiusUnit = radiusMatch[2].trim();
         }
 
@@ -401,6 +416,7 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
       }
 
       // console.log(roadDirection, address, roadRadius, radiusUnit, streetWidth);
+      console.log("checking the parser", roadRadius)
     
 
       // Return the parsed specification for this layer
@@ -454,5 +470,4 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
     }
   };
 
-  console.log("checking the parser", ParsedSpec)
 

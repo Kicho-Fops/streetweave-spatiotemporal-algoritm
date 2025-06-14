@@ -1300,7 +1300,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
                     // console.log("lineWidth before:", lineWidth)
 
                     lineWidth = getLineWidth(lineWidth)
-                    console.log("lineWidth after:", lineWidth)
+                    // console.log("lineWidth after:", lineWidth)
 
                     ///line random color-->
                     // const randomValue = getRandomValueFromRange(layerSpec.lineColor || '');
