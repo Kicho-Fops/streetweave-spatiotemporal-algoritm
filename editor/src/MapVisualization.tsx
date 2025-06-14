@@ -796,7 +796,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
               const addressPoint = turf.point([addressCoords.lon, addressCoords.lat]);
               const lineFeature = turf.lineString(layer.feature.geometry.coordinates);
               const distance = turf.pointToLineDistance(addressPoint, lineFeature, { units: parsedSpec[0].radiusUnit });
-              if (distance > parsedSpec[0].roadRadius) {
+              if (distance > Number(parsedSpec[0].roadRadius)) {
                 shouldUpdate = false;
               }
             }

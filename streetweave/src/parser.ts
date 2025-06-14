@@ -403,7 +403,15 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
         // Capture "radius" if it exists, with numeric and unit parts
         const radiusMatch = queryContent.match(/radius\s*=\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)/);
         if (radiusMatch) {
-          roadRadius = parseFloat(radiusMatch[1].trim());
+          const raw = radiusMatch[1];            // e.g. "50" or "12.3"
+          const asNum = Number(raw);             // -> 50 or 12.3 (a JS number)
+
+          if (!Number.isNaN(asNum)) {
+            roadRadius = asNum;                  // now a true number
+          } else {
+            // if you ever want null/undefined on parse‐fail:
+            roadRadius = undefined;
+          }
           radiusUnit = radiusMatch[2].trim();
         }
 
