@@ -41,6 +41,7 @@ export interface ParsedSpec {
   streetWidth?: number;
   methodRow?: number;
   methodColumn?: number;
+  checkVal?: RegExpMatchArray | null;
 }
 
 export function parseSpecification(spec: string): ParsedSpec[] {
@@ -51,17 +52,33 @@ export function parseSpecification(spec: string): ParsedSpec[] {
 const parseSingleLayer = (spec: string): ParsedSpec | null => {
     // console.log("🔍 parseSingleLayer received:", JSON.stringify(spec));
     try {
-      // Parse unit (either area or segment)
+      // // Parse unit (either area or segment)
       // const unitMatch = spec.match(/unit\s*=\s*(\w+)/);
       // const unit = unitMatch ? unitMatch[1] : 'area'; // Default to 'area' if not found
-      const unitRegex = /unit\s*=\s*(\w+)(?:\/(\d+(?:\.\d+)?))?/;
+      let checkVal: RegExpMatchArray | null = null;
+      
+      const unitRegex = /unit\s*=\s*(\w+)(?:\/(\d+(?:\.\d+)?))?/; // without ""
       const unitMatch = spec.match(unitRegex);
-
+      checkVal = unitMatch;
       // The unit will always be the first capture group; if nothing is found, default to 'area'
       const unit = unitMatch ? unitMatch[1] : 'segment';
-
       // If the division part is provided, parse it as a number; otherwise, default to 1.
-      const unitDivide = unitMatch && unitMatch[2] ? parseFloat(unitMatch[2]) : 1;
+      const unitDivide = unitMatch[2] ? parseFloat(unitMatch[2]) : 1;  
+
+      
+      //New Unit-->
+      // let checkVal: RegExpMatchArray | null = null;
+      // const unitRegex = /\bunit\s*=\s*['"]?([^\/"']+)(?:\/(\d+(?:\.\d+)?))?['"]?/;
+      // const unitMatch = unitRegex.exec(spec);
+      // checkVal = unitMatch;
+      // let unit = 'segment';    // default if nothing matches
+      // let unitDivide = 1;      // default divisor
+
+      // if (unitMatch) {
+      //   unit       = unitMatch[1];
+      //   unitDivide = unitMatch[2] ? parseFloat(unitMatch[2]) : 1;
+      // }
+
 
       // Parse geojson path
       // const dataMatch = spec.match(/data\(([^)]+)\)/);
@@ -471,6 +488,7 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
         streetWidth,
         methodRow,
         methodColumn,
+        checkVal
       };
     } catch (error) {
       console.error('Failed to parse the specification:', error);
