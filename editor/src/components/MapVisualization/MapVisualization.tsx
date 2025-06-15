@@ -1,25 +1,26 @@
-// src/components/MapVisualization.tsx
-
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState  } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
 import 'leaflet.heat';
 import vegaEmbed from 'vega-embed';
 import * as turf from '@turf/turf';
+// import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
 
-import type { GeoJsonObject } from 'geojson'; // Ensure these are imported
+import type { GeoJsonObject } from 'geojson';
 
 // Import types
-import { ParsedSpec, GeoJSONData, ProcessedEdge } from 'streetweave';
+import { ParsedSpec, GeoJSONData, ProcessedEdge } from 'streetweave'
 
 // Import utility functions
-import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
-import { getCardinalDirection, bearingBetweenPoints, normalizeSegment, offsetPoint, calculateMidpoint } from '../utils/geoHelpers';
-import { applyOpacity, getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, spikePath, rectPath, PERPENDICULAR_COLORS } from '../utils/styleHelpers';
-import { initializeMap, projectPoint, getAdjustedLineWidth, getOffsetDistance } from '../utils/mapHelpers';
+import { applySpatialAggregation, processEdgesToNodes } from '../../utils/aggregation';
+import { applyOpacity, getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, spikePath, rectPath, PERPENDICULAR_COLORS } from '../../utils/styleHelpers';
+import { getCardinalDirection, bearingBetweenPoints, normalizeSegment, offsetPoint, calculateMidpoint } from '../../utils/geoHelpers';
+import { initializeMap, projectPoint, getOffsetDistance, getAdjustedLineWidth } from '../../utils/mapHelpers';
+
 
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }) => {
+
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const mimicLayerRef = useRef<L.GeoJSON | null>(null);
@@ -31,11 +32,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   const alignmentCounters = useRef({
     left: 0,
     right: 0
-  });
+  })
 
-  // Geocode address for the first layer's spec
-  useEffect(() => {
-    const address = parsedSpec[0]?.address;
+   useEffect(() => {
+    const address = parsedSpec[0].address;
     if (address) {
       fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`)
         .then(response => response.json())
@@ -48,106 +48,162 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     } else {
       setAddressCoords(null);
     }
-  }, [parsedSpec[0]?.address]);
+  }, [parsedSpec[0].address]);
 
-  // Update mimic street width from parsedSpec
   useEffect(() => {
     if (parsedSpec[0] && parsedSpec[0].streetWidth !== undefined) {
       setMimicWidth(parsedSpec[0].streetWidth);
     }
   }, [parsedSpec]);
 
-  // Initialize the map and mimic street layer once
   useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
+    // if (!mapInstanceRef.current) return
 
-    if (mapRef.current && !mapInstanceRef.current) {
-      let initialLat, initialLon;
-      if (parsedSpec[0]?.unit === 'area') {
+    if (mapRef.current) {
+      const initialZoom = parsedSpec[0]?.zoom || 12;
+      let initialLat: number = 41.8781
+      let initialLon: number = -87.6298
+
+      if(parsedSpec[0].unit == 'area'){
         initialLat = 41.8781;
         initialLon = -87.6298;
-      } else if (parsedSpec[0]?.unit === 'segment' || parsedSpec[0]?.unit === 'node') {
+
+      } else if(parsedSpec[0].unit == 'segment'){
+
         initialLat = 41.802515601319314;
         initialLon = -87.64537972052756;
-      } else {
-        initialLat = 40.7128;
-        initialLon = -74.0060;
+
+      } else if(parsedSpec[0].unit == 'node'){
+        initialLat = 41.80159035804221;
+        initialLon = -87.64538029790135;
       }
-      const initialZoom = parsedSpec[0]?.zoom || 12;
 
-      mapInstanceRef.current = initializeMap(
-        mapRef.current,
-        initialLat,
-        initialLon,
-        initialZoom,
-        parsedSpec[0]?.background || "light"
-      );
+      if (!mapInstanceRef.current) {
+        // Initial map creation
+        mapInstanceRef.current = initializeMap(
+          mapRef.current,
+          initialLat,
+          initialLon,
+          initialZoom,
+          parsedSpec[0]?.background || "light"
+        );
 
-      // Add mimic street pane and initial layer
-      mapInstanceRef.current.createPane('mimicStreetPane');
-      mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350';
+        // mapInstanceRef.current.createPane('mimicStreetPane');
+        // mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350'
+      
+      } else {
+        // Update zoom level if parsedSpec changes
+        // mapInstanceRef.current.setView([Lat, Lon], parsedSpec[0].zoom);
 
-      d3.json(`/data/filtered_data.json`)
-        .then((data: any) => {
-          const features = data.edges.map((edge: any) => ({
-            type: "Feature",
-            geometry: {
-              type: "LineString",
-              coordinates: [
-                [edge[0].lon, edge[0].lat],
-                [edge[1].lon, edge[1].lat]
-              ]
-            },
-            properties: {
-              Bearing: edge[2]?.Bearing,
-              Length: edge[3]?.Length
-            }
-          }));
-          const geojson = { type: "FeatureCollection", features: features };
+        // Smoothly animate through each spec’s zoom in sequence
+        parsedSpec.slice(1).reduce<Promise<void>>(
+          (prev, spec) =>
+            prev.then(() => {
+              // compute Lat/Lon for this spec
+              let tLat: number, tLon: number;
+              if (spec.unit === 'area') {
+                tLat = 41.8781; tLon = -87.6298;
+              } else if (spec.unit === 'segment') {
+                tLat = 41.802515601319314; tLon = -87.64537972052756;
+              } else {
+                tLat = 41.80159035804221; tLon = -87.64538029790135;
+              }
 
-          mimicLayerRef.current = L.geoJSON(geojson as GeoJsonObject, {
-            pane: 'mimicStreetPane',
-            style: {
-              color: '#d3d3d6',
-              weight: 0,
-              opacity: 0.8
-            }
-          }).addTo(map);
-        })
-        .catch(error => console.error("Failed to load mimic street GeoJSON:", error));
-    } else if (map) {
-      // Update map view if parsedSpec changes
-      const initialLat = parsedSpec[0]?.unit === 'area' ? 41.8781 : (parsedSpec[0]?.unit === 'segment' || parsedSpec[0]?.unit === 'node' ? 41.802515601319314 : 40.7128);
-      const initialLon = parsedSpec[0]?.unit === 'area' ? -87.6298 : (parsedSpec[0]?.unit === 'segment' || parsedSpec[0]?.unit === 'node' ? -87.64537972052756 : -74.0060);
-      map.setView([initialLat, initialLon], parsedSpec[0]?.zoom || 12);
+              return new Promise<void>(resolve => {
+                mapInstanceRef.current!
+                  .flyTo([tLat, tLon], spec.zoom, { duration: 1 })
+                  .once('moveend', () => resolve());
+              });
+            }),
+          // start the chain by first flying from the current view to the first element
+          new Promise<void>(resolve => {
+            mapInstanceRef.current!
+              .flyTo([initialLat, initialLon], parsedSpec[0].zoom, { duration: 1 })
+              .once('moveend', () => resolve());
+          })
+        );
+      }
+
     }
   }, [parsedSpec]);
-
-  // Update mimic street width on slider change or spec update
+  
+    // ================== 2) RIGHT-CLICK => OPEN MINI-MAP POPUP ==================
   useEffect(() => {
-    if (mimicLayerRef.current && mapInstanceRef.current) {
+    if (!mapInstanceRef.current) return;
+
+    const initMimicLayer = async () => {
+      mapInstanceRef.current!.getPane('mimicStreetPane');
+      mapInstanceRef.current!.createPane('mimicStreetPane');
+
+      if (!mimicLayerRef.current) {
+        try {
+          const data: { edges: any[] } | undefined = await d3.json('/data/filtered_data.json');
+
+          if (data !== undefined) {
+            const features = data.edges.map(edge => ({
+              type: 'Feature' as const,
+              geometry: {
+                type: 'LineString' as const,
+                coordinates: [
+                  [edge[0].lon, edge[0].lat],
+                  [edge[1].lon, edge[1].lat]
+                ]
+              },
+              properties: {
+                Bearing: edge[2].Bearing,
+                Length: edge[3].Length
+              }
+            }));
+  
+            const geojson = { type: 'FeatureCollection' as const, features };
+  
+            mimicLayerRef.current = L.geoJSON(geojson as GeoJsonObject, {
+              pane: 'mimicStreetPane',
+              style: {
+                color: '#d3d3d6',
+                weight: 0,
+                opacity: 0.8
+              }
+            }).addTo(mapInstanceRef.current!);
+
+          }
+        } catch (error) {
+          console.error('Failed to load mimic street GeoJSON:', error);
+        }
+      }
+    };
+
+    initMimicLayer();
+  }, []);
+
+
+  // Update mimic street width based on the slider value and filtering conditions.
+  useEffect(() => {
+    if (mimicLayerRef.current) {
       mimicLayerRef.current.eachLayer((layer: any) => {
-        const defaultWeight = parsedSpec[0]?.streetWidth || 0;
+        const defaultWeight = parsedSpec[0].streetWidth;
         let shouldUpdate = true;
 
-        if (parsedSpec[0]?.roadDirection) {
+        if (parsedSpec[0].roadDirection) {
           const featureBearing = layer.feature.properties.Bearing;
           const featureDirection = getCardinalDirection(featureBearing);
           if (featureDirection.toLowerCase() !== parsedSpec[0].roadDirection.toLowerCase()) {
             shouldUpdate = false;
           }
         }
-        if (addressCoords && parsedSpec[0]?.roadRadius && parsedSpec[0]?.radiusUnit) {
+
+        if (addressCoords) {
           const addressPoint = turf.point([addressCoords.lon, addressCoords.lat]);
           const lineFeature = turf.lineString(layer.feature.geometry.coordinates);
           const distance = turf.pointToLineDistance(addressPoint, lineFeature, { units: parsedSpec[0].radiusUnit as turf.Units });
+          
           if (distance > Number(parsedSpec[0].roadRadius)) {
             shouldUpdate = false;
           }
         }
+
         layer.setStyle({
-          color: parsedSpec[0]?.streetColor || '#d3d3d6',
+          color: parsedSpec[0].streetColor ? parsedSpec[0].streetColor : '#d3d3d6',
           weight: shouldUpdate ? mimicWidth : defaultWeight,
           opacity: 0.8
         });
@@ -155,38 +211,42 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     }
   }, [mimicWidth, parsedSpec, addressCoords]);
 
-  // Main effect for rendering layers based on parsedSpec
+
+
+  // Clear previous visualizations and render the new one
   useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
+    if (mapInstanceRef.current) {
 
-    // Clear all previously rendered overlay layers (except mimic and base tiles)
-    currentLayersRef.current.forEach(layer => {
-      if (layer instanceof L.Layer && map.hasLayer(layer)) {
-        map.removeLayer(layer);
-      }
-    });
-    currentLayersRef.current = [];
-    d3.selectAll('.vega-lite-svg').remove(); // Clear Vega-Lite SVGs
-    map.off('move zoom moveend zoomend'); // Remove old event listeners to prevent duplicates
+      currentLayersRef.current.forEach(layer => {
+        if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
+          mapInstanceRef.current!.removeLayer(layer);
+        }
+      });
 
-    // Reset alignment counters for a fresh render cycle
-    alignmentCounters.current = { left: 0, right: 0 };
+      currentLayersRef.current = [];
+      
+      parsedSpec.forEach(async (layerSpec, index) => {
+        d3.selectAll('.vega-lite-svg').remove();
 
-    // Render each layer specified in parsedSpec
-    parsedSpec.forEach((layerSpec, index) => {
-      if (layerSpec.unit === 'segment') {
-        renderSegmentLayer(map, layerSpec, index, currentLayersRef, alignmentCounters);
-      } else if (layerSpec.unit === 'node') {
-        renderNodeLayer(map, layerSpec, currentLayersRef);
-      } else if (layerSpec.unit === 'area') {
-        renderAreaLayer(map, layerSpec, currentLayersRef);
-      }
-    });
+        if (mapInstanceRef.current !== null) {
+          mapInstanceRef.current.off('move zoom');
+  
+          if (layerSpec.unit === 'segment'){
+            renderSegmentLayer(mapInstanceRef.current, layerSpec, index, currentLayersRef, alignmentCounters);
+          }
+  
+          else if(layerSpec.unit === 'node'){
+            renderNodeLayer(mapInstanceRef.current, layerSpec, currentLayersRef);
+          }
+  
+          else if (layerSpec.unit === 'area'){
+            renderAreaLayer(mapInstanceRef.current, layerSpec, currentLayersRef);
+          }
+        }
 
-  }, [parsedSpec]); // Re-run this effect when parsedSpec changes
-
-  //region Renderer Functions (separated from main useEffect)
+      });
+    }
+  }, [parsedSpec]);
 
   /**
    * Renders a segment-based layer (line, matrix, rect, chart, spike).
@@ -539,7 +599,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     }
   };
 
-  /**
+    /**
    * Renders a node-based layer (chart, spike, rect, or simple points).
    * @param map The Leaflet map instance.
    * @param layerSpec The parsed layer specification.
@@ -665,7 +725,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     }
   };
 
-  /**
+    /**
    * Renders an area-based layer (fill, heatmap, point).
    * @param map The Leaflet map instance.
    * @param layerSpec The parsed layer specification.
@@ -767,11 +827,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       console.error(`Error rendering area layer:`, error);
     }
   };
-  //endregion
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {/* Map container */}
       <div ref={mapRef} id="map" style={{ height: '100%', width: '100%' }}></div>
+      
+      {/* Hidden Vega-Lite chart container */}
       <div id="vis" style={{ visibility: 'hidden', position: 'absolute', top: 0, left: 0, zIndex: -1 }}></div>
       <div
         style={{
@@ -784,7 +846,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           borderRadius: '5px'
         }}
       >
-        <label htmlFor="widthSlider">Street Width: {mimicWidth.toFixed(0)}</label>
+        <label htmlFor="widthSlider">Street Width: {mimicWidth}</label>
         <br />
         <input
           id="widthSlider"
@@ -797,6 +859,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       </div>
     </div>
   );
+  
 };
 
 export default MapVisualization;
