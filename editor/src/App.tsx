@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import TextEditor from './TextEditor';
-import MapVisualization from './components/MapVisualization';
+import TextEditor from './TextEditor/TextEditor';
+import MapVisualization from './components/MapVisualization/MapVisualization';
 import './App.css';
 import { parseSpecification, ParsedSpec } from 'streetweave';
 
@@ -15,6 +15,7 @@ const App: React.FC = () => {
       setParsedSpec(parsedLayers);
     }
   };
+
 
   return (
     <div className="grid-container">
