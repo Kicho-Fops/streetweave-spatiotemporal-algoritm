@@ -715,7 +715,46 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[], applyFlag: number }
       
       } else {
         // Update zoom level if parsedSpec changes
-        mapInstanceRef.current.setView([Lat, Lon], parsedSpec[0].zoom);
+        // mapInstanceRef.current.setView([Lat, Lon], parsedSpec[0].zoom);
+
+
+        // Smoothly animate through each spec’s zoom in sequence
+        parsedSpec.slice(1).reduce<Promise<void>>(
+          (prev, spec) =>
+            prev.then(() => {
+              // compute Lat/Lon for this spec
+              let tLat: number, tLon: number;
+              if (spec.unit === 'area') {
+                tLat = 41.8781; tLon = -87.6298;
+              } else if (spec.unit === 'segment') {
+                tLat = 41.802515601319314; tLon = -87.64537972052756;
+              } else {
+                tLat = 41.80159035804221; tLon = -87.64538029790135;
+              }
+
+              return new Promise<void>(resolve => {
+                mapInstanceRef.current!
+                  .flyTo([tLat, tLon], spec.zoom, { duration: 1 })
+                  .once('moveend', () => resolve());
+              });
+            }),
+          // start the chain by first flying from the current view to the first element
+          new Promise<void>(resolve => {
+            mapInstanceRef.current!
+              .flyTo([Lat, Lon], parsedSpec[0].zoom, { duration: 1 })
+              .once('moveend', () => resolve());
+          })
+        );
+
+        
+
+
+
+
+
+
+
+
       }
 
     }
