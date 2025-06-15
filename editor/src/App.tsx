@@ -9,7 +9,9 @@ const App: React.FC = () => {
 
   const applySpec = (spec: string) => {
     const parsedLayers = parseSpecification(spec);
+    console.log("checkVal", spec)
     if (parsedLayers.length > 0) {
+      console.log("unitMatch was:", parsedLayers[0]);
       setParsedSpec(parsedLayers);
     }
   };
