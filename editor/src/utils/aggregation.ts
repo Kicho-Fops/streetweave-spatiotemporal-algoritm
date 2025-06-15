@@ -1,0 +1,371 @@
+// src/utils/aggregation.ts
+
+import * as d3 from 'd3';
+import * as turf from '@turf/turf';
+import { FeatureCollection, Feature, MultiPolygon, Point, Polygon, Position } from 'geojson';
+import { AggregationType, ThematicPoint, GeoJSONData, ProcessedEdge, ParsedSpec } from 'streetweave';
+import { calculateCentroid, calculateMidpoint, calculateDistances, findClosestPoints, filterPointsInBuffer, createBuffer } from './geoHelpers';
+
+
+/**
+ * Aggregates values based on the selected aggregation type.
+ * @param points The points to aggregate.
+ * @param aggregationType The type of aggregation ('sum', 'mean', 'min', 'max').
+ * @param thematicData The original thematic data (used to determine attributes).
+ * @returns An object with aggregated values for each attribute.
+ */
+export const aggregateValues = (
+  points: ThematicPoint[],
+  aggregationType: AggregationType,
+  thematicData: ThematicPoint[]
+): Record<string, number | null> => {
+  const attributes =
+    thematicData.length > 0
+      ? Object.keys(thematicData[0]).filter(k => k !== 'Lat' && k !== 'Lon')
+      : [];
+
+  const aggregatedValues: Record<string, number | null> = {};
+
+  attributes.forEach(attr => {
+    const values = points
+      .map(point => point[attr])
+      .filter(val => typeof val === 'number');
+
+    let value = null;
+    switch (aggregationType) {
+      case 'sum':
+        value = d3.sum(values);
+        break;
+      case 'mean':
+        value = values.length ? d3.mean(values) : null;
+        break;
+      case 'min':
+        value = values.length ? d3.min(values) : null;
+        break;
+      case 'max':
+        value = values.length ? d3.max(values) : null;
+        break;
+      default:
+        value = null;
+    }
+    if(!value) value = null;
+    aggregatedValues[attr] = value;
+  });
+
+  return aggregatedValues;
+};
+
+/**
+ * Aggregates thematic data into GeoJSON features based on point-in-polygon containment.
+ * @param geojsonData The GeoJSON data (area units).
+ * @param thematicData The thematic point data.
+ * @param aggregationType The type of aggregation.
+ * @returns The updated GeoJSON data with aggregated properties.
+ */
+const aggregationContainsArea = (
+  geojsonData: GeoJSONData,
+  thematicData: ThematicPoint[],
+  aggregationType: AggregationType
+): GeoJSONData => {
+  if (!geojsonData.features) return geojsonData;
+
+  geojsonData.features.forEach(feature => {
+    const polygon = feature.geometry as Polygon;
+    if (!polygon || !polygon.coordinates || !polygon.coordinates[0]) {
+      console.warn('Skipping feature with invalid polygon geometry:', feature);
+      return;
+    }
+
+    const pointsInPolygon = thematicData.filter(point => {
+      const pointCoordinates: Position = [point.Lon, point.Lat];
+      try {
+        return d3.polygonContains(polygon.coordinates[0] as [number, number][], pointCoordinates as [number, number]);
+      } catch (err) {
+        console.error('Error checking point in polygon:', err);
+        return false;
+      }
+    });
+    feature.properties = {
+      ...feature.properties,
+      ...aggregateValues(pointsInPolygon, aggregationType, thematicData)
+    };
+  });
+  return geojsonData;
+};
+
+/**
+ * Aggregates thematic data for edge segments based on point-in-polygon containment (using a buffer).
+ * @param edgesData The raw edge data from the physical layer.
+ * @param thematicData The thematic point data.
+ * @param aggregationType The type of aggregation.
+ * @returns An array of updated edge data with aggregated properties.
+ */
+const aggregationContainsSegment = (
+  edgesData: any[], // Raw edges data
+  thematicData: ThematicPoint[],
+  aggregationType: AggregationType
+): ProcessedEdge[] => {
+  const bboxWidth = 5000; // meters
+
+  return edgesData.map(edge => {
+    const pointA = [edge[0].lon, edge[0].lat];
+    const pointB = [edge[1].lon, edge[1].lat];
+
+    const line = turf.lineString([pointA, pointB]);
+    const bbox = turf.buffer(line, bboxWidth, { units: 'meters' });
+
+    if (!bbox) {
+      // Return original edge with an empty aggregated attributes object if buffer fails
+      return [edge[0], edge[1], edge[2], edge[3], {}];
+    }
+
+    const pointsInBoundingBox = thematicData.filter(point => {
+      const thematicPoint = turf.point([point.Lon, point.Lat]);
+      return turf.booleanPointInPolygon(thematicPoint, bbox);
+    });
+
+    const aggregated = aggregateValues(pointsInBoundingBox, aggregationType, thematicData);
+    // Ensure the structure is consistent: [pointA, pointB, {Bearing}, {Length}, {AggregatedValues}]
+    // Handle cases where edge[2] or edge[3] might not be objects
+    const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
+    const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
+
+    return [edge[0], edge[1], existingBearing, existingLength, aggregated] as ProcessedEdge;
+  });
+};
+
+
+/**
+ * Creates a new GeoJSON dataset by aggregating thematic data to each Polygon/MultiPolygon feature
+ * based on nearest neighbors to the centroid.
+ * @param geojsonData The GeoJSON FeatureCollection of Polygons/MultiPolygons.
+ * @param thematicData The thematic point data.
+ * @param aggregationType The type of aggregation.
+ * @returns The updated GeoJSON data with aggregated properties.
+ */
+const aggregateAreaNearestNeighbor = (
+  geojsonData: FeatureCollection<MultiPolygon | Polygon>,
+  thematicData: ThematicPoint[],
+  aggregationType: AggregationType
+): FeatureCollection<MultiPolygon | Polygon> => {
+  geojsonData.features.forEach((feature) => {
+    if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+      console.warn('Skipping feature with unsupported or missing geometry:', feature);
+      return;
+    }
+
+    let centroid: Feature<Point>;
+    try {
+      centroid = calculateCentroid(feature.geometry);
+    } catch (err) {
+      console.error('Error computing centroid:', err);
+      return;
+    }
+
+    const distances = calculateDistances(centroid, thematicData);
+    const closestPoints = findClosestPoints(distances, thematicData);
+    const aggregatedValues = aggregateValues(closestPoints, aggregationType, thematicData);
+
+    feature.properties = { ...feature.properties, ...aggregatedValues };
+  });
+  return geojsonData;
+};
+
+/**
+ * Aggregates thematic data for each edge segment based on nearest neighbors to the midpoint.
+ * @param edgesData The array of raw edge data.
+ * @param environmentalData The thematic point data.
+ * @param aggregationType The type of aggregation.
+ * @returns An array of updated edge data with aggregated attributes.
+ */
+const aggregateSegmentNearestNeighbor = (
+  edgesData: any[], // Raw edges data
+  environmentalData: ThematicPoint[],
+  aggregationType: AggregationType
+): ProcessedEdge[] => {
+  return edgesData.map(edge => {
+    const [pointA, pointB] = [edge[0], edge[1]];
+    const midpointCoords = calculateMidpoint(pointA, pointB);
+    const centroid = turf.point([midpointCoords.lon, midpointCoords.lat]);
+
+    const distances = calculateDistances(centroid, environmentalData);
+    const closestPoints = findClosestPoints(distances, environmentalData, 100);
+    const aggregatedValues = aggregateValues(closestPoints, aggregationType, environmentalData);
+
+    const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
+    const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
+
+    return [
+      edge[0],
+      edge[1],
+      existingBearing,
+      existingLength,
+      aggregatedValues
+    ] as ProcessedEdge;
+  });
+};
+
+/**
+ * Aggregates thematic data into GeoJSON features based on a buffer around the centroid.
+ * @param geojsonData The GeoJSON FeatureCollection of Polygons/MultiPolygons.
+ * @param environmentalData The thematic point data.
+ * @param bufferDistance The buffer distance in kilometers.
+ * @param aggregationType The type of aggregation.
+ * @returns The updated GeoJSON data with aggregated properties.
+ */
+const aggregateAreaBuffer = (
+  geojsonData: FeatureCollection<MultiPolygon | Polygon>,
+  environmentalData: ThematicPoint[],
+  bufferDistance: number,
+  aggregationType: AggregationType
+): FeatureCollection<MultiPolygon | Polygon> => {
+  geojsonData.features.forEach(feature => {
+    if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+      console.warn("Invalid geometry, skipping feature:", feature);
+      return;
+    }
+
+    let centroid: Feature<Point>;
+    try {
+      centroid = calculateCentroid(feature.geometry);
+    } catch (e) {
+      console.error("Failed to calculate centroid:", e);
+      return;
+    }
+
+    const buffer = createBuffer(centroid, bufferDistance);
+    if (!buffer) {
+      console.warn("Invalid buffer, skipping feature.");
+      return;
+    }
+
+    const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
+    const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
+
+    feature.properties = { ...feature.properties, ...aggregatedValues };
+  });
+  return geojsonData;
+};
+
+/**
+ * Aggregates thematic data for edge segments based on a buffer around their midpoint.
+ * @param edgesData The raw edge data.
+ * @param environmentalData The thematic point data.
+ * @param bufferDistance The buffer distance in kilometers.
+ * @param aggregationType The type of aggregation.
+ * @returns An array of updated edge data with aggregated attributes.
+ */
+const aggregateSegmentBuffer = (
+  edgesData: any[], // Raw edges data
+  environmentalData: ThematicPoint[],
+  bufferDistance: number,
+  aggregationType: AggregationType
+): ProcessedEdge[] => {
+  return edgesData.map(edge => {
+    const pointA = { lat: edge[0].lat, lon: edge[0].lon };
+    const pointB = { lat: edge[1].lat, lon: edge[1].lon };
+    const midpoint = calculateMidpoint(pointA, pointB);
+    const midpointTurf = turf.point([midpoint.lon, midpoint.lat]);
+
+    const buffer = createBuffer(midpointTurf, bufferDistance);
+    if (!buffer) {
+      // Return original edge with an empty aggregated attributes object if buffer fails
+      return [edge[0], edge[1], edge[2], edge[3], {}];
+    }
+
+    const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
+    const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
+
+    const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
+    const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
+
+    return [
+      edge[0],
+      edge[1],
+      existingBearing,
+      existingLength,
+      aggregatedValues
+    ] as ProcessedEdge;
+  });
+};
+
+/**
+ * General purpose function to apply spatial aggregation based on spec.
+ * @param physicalData The initial physical layer data. For 'area' it's GeoJSONData, for 'segment'/'node' it's an array of raw edges.
+ * @param thematicData The thematic data.
+ * @param layerSpec The parsed layer specification.
+ * @returns The aggregated data, either GeoJSONData or ProcessedEdge[].
+ */
+export async function applySpatialAggregation(
+  physicalData: GeoJSONData | any[], // Can be GeoJSONData or Array of raw edges
+  thematicData: ThematicPoint[],
+  layerSpec: ParsedSpec
+): Promise<GeoJSONData | ProcessedEdge[]> {
+  if (layerSpec.unit === 'area') {
+    const geojsonData = physicalData as GeoJSONData;
+    if (layerSpec.spatialRelation === 'contains') {
+      return aggregationContainsArea(geojsonData, thematicData, layerSpec.AggregationType!);
+    } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+      return aggregateAreaNearestNeighbor(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.AggregationType!);
+    } else if (layerSpec.spatialRelation === 'buffer') {
+      return aggregateAreaBuffer(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.bufferValue!, layerSpec.AggregationType!);
+    }
+  } else if (layerSpec.unit === 'segment' || layerSpec.unit === 'node') {
+    const edgesData = physicalData as any[]; // Raw edges array
+    if (layerSpec.spatialRelation === 'contains') {
+      return aggregationContainsSegment(edgesData, thematicData, layerSpec.AggregationType!);
+    } else if (layerSpec.spatialRelation === 'nearest neighbor') {
+      return aggregateSegmentNearestNeighbor(edgesData, thematicData, layerSpec.AggregationType!);
+    } else if (layerSpec.spatialRelation === 'buffer') {
+      return aggregateSegmentBuffer(edgesData, thematicData, layerSpec.bufferValue!, layerSpec.AggregationType!);
+    }
+  }
+  // Return unchanged if no aggregation matches or if unit is not recognized
+  return physicalData;
+}
+
+/**
+ * Transforms raw edge data (from physical layer) into unique nodes with aggregated attributes.
+ * This is specifically for 'node' unit processing.
+ * @param aggregatedEdges The edges data after initial aggregation.
+ * @returns A list of unique nodes with their aggregated attributes.
+ */
+export const processEdgesToNodes = (aggregatedEdges: ProcessedEdge[]): (ThematicPoint & Record<string, number | null>)[] => {
+  const NodesMap: Record<string, any> = {};
+
+  aggregatedEdges.forEach((edge: ProcessedEdge) => {
+    const [firstNode, secondNode, , , aggregatedAttributes] = edge;
+
+    // Process both nodes of the edge
+    [firstNode, secondNode].forEach(node => {
+      const key = `${node.lat},${node.lon}`;
+      if (!NodesMap[key]) {
+        NodesMap[key] = { lat: node.lat, lon: node.lon, sums: {}, count: 0 };
+      }
+
+      // Aggregate numeric attributes from the edge onto the node
+      for (const [attrKey, attrValue] of Object.entries(aggregatedAttributes || {})) {
+        if (typeof attrValue === 'number') {
+          if (!NodesMap[key].sums[attrKey]) {
+            NodesMap[key].sums[attrKey] = 0;
+          }
+          NodesMap[key].sums[attrKey] += attrValue;
+        }
+      }
+      NodesMap[key].count += 1;
+    });
+  });
+
+  // Convert NodeMap to a list of nodes with averaged attributes
+  return Object.values(NodesMap).map((node: any) => {
+    const averagedAttrs: Record<string, number | null> = {};
+    for (const [attrKey, sumValue] of Object.entries(node.sums)) {
+      averagedAttrs[attrKey] = (sumValue as number) / node.count;
+    }
+    return {
+      Lat: node.lat,
+      Lon: node.lon,
+      ...averagedAttrs
+    };
+  });
+};

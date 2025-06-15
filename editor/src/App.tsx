@@ -1,21 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import TextEditor from './TextEditor';
-import MapVisualization from './MapVisualization';
+import MapVisualization from './components/MapVisualization';
 import './App.css';
 import { parseSpecification, ParsedSpec } from 'streetweave';
 
 const App: React.FC = () => {
   const [parsedSpec, setParsedSpec] = useState<ParsedSpec[]>([]);
-  const applyFlag = useRef(0);
 
   const applySpec = (spec: string) => {
     const parsedLayers = parseSpecification(spec);
     if (parsedLayers.length > 0) {
       setParsedSpec(parsedLayers);
-      applyFlag.current = 1;
     }
   };
-
 
   return (
     <div className="grid-container">
@@ -24,7 +21,7 @@ const App: React.FC = () => {
       </div>
       <div className="grid-item visualization">
         {parsedSpec.length > 0 && (
-          <MapVisualization parsedSpec={parsedSpec} applyFlag={applyFlag} />
+          <MapVisualization parsedSpec={parsedSpec} />
         )}
       </div>
     </div>
