@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import TextEditor from './TextEditor/TextEditor';
-import MapVisualization from './components/MapVisualization/MapVisualization';
+import TextEditor from './components/TextEditor';
+import MapVisualization from './components/MapVisualization';
 import './App.css';
 import { parseSpecification, ParsedSpec } from 'streetweave';
 
