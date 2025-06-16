@@ -44,45 +44,60 @@ export const getDynamicStyleValue = (
   thresholdColors: string[] | null = null,
   thresholdSteps: number = 5
 ): string | number | null => {
+
   if (typeof specValue === 'number') {
     return specValue;
   }
   if (typeof specValue === 'string') {
-    // For ProcessedEdge, aggregated attributes are at index 4. For Node object, they are direct properties.
-    const aggregatedAttributes = Array.isArray(dataPoint) ? dataPoint[4] : dataPoint;
+      const hexRe = /^#([0-9A-F]{3}|[0-9A-F]{6})$/i
+      
+      if(hexRe.test(specValue)) return specValue
 
-    if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(specValue)) {
-      const attributeValue = aggregatedAttributes[specValue];
-      if (attributeValue === null || typeof attributeValue === 'undefined') return null;
+      const idx = Array.isArray(dataPoint)
+        ? dataPoint.findIndex(entry => entry.hasOwnProperty(specValue))
+        : -1;
 
-      // Collect all valid numbers for the specified attribute from all data points
-      const allAttributeValues = allDataPoints
-        .map(dp => (Array.isArray(dp) ? dp[4]?.[specValue] : dp[specValue]))
-        .filter((v): v is number => typeof v === 'number');
-
-      if (allAttributeValues.length === 0) return null;
-
-      const minValue = d3.min(allAttributeValues);
-      const maxValue = d3.max(allAttributeValues);
-
-      if (minValue === undefined || maxValue === undefined) return null;
-
-      if (d3ScaleRange) {
-        // Linear scale for width/opacity/height
-        const scale = d3.scaleLinear().domain([minValue, maxValue]).range(d3ScaleRange);
-        return scale(attributeValue);
-      } else if (interpolateFn) {
-        // Sequential color scale
-        const scale = d3.scaleSequential(interpolateFn).domain([minValue, maxValue]);
-        return scale(attributeValue);
-      } else if (thresholdColors && thresholdColors.length >= thresholdSteps) {
-        // Threshold color scale
-        const step = (maxValue - minValue) / thresholdSteps;
-        const thresholds = Array.from({ length: thresholdSteps - 1 }, (_, i) => minValue + (i + 1) * step);
-        const scale = d3.scaleThreshold<number, string>().domain(thresholds).range(thresholdColors);
-        return scale(attributeValue);
+      if (idx === -1) return specValue
+      // For ProcessedEdge, aggregated attributes are at index 4. For Node object, they are direct properties.
+      const aggregatedAttributes = Array.isArray(dataPoint) ? dataPoint[4] : dataPoint;
+  
+      if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(specValue)) {
+        const attributeValue = aggregatedAttributes[specValue];
+        if (attributeValue === null || typeof attributeValue === 'undefined') return null;
+  
+        // Collect all valid numbers for the specified attribute from all data points
+        const allAttributeValues = allDataPoints
+          .map(dp => (Array.isArray(dp) ? dp[4]?.[specValue] : dp[specValue]))
+          .filter((v): v is number => typeof v === 'number');
+  
+        if (allAttributeValues.length === 0) return null;
+  
+        const minValue = d3.min(allAttributeValues);
+        const maxValue = d3.max(allAttributeValues);
+  
+        if (minValue === undefined || maxValue === undefined) return null;
+  
+        if (d3ScaleRange) {
+          // Linear scale for width/opacity/height
+          const scale = d3.scaleLinear().domain([minValue, maxValue]).range(d3ScaleRange);
+          return scale(attributeValue);
+        } else if (interpolateFn) {
+          // Sequential color scale
+          const scale = d3.scaleSequential(interpolateFn).domain([minValue, maxValue]);
+          return scale(attributeValue);
+        } else if (thresholdColors && thresholdColors.length >= thresholdSteps) {
+          // Threshold color scale
+          const step = (maxValue - minValue) / thresholdSteps;
+          const thresholds = Array.from({ length: thresholdSteps - 1 }, (_, i) => minValue + (i + 1) * step);
+          const scale = d3.scaleThreshold<number, string>().domain(thresholds).range(thresholdColors);
+          return scale(attributeValue);
+        }
       }
-    }
+
+        
+
+
+
   }
   return null; // Default if attribute not found or no mapping specified
 };
