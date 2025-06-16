@@ -10,12 +10,12 @@ import * as turf from '@turf/turf';
 import type { GeoJsonObject } from 'geojson';
 
 // Import types
-import { ParsedSpec, GeoJSONData, ProcessedEdge } from 'streetweave'
+import { ParsedSpec, ProcessedEdge } from 'streetweave'
 
 // Import utility functions
 import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
-import { applyOpacity, getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, spikePath, rectPath, PERPENDICULAR_COLORS } from '../utils/styleHelpers';
-import { getCardinalDirection, bearingBetweenPoints, normalizeSegment, offsetPoint, calculateMidpoint } from '../utils/geoHelpers';
+import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, PERPENDICULAR_COLORS } from '../utils/styleHelpers';
+import { bearingBetweenPoints, normalizeSegment, offsetPoint } from '../utils/geoHelpers';
 import { initializeMap, projectPoint, getOffsetDistance, getAdjustedLineWidth } from '../utils/mapHelpers';
 
 
@@ -35,7 +35,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   })
 
    useEffect(() => {
-    const address = parsedSpec[0].address;
+    const address = parsedSpec[0].queryAddress;
     if (address) {
       fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`)
         .then(response => response.json())
@@ -48,7 +48,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     } else {
       setAddressCoords(null);
     }
-  }, [parsedSpec[0].address]);
+  }, [parsedSpec[0].queryAddress]);
 
   useEffect(() => {
     if (parsedSpec[0] && parsedSpec[0].streetWidth !== undefined) {
@@ -85,7 +85,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           initialLat,
           initialLon,
           initialZoom,
-          parsedSpec[0]?.background || "light"
+          "light"
         );
 
         // mapInstanceRef.current.createPane('mimicStreetPane');
@@ -184,20 +184,20 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         const defaultWeight = parsedSpec[0].streetWidth;
         let shouldUpdate = true;
 
-        if (parsedSpec[0].roadDirection) {
-          const featureBearing = layer.feature.properties.Bearing;
-          const featureDirection = getCardinalDirection(featureBearing);
-          if (featureDirection.toLowerCase() !== parsedSpec[0].roadDirection.toLowerCase()) {
-            shouldUpdate = false;
-          }
-        }
+        // if (parsedSpec[0].roadDirection) {
+        //   const featureBearing = layer.feature.properties.Bearing;
+        //   const featureDirection = getCardinalDirection(featureBearing);
+        //   if (featureDirection.toLowerCase() !== parsedSpec[0].roadDirection.toLowerCase()) {
+        //     shouldUpdate = false;
+        //   }
+        // }
 
         if (addressCoords) {
           const addressPoint = turf.point([addressCoords.lon, addressCoords.lat]);
           const lineFeature = turf.lineString(layer.feature.geometry.coordinates);
-          const distance = turf.pointToLineDistance(addressPoint, lineFeature, { units: parsedSpec[0].radiusUnit as turf.Units });
+          const distance = turf.pointToLineDistance(addressPoint, lineFeature, { units: "meters" as turf.Units });
           
-          if (distance > Number(parsedSpec[0].roadRadius)) {
+          if (distance > Number(parsedSpec[0].queryRadius)) {
             shouldUpdate = false;
           }
         }
@@ -239,9 +239,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             renderNodeLayer(mapInstanceRef.current, layerSpec, currentLayersRef);
           }
   
-          else if (layerSpec.unit === 'area'){
-            renderAreaLayer(mapInstanceRef.current, layerSpec, currentLayersRef);
-          }
+          // else if (layerSpec.unit === 'area'){
+            // renderAreaLayer(mapInstanceRef.current, layerSpec, currentLayersRef);
+          // }
         }
 
       });
@@ -380,10 +380,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const baseLineWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, edge, processedEdges, [0, 10]) as number ?? 5;
           const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
 
-          const lineOpacity = getDynamicStyleValue(layerSpec.strokeOpacity, edge, processedEdges, [0, 1]) as number ?? 1;
+          const lineOpacity = getDynamicStyleValue(layerSpec.lineOpacity, edge, processedEdges, [0, 1]) as number ?? 1;
 
-          const dashArray = getDashArray(layerSpec.lineType, layerSpec.lineTypeVal, edge, processedEdges);
-          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.lineType, layerSpec.lineTypeVal, edge, processedEdges);
+          const dashArray = getDashArray(layerSpec.lineType, layerSpec.lineType, edge, processedEdges);
+          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.lineType, layerSpec.lineType, edge, processedEdges);
 
           if (layerSpec.method === 'line') {
             const lineGenerator = d3.line<any>()
@@ -449,7 +449,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               }
             }
           } else if (layerSpec.method === 'rect') {
-            const baseHeight = getDynamicStyleValue(layerSpec.height, edge, processedEdges, [0, 7]) as number ?? 5;
+            const baseHeight = getDynamicStyleValue(layerSpec.lineHeight, edge, processedEdges, [0, 7]) as number ?? 5;
             const rectWidth = getAdjustedLineWidth(map, baseHeight);
             const inset = 5;
 
@@ -563,30 +563,31 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               })
               .catch(error => console.error("Error embedding Vega-Lite chart:", error));
 
-          } else if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
-            const mid = calculateMidpoint(pointsForRendering[0], pointsForRendering[1]);
-            const pt = L.point(projectPoint(map, mid.lat, mid.lon)[0], projectPoint(map, mid.lat, mid.lon)[1]);
+          } 
+          // else if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
+          //   const mid = calculateMidpoint(pointsForRendering[0], pointsForRendering[1]);
+          //   const pt = L.point(projectPoint(map, mid.lat, mid.lon)[0], projectPoint(map, mid.lat, mid.lon)[1]);
 
-            const shapeColor = getDynamicStyleValue(layerSpec.lineColor, edge, processedEdges, null, d3.interpolateBuGn) as string || 'red';
-            const shapeWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, edge, processedEdges, [5, 30]) as number ?? 5;
-            const shapeHeight = getDynamicStyleValue(layerSpec.height, edge, processedEdges, [5, 30]) as number ?? 5;
-            const shapeOpacity = getDynamicStyleValue(layerSpec.strokeOpacity, edge, processedEdges, [0, 1]) as number ?? 1;
+          //   const shapeColor = getDynamicStyleValue(layerSpec.lineColor, edge, processedEdges, null, d3.interpolateBuGn) as string || 'red';
+          //   const shapeWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, edge, processedEdges, [5, 30]) as number ?? 5;
+          //   const shapeHeight = getDynamicStyleValue(layerSpec.height, edge, processedEdges, [5, 30]) as number ?? 5;
+          //   const shapeOpacity = getDynamicStyleValue(layerSpec.strokeOpacity, edge, processedEdges, [0, 1]) as number ?? 1;
 
-            const pathGenerator = layerSpec.shape === 'rect' ? rectPath : spikePath;
-            const dAttr = pathGenerator(shapeHeight, shapeWidth);
+          //   const pathGenerator = layerSpec.shape === 'rect' ? rectPath : spikePath;
+          //   const dAttr = pathGenerator(shapeHeight, shapeWidth);
 
-            svgGroup.append("path")
-              .datum(edge)
-              .attr("class", `my${layerSpec.shape === 'rect' ? 'Rect' : 'Spike'}`)
-              .attr("transform", `translate(${pt.x},${pt.y})`)
-              .attr("d", dAttr)
-              .attr("fill", shapeColor)
-              .attr("fill-opacity", shapeOpacity)
-              .attr("stroke", "#333")
-              .attr("stroke-width", 0.5)
-              .append("title")
-              .text(`Height: ${shapeHeight.toFixed(2)}\nWidth: ${shapeWidth.toFixed(2)}\nColor: ${shapeColor}\nOpacity: ${shapeOpacity.toFixed(2)}`);
-          }
+          //   svgGroup.append("path")
+          //     .datum(edge)
+          //     .attr("class", `my${layerSpec.shape === 'rect' ? 'Rect' : 'Spike'}`)
+          //     .attr("transform", `translate(${pt.x},${pt.y})`)
+          //     .attr("d", dAttr)
+          //     .attr("fill", shapeColor)
+          //     .attr("fill-opacity", shapeOpacity)
+          //     .attr("stroke", "#333")
+          //     .attr("stroke-width", 0.5)
+          //     .append("title")
+          //     .text(`Height: ${shapeHeight.toFixed(2)}\nWidth: ${shapeWidth.toFixed(2)}\nColor: ${shapeColor}\nOpacity: ${shapeOpacity.toFixed(2)}`);
+          // }
         });
       };
 
@@ -637,8 +638,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
           const shapeColor = getDynamicStyleValue(layerSpec.lineColor, node, nodesList, null, d3.interpolateBuGn) as string || 'red';
           const shapeWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, node, nodesList, [5, 30]) as number ?? 5;
-          const shapeHeight = getDynamicStyleValue(layerSpec.height, node, nodesList, [5, 30]) as number ?? 5;
-          const shapeOpacity = getDynamicStyleValue(layerSpec.strokeOpacity, node, nodesList, [0, 1]) as number ?? 1;
+          // const shapeHeight = getDynamicStyleValue(layerSpec.lineHeight, node, nodesList, [5, 30]) as number ?? 5;
+          const shapeOpacity = getDynamicStyleValue(layerSpec.lineOpacity, node, nodesList, [0, 1]) as number ?? 1;
 
           const pt = L.point(projectPoint(map, node.lat, node.lon)[0], projectPoint(map, node.lat, node.lon)[1]);
 
@@ -684,22 +685,24 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 map.on('move zoom', updateChartPosition);
               })
               .catch(error => console.error("Error embedding Vega-Lite chart for node:", error));
-          } else if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
-            const pathGenerator = layerSpec.shape === 'rect' ? rectPath : spikePath;
-            const dAttr = pathGenerator(shapeHeight, shapeWidth);
+          } 
+          // else if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
+          //   const pathGenerator = layerSpec.shape === 'rect' ? rectPath : spikePath;
+          //   const dAttr = pathGenerator(shapeHeight, shapeWidth);
 
-            svgGroup.append("path")
-              .datum(node)
-              .attr("class", "nodeShape")
-              .attr("transform", `translate(${pt.x},${pt.y})`)
-              .attr("d", dAttr)
-              .attr("fill", shapeColor)
-              .attr("fill-opacity", shapeOpacity)
-              .attr("stroke", "#333")
-              .attr("stroke-width", 0.5)
-              .append("title")
-              .text(`Height: ${shapeHeight.toFixed(2)}\nWidth: ${shapeWidth.toFixed(2)}\nColor: ${shapeColor}\nOpacity: ${shapeOpacity.toFixed(2)}`);
-          } else {
+          //   svgGroup.append("path")
+          //     .datum(node)
+          //     .attr("class", "nodeShape")
+          //     .attr("transform", `translate(${pt.x},${pt.y})`)
+          //     .attr("d", dAttr)
+          //     .attr("fill", shapeColor)
+          //     .attr("fill-opacity", shapeOpacity)
+          //     .attr("stroke", "#333")
+          //     .attr("stroke-width", 0.5)
+          //     .append("title")
+          //     .text(`Height: ${shapeHeight.toFixed(2)}\nWidth: ${shapeWidth.toFixed(2)}\nColor: ${shapeColor}\nOpacity: ${shapeOpacity.toFixed(2)}`);
+          // } 
+          else {
             svgGroup.append("circle")
               .datum(node)
               .attr('class', 'nodeShape')
@@ -731,102 +734,106 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
    * @param layerSpec The parsed layer specification.
    * @param currentLayersRef Ref to store active Leaflet layers for cleanup.
    */
-  const renderAreaLayer = async (
-    map: L.Map,
-    layerSpec: ParsedSpec,
-    currentLayersRef: React.MutableRefObject<L.Layer[]>
-  ) => {
-    try {
-      if (layerSpec.method === 'fill') {
-        const geojsonData: any = await d3.json(`/data/${layerSpec.physicalLayerPath}`);
-        if (!geojsonData?.features) {
-          console.error("GeoJSON data is missing features or is invalid for area fill layer.");
-          return;
-        }
+  // const renderAreaLayer = async (
+    // map: L.Map,
+    // layerSpec: ParsedSpec,
+    // currentLayersRef: React.MutableRefObject<L.Layer[]>
+  // ) => {
+  //   try {
+    //   if (layerSpec.method === 'fill') {
+    //     const geojsonData: any = await d3.json(`/data/${layerSpec.physicalLayerPath}`);
+    //     if (!geojsonData?.features) {
+    //       console.error("GeoJSON data is missing features or is invalid for area fill layer.");
+    //       return;
+    //     }
 
-        const thematicData: any = layerSpec.thematicLayerPath
-          ? await d3.json(`/data/${layerSpec.thematicLayerPath}`)
-          : [];
+    //     const thematicData: any = layerSpec.thematicLayerPath
+    //       ? await d3.json(`/data/${layerSpec.thematicLayerPath}`)
+    //       : [];
 
-        // Apply spatial aggregation if specified
-        const aggregatedGeoJSON: GeoJSONData = await applySpatialAggregation(geojsonData, thematicData, layerSpec) as GeoJSONData;
+    //     // Apply spatial aggregation if specified
+    //     const aggregatedGeoJSON: GeoJSONData = await applySpatialAggregation(geojsonData, thematicData, layerSpec) as GeoJSONData;
 
-        let colorScale: d3.ScaleThreshold<number, string> | d3.ScaleSequential<string, never>;
+    //     let colorScale: d3.ScaleThreshold<number, string> | d3.ScaleSequential<string, never>;
 
-        if (layerSpec.domain && layerSpec.range) {
-          colorScale = d3.scaleThreshold<number, string>()
-            .domain(layerSpec.domain)
-            .range(layerSpec.range);
-        } else {
-          // Fallback to sequential scale if no domain/range is specified for fillAttribute
-          const values = aggregatedGeoJSON.features.map(f => f.properties?.[layerSpec.fillAttribute!])
-                                                  .filter((v): v is number => typeof v === 'number');
-          const minVal = d3.min(values) || 0;
-          const maxVal = d3.max(values) || 1;
-          colorScale = d3.scaleSequential(d3.interpolateBlues).domain([minVal, maxVal]);
-        }
+    //     if (layerSpec.domain && layerSpec.range) {
+    //       colorScale = d3.scaleThreshold<number, string>()
+    //         .domain(layerSpec.domain)
+    //         .range(layerSpec.range);
+    //     } 
+    //     else {
+    //       // Fallback to sequential scale if no domain/range is specified for fillAttribute
+    //       const values = aggregatedGeoJSON.features.map(f => f.properties?.[layerSpec.fillAttribute!])
+    //                                               .filter((v): v is number => typeof v === 'number');
+    //       const minVal = d3.min(values) || 0;
+    //       const maxVal = d3.max(values) || 1;
+    //       colorScale = d3.scaleSequential(d3.interpolateBlues).domain([minVal, maxVal]);
+    //     }
 
-        const styleFeature = (feature: any) => {
-          return {
-            // Use nullish coalescing (??) to provide a default value (null in this case)
-            // if feature.properties is undefined or the attribute itself is null/undefined.
-            // This ensures a value compatible with `colorScale` is always passed.
-            fillColor: colorScale(feature.properties?.[layerSpec.fillAttribute!] ?? null),
-            fillOpacity: applyOpacity('fill', layerSpec),
-            weight: layerSpec.strokeWidth || 1,
-            color: layerSpec.strokeColor || 'black',
-            opacity: applyOpacity('stroke', layerSpec),
-          };
-        };
+    //     const styleFeature = (feature: any) => {
+    //       return {
+    //         // Use nullish coalescing (??) to provide a default value (null in this case)
+    //         // if feature.properties is undefined or the attribute itself is null/undefined.
+    //         // This ensures a value compatible with `colorScale` is always passed.
+    //         fillColor: colorScale(feature.properties?.[layerSpec.fillAttribute!] ?? null),
+    //         fillOpacity: applyOpacity('fill', layerSpec),
+    //         weight: layerSpec.strokeWidth || 1,
+    //         color: layerSpec.strokeColor || 'black',
+    //         opacity: applyOpacity('stroke', layerSpec),
+    //       };
+    //     };
 
-        const geoJsonLayer = L.geoJSON(aggregatedGeoJSON, { style: styleFeature }).addTo(map);
-        currentLayersRef.current.push(geoJsonLayer);
+    //     const geoJsonLayer = L.geoJSON(aggregatedGeoJSON, { style: styleFeature }).addTo(map);
+    //     currentLayersRef.current.push(geoJsonLayer);
 
-      } else if (layerSpec.method === 'heatmap') {
-        const heatDataRaw: any = await d3.json(`/data/${layerSpec.thematicLayerPath}`);
-        if (!Array.isArray(heatDataRaw)) {
-          console.error('Heatmap data is missing or not in the expected format (array of points).');
-          return;
-        }
-        // Ensure data is in [lat, lon, value] format for heatmap.js
-        const heatData = heatDataRaw.map(point => [point.Lat, point.Lon, point[layerSpec.valueField || 'value'] || 1]);
+    //   } 
+    //   else if (layerSpec.method === 'heatmap') {
+    //     const heatDataRaw: any = await d3.json(`/data/${layerSpec.thematicLayerPath}`);
+    //     if (!Array.isArray(heatDataRaw)) {
+    //       console.error('Heatmap data is missing or not in the expected format (array of points).');
+    //       return;
+    //     }
+    //     // Ensure data is in [lat, lon, value] format for heatmap.js
+    //     const heatData = heatDataRaw.map(point => [point.Lat, point.Lon, point[layerSpec.valueField || 'value'] || 1]);
 
-        const heatmapLayer = (L as any).heatLayer(heatData, {
-          radius: layerSpec.radius || 25,
-          blur: layerSpec.blur || 15,
-          maxZoom: 17,
-          // Use D3 color scheme if specified
-          gradient: layerSpec.colorScheme ? (d3 as any)[layerSpec.colorScheme] : undefined,
-        }).addTo(map);
-        currentLayersRef.current.push(heatmapLayer);
+    //     const heatmapLayer = (L as any).heatLayer(heatData, {
+    //       radius: layerSpec.radius || 25,
+    //       blur: layerSpec.blur || 15,
+    //       maxZoom: 17,
+    //       // Use D3 color scheme if specified
+    //       gradient: layerSpec.colorScheme ? (d3 as any)[layerSpec.colorScheme] : undefined,
+    //     }).addTo(map);
+    //     currentLayersRef.current.push(heatmapLayer);
 
-      } else if (layerSpec.method === 'point') {
-        const pointData: any = await d3.json(`/data/${layerSpec.thematicLayerPath}`);
-        if (!Array.isArray(pointData)) {
-          console.error('Point data is missing or not in the expected format (array of points).');
-          return;
-        }
+    //   } 
+    //   else if (layerSpec.method === 'point') {
+    //     const pointData: any = await d3.json(`/data/${layerSpec.thematicLayerPath}`);
+    //     if (!Array.isArray(pointData)) {
+    //       console.error('Point data is missing or not in the expected format (array of points).');
+    //       return;
+    //     }
 
-        pointData.forEach((d: any) => {
-          const lat = d[layerSpec.xField!];
-          const lon = d[layerSpec.yField!];
+    //     pointData.forEach((d: any) => {
+    //       const lat = d[layerSpec.xField!];
+    //       const lon = d[layerSpec.yField!];
 
-          if (lat && lon) {
-            const marker = L.circleMarker([lat, lon], {
-              color: layerSpec.pointColor || 'red',
-              radius: layerSpec.pointRadius || 5,
-              fillOpacity: applyOpacity('fill', layerSpec),
-              weight: layerSpec.strokeWidth || 1,
-              opacity: applyOpacity('stroke', layerSpec)
-            }).addTo(map);
-            currentLayersRef.current.push(marker);
-          }
-        });
-      }
-    } catch (error) {
-      console.error(`Error rendering area layer:`, error);
-    }
-  };
+    //       if (lat && lon) {
+    //         const marker = L.circleMarker([lat, lon], {
+    //           color: layerSpec.pointColor || 'red',
+    //           radius: layerSpec.pointRadius || 5,
+    //           fillOpacity: applyOpacity('fill', layerSpec),
+    //           weight: layerSpec.strokeWidth || 1,
+    //           opacity: applyOpacity('stroke', layerSpec)
+    //         }).addTo(map);
+    //         currentLayersRef.current.push(marker);
+    //       }
+    //     });
+    //   }
+    // } 
+    // catch (error) {
+    //   console.error(`Error rendering area layer:`, error);
+    // }
+  // };
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

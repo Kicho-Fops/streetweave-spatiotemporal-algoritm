@@ -24,6 +24,7 @@ export type GeoJSONData = { // Renamed from CustomGeoJSONData to simply GeoJSOND
 };
 
 export type AggregationType = 'sum' | 'mean' | 'min' | 'max';
+export type SpatialRelationType = 'buffer' | 'nn' | 'contains';
 
 export type SegmentData = {
   lat: number;
@@ -61,45 +62,24 @@ export interface ParsedSpec {
   unit: string;
   unitDivide: number;
   zoom: number;
-  method?: string;
-  shape?: string;
-  fillAttribute?: string;
-  strokeColor?: string;
-  strokeWidth?: number;
-  fillOpacity?: number;
-  strokeOpacity?: string | number;
-  domain?: number[];
-  range?: string[];
-  lineColor?: string;
+  method: string;
+  lineOpacity: string | number;
+  lineColor: string;
   lineType?: string;
-  lineTypeVal?: string;
-  lineStrokeWidth?: string | number;
-  height?: string | number;
-  radius?: number;
-  blur?: number;
-  xField?: string;
-  yField?: string;
-  pointColor?: string;
+  lineStrokeWidth: string | number;
+  lineHeight: string | number;
   chart?: any;
-  orientation?: string;
-  alignment?: string;
+  orientation: string;
+  alignment: string;
   physicalLayerPath?: string;
   thematicLayerPath?: string;
-  spatialRelation?: string;
-  operation?: string;
-  AggregationType?: AggregationType; 
-  bufferValue?: number;
-  roadDirection?: string;
-  address?: string;
-  roadRadius?: number;
-  radiusUnit?: string;
-  background?: string;
-  streetName?: string;
+  spatialRelation: SpatialRelationType;
+  spatialRelationValue: number;
+  aggregationType: AggregationType; 
   streetColor?: string;
   streetWidth?: number;
   methodRow?: number;
   methodColumn?: number;
-  colorScheme?: string; 
-  valueField?: string; 
-  pointRadius?: number;
+  queryAddress?: string;
+  queryRadius?: number;
 }

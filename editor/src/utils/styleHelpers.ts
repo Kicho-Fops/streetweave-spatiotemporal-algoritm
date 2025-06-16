@@ -13,11 +13,11 @@ import { ParsedSpec, ProcessedEdge } from 'streetweave';
 export const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: ParsedSpec): number => {
   switch (type) {
     case 'line':
-      return typeof layerSpec.strokeOpacity === 'number' ? layerSpec.strokeOpacity : 1;
+      return typeof layerSpec.lineOpacity === 'number' ? layerSpec.lineOpacity : 1;
     case 'fill':
-      return typeof layerSpec.fillOpacity === 'number' ? layerSpec.fillOpacity : 0.7;
+      return typeof layerSpec.lineOpacity === 'number' ? layerSpec.lineOpacity : 0.7;
     case 'stroke':
-      return typeof layerSpec.strokeOpacity === 'number' ? layerSpec.strokeOpacity : 1;
+      return typeof layerSpec.lineOpacity === 'number' ? layerSpec.lineOpacity : 1;
     default:
       return 1;
   }

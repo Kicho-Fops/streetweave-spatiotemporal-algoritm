@@ -304,20 +304,20 @@ export async function applySpatialAggregation(
   if (layerSpec.unit === 'area') {
     const geojsonData = physicalData as GeoJSONData;
     if (layerSpec.spatialRelation === 'contains') {
-      return aggregationContainsArea(geojsonData, thematicData, layerSpec.AggregationType!);
-    } else if (layerSpec.spatialRelation === 'nearest neighbor') {
-      return aggregateAreaNearestNeighbor(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.AggregationType!);
+      return aggregationContainsArea(geojsonData, thematicData, layerSpec.aggregationType!);
+    } else if (layerSpec.spatialRelation === 'nn') {
+      return aggregateAreaNearestNeighbor(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.aggregationType!);
     } else if (layerSpec.spatialRelation === 'buffer') {
-      return aggregateAreaBuffer(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.bufferValue!, layerSpec.AggregationType!);
+      return aggregateAreaBuffer(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.spatialRelationValue!, layerSpec.aggregationType!);
     }
   } else if (layerSpec.unit === 'segment' || layerSpec.unit === 'node') {
     const edgesData = physicalData as any[]; // Raw edges array
     if (layerSpec.spatialRelation === 'contains') {
-      return aggregationContainsSegment(edgesData, thematicData, layerSpec.AggregationType!);
-    } else if (layerSpec.spatialRelation === 'nearest neighbor') {
-      return aggregateSegmentNearestNeighbor(edgesData, thematicData, layerSpec.AggregationType!);
+      return aggregationContainsSegment(edgesData, thematicData, layerSpec.aggregationType!);
+    } else if (layerSpec.spatialRelation === 'nn') {
+      return aggregateSegmentNearestNeighbor(edgesData, thematicData, layerSpec.aggregationType!);
     } else if (layerSpec.spatialRelation === 'buffer') {
-      return aggregateSegmentBuffer(edgesData, thematicData, layerSpec.bufferValue!, layerSpec.AggregationType!);
+      return aggregateSegmentBuffer(edgesData, thematicData, layerSpec.spatialRelationValue!, layerSpec.aggregationType!);
     }
   }
   // Return unchanged if no aggregation matches or if unit is not recognized
