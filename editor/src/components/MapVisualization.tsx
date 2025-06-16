@@ -365,7 +365,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           }
 
           const pointsForRendering = [{ lat: currentStartPoint.lat, lon: currentStartPoint.lon }, { lat: currentEndPoint.lat, lon: currentEndPoint.lon }];
-
           // Retrieve dynamic styles using the helper
           const lineColor = getDynamicStyleValue(
             layerSpec.lineColor,
@@ -374,8 +373,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             null,
             d3.interpolateBuGn,
             PERPENDICULAR_COLORS[layerIndex] || ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]
-          ) as string || 'red';
-
+          ) as string// || 'red';
+          // console.log("[MapViz 377] layerSpec.lineColor: ", layerSpec.lineColor)
+          // console.log("[MapViz 377] typeof layerSpec.lineColor: ", typeof layerSpec.lineColor)
+          // console.log("[MapViz 378] lineColor: ", lineColor)
+          
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
           const baseLineWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, edge, processedEdges, [0, 10]) as number ?? 5;
           const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
