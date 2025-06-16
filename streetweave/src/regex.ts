@@ -33,8 +33,8 @@ export const RegexPatterns = {
   chart: /\.chart\(([\s\S]*?)\)/,
   orientation: /\.orientation\(\s*(?:")?([^",\)\s]+)(?:")?\s*\)/,
   alignment: /\.alignment\(\s*(?:")?([^",\)\s]+)(?:")?\s*\)/,
-  // query: /\.query\(([^)]+)\)/,
+  query: /\.query\(([^)]+)\)/,
   // queryRoadDirection: /road direction\s*=\s*(?:")?([^",]+)(?:")?/,
-  address: /address\s*=\s*(?:")?([^"]+)(?:")?/,
-  radius: /radius\s*=\s*(\d+(?:\.\d+)?)\s*(?:")?([a-zA-Z]+)(?:")?/
+  queryAddress: /address\s*=\s*(?:")?([^"]+)(?:")?/,
+  queryRadius: /radius\s*=\s*(\d+(?:\.\d+)?)\s*(?:")?([a-zA-Z]+)(?:")?/
 };

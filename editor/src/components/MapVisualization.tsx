@@ -563,30 +563,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               .catch(error => console.error("Error embedding Vega-Lite chart:", error));
 
           } 
-          // else if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
-          //   const mid = calculateMidpoint(pointsForRendering[0], pointsForRendering[1]);
-          //   const pt = L.point(projectPoint(map, mid.lat, mid.lon)[0], projectPoint(map, mid.lat, mid.lon)[1]);
-
-          //   const shapeColor = getDynamicStyleValue(layerSpec.lineColor, edge, processedEdges, null, d3.interpolateBuGn) as string || 'red';
-          //   const shapeWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, edge, processedEdges, [5, 30]) as number ?? 5;
-          //   const shapeHeight = getDynamicStyleValue(layerSpec.height, edge, processedEdges, [5, 30]) as number ?? 5;
-          //   const shapeOpacity = getDynamicStyleValue(layerSpec.strokeOpacity, edge, processedEdges, [0, 1]) as number ?? 1;
-
-          //   const pathGenerator = layerSpec.shape === 'rect' ? rectPath : spikePath;
-          //   const dAttr = pathGenerator(shapeHeight, shapeWidth);
-
-          //   svgGroup.append("path")
-          //     .datum(edge)
-          //     .attr("class", `my${layerSpec.shape === 'rect' ? 'Rect' : 'Spike'}`)
-          //     .attr("transform", `translate(${pt.x},${pt.y})`)
-          //     .attr("d", dAttr)
-          //     .attr("fill", shapeColor)
-          //     .attr("fill-opacity", shapeOpacity)
-          //     .attr("stroke", "#333")
-          //     .attr("stroke-width", 0.5)
-          //     .append("title")
-          //     .text(`Height: ${shapeHeight.toFixed(2)}\nWidth: ${shapeWidth.toFixed(2)}\nColor: ${shapeColor}\nOpacity: ${shapeOpacity.toFixed(2)}`);
-          // }
         });
       };
 
@@ -685,22 +661,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               })
               .catch(error => console.error("Error embedding Vega-Lite chart for node:", error));
           } 
-          // else if (layerSpec.shape === 'spike' || layerSpec.shape === 'rect') {
-          //   const pathGenerator = layerSpec.shape === 'rect' ? rectPath : spikePath;
-          //   const dAttr = pathGenerator(shapeHeight, shapeWidth);
-
-          //   svgGroup.append("path")
-          //     .datum(node)
-          //     .attr("class", "nodeShape")
-          //     .attr("transform", `translate(${pt.x},${pt.y})`)
-          //     .attr("d", dAttr)
-          //     .attr("fill", shapeColor)
-          //     .attr("fill-opacity", shapeOpacity)
-          //     .attr("stroke", "#333")
-          //     .attr("stroke-width", 0.5)
-          //     .append("title")
-          //     .text(`Height: ${shapeHeight.toFixed(2)}\nWidth: ${shapeWidth.toFixed(2)}\nColor: ${shapeColor}\nOpacity: ${shapeOpacity.toFixed(2)}`);
-          // } 
           else {
             svgGroup.append("circle")
               .datum(node)
@@ -726,113 +686,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       console.error(`Error rendering node layer for ${layerSpec.physicalLayerPath}:`, error);
     }
   };
-
-    /**
-   * Renders an area-based layer (fill, heatmap, point).
-   * @param map The Leaflet map instance.
-   * @param layerSpec The parsed layer specification.
-   * @param currentLayersRef Ref to store active Leaflet layers for cleanup.
-   */
-  // const renderAreaLayer = async (
-    // map: L.Map,
-    // layerSpec: ParsedSpec,
-    // currentLayersRef: React.MutableRefObject<L.Layer[]>
-  // ) => {
-  //   try {
-    //   if (layerSpec.method === 'fill') {
-    //     const geojsonData: any = await d3.json(`/data/${layerSpec.physicalLayerPath}`);
-    //     if (!geojsonData?.features) {
-    //       console.error("GeoJSON data is missing features or is invalid for area fill layer.");
-    //       return;
-    //     }
-
-    //     const thematicData: any = layerSpec.thematicLayerPath
-    //       ? await d3.json(`/data/${layerSpec.thematicLayerPath}`)
-    //       : [];
-
-    //     // Apply spatial aggregation if specified
-    //     const aggregatedGeoJSON: GeoJSONData = await applySpatialAggregation(geojsonData, thematicData, layerSpec) as GeoJSONData;
-
-    //     let colorScale: d3.ScaleThreshold<number, string> | d3.ScaleSequential<string, never>;
-
-    //     if (layerSpec.domain && layerSpec.range) {
-    //       colorScale = d3.scaleThreshold<number, string>()
-    //         .domain(layerSpec.domain)
-    //         .range(layerSpec.range);
-    //     } 
-    //     else {
-    //       // Fallback to sequential scale if no domain/range is specified for fillAttribute
-    //       const values = aggregatedGeoJSON.features.map(f => f.properties?.[layerSpec.fillAttribute!])
-    //                                               .filter((v): v is number => typeof v === 'number');
-    //       const minVal = d3.min(values) || 0;
-    //       const maxVal = d3.max(values) || 1;
-    //       colorScale = d3.scaleSequential(d3.interpolateBlues).domain([minVal, maxVal]);
-    //     }
-
-    //     const styleFeature = (feature: any) => {
-    //       return {
-    //         // Use nullish coalescing (??) to provide a default value (null in this case)
-    //         // if feature.properties is undefined or the attribute itself is null/undefined.
-    //         // This ensures a value compatible with `colorScale` is always passed.
-    //         fillColor: colorScale(feature.properties?.[layerSpec.fillAttribute!] ?? null),
-    //         fillOpacity: applyOpacity('fill', layerSpec),
-    //         weight: layerSpec.strokeWidth || 1,
-    //         color: layerSpec.strokeColor || 'black',
-    //         opacity: applyOpacity('stroke', layerSpec),
-    //       };
-    //     };
-
-    //     const geoJsonLayer = L.geoJSON(aggregatedGeoJSON, { style: styleFeature }).addTo(map);
-    //     currentLayersRef.current.push(geoJsonLayer);
-
-    //   } 
-    //   else if (layerSpec.method === 'heatmap') {
-    //     const heatDataRaw: any = await d3.json(`/data/${layerSpec.thematicLayerPath}`);
-    //     if (!Array.isArray(heatDataRaw)) {
-    //       console.error('Heatmap data is missing or not in the expected format (array of points).');
-    //       return;
-    //     }
-    //     // Ensure data is in [lat, lon, value] format for heatmap.js
-    //     const heatData = heatDataRaw.map(point => [point.Lat, point.Lon, point[layerSpec.valueField || 'value'] || 1]);
-
-    //     const heatmapLayer = (L as any).heatLayer(heatData, {
-    //       radius: layerSpec.radius || 25,
-    //       blur: layerSpec.blur || 15,
-    //       maxZoom: 17,
-    //       // Use D3 color scheme if specified
-    //       gradient: layerSpec.colorScheme ? (d3 as any)[layerSpec.colorScheme] : undefined,
-    //     }).addTo(map);
-    //     currentLayersRef.current.push(heatmapLayer);
-
-    //   } 
-    //   else if (layerSpec.method === 'point') {
-    //     const pointData: any = await d3.json(`/data/${layerSpec.thematicLayerPath}`);
-    //     if (!Array.isArray(pointData)) {
-    //       console.error('Point data is missing or not in the expected format (array of points).');
-    //       return;
-    //     }
-
-    //     pointData.forEach((d: any) => {
-    //       const lat = d[layerSpec.xField!];
-    //       const lon = d[layerSpec.yField!];
-
-    //       if (lat && lon) {
-    //         const marker = L.circleMarker([lat, lon], {
-    //           color: layerSpec.pointColor || 'red',
-    //           radius: layerSpec.pointRadius || 5,
-    //           fillOpacity: applyOpacity('fill', layerSpec),
-    //           weight: layerSpec.strokeWidth || 1,
-    //           opacity: applyOpacity('stroke', layerSpec)
-    //         }).addTo(map);
-    //         currentLayersRef.current.push(marker);
-    //       }
-    //     });
-    //   }
-    // } 
-    // catch (error) {
-    //   console.error(`Error rendering area layer:`, error);
-    // }
-  // };
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
