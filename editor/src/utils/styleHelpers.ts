@@ -93,11 +93,6 @@ export const getDynamicStyleValue = (
           return scale(attributeValue);
         }
       }
-
-        
-
-
-
   }
   return null; // Default if attribute not found or no mapping specified
 };
