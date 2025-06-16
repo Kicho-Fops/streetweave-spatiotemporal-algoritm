@@ -1,7 +1,7 @@
 export const RegexPatterns = {
   unit: /unit\s*=\s*(?:")?(\w+)(?:")?(?:\/(\d+(?:\.\d+)?))?/,
   data: /data\(([^)]+)\)/,
-  relation: /\.relation\(\s*(?=.*?\s*spatial\s*=\s*(?:")?(?<spatial>[^"]*?)(?:")?,?)\s*(?=.*?\s*value\s*=\s*(?:")?(?<value>[^"]*?)(?:")?,?)\s*(?=.*?\s*type\s*=\s*(?:")?(?<type>[^"]*?)(?:")?,?)[^)]*\)/,
+  relation: /\.relation\((?<params>[^)]*)\)/,
   buffer: /^buffer\((\d+)\)$/,
   zoom: /zoom\((\d+)\)/,
   method: /method\s*=\s*(?:")?([a-zA-Z]\w*)(?:")?(?:\(\s*(\d+)\s*,\s*(\d+)\s*\))?/,

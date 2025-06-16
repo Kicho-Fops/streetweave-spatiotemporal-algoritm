@@ -35,20 +35,47 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
     }
 
     const relationMatch = spec.match(RegexPatterns.relation);
-    if (relationMatch && relationMatch.groups) {
-      let spatial = relationMatch.groups.spatial? relationMatch.groups.spatial : parsedSpec.spatialRelation;
-      let value = relationMatch.groups.value? relationMatch.groups.value : parsedSpec.spatialRelationValue;
-      let aggregation = relationMatch.groups.aggregation? relationMatch.groups.aggregation : parsedSpec.aggregationType;
+    console.log('--- Debugging Regex Match ---');
+    console.log('Input spec string:', spec);
+    console.log('Regex being used:', RegexPatterns.relation); // <--- Crucial check!
+    console.log('Type of Regex being used:', typeof RegexPatterns.relation); // Should be 'object'
 
-      if (['sum', 'mean', 'min', 'max'].includes(aggregation)) {
-        parsedSpec.aggregationType = aggregation as AggregationType;
-      }
-      if(['nn', 'buffer', 'contains'].includes(spatial)) {
-        parsedSpec.spatialRelation = spatial as SpatialRelationType;
-      }
-      if (typeof value === 'number') {
-        parsedSpec.spatialRelationValue = value;
-      }      
+    if (relationMatch && relationMatch.groups && relationMatch.groups.params) {
+      const paramsString = relationMatch.groups.params;
+
+        // Regex to find individual key-value pairs within the paramsString
+        const paramRegex = /(?<key>\w+)\s*=\s*(?:")?(?<value>[^",]*)(?:")?/g;
+        let match;
+
+        while ((match = paramRegex.exec(paramsString)) !== null) {
+          if (match.groups) {
+            const key = match.groups.key;
+            const rawValue = match.groups.value.trim(); // Trim whitespace
+
+            switch (key) {
+              case 'spatial':
+                if (['nn', 'buffer', 'contains'].includes(rawValue)) {
+                  parsedSpec.spatialRelation = rawValue as SpatialRelationType;
+                }
+                break;
+              case 'value':
+                // Convert the string value to a number
+                const numValue = Number(rawValue);
+                if (!isNaN(numValue)) {
+                  parsedSpec.spatialRelationValue = numValue;
+                }
+                break;
+              case 'type': // Your regex has 'type', not 'aggregation'
+                if (['sum', 'mean', 'min', 'max'].includes(rawValue)) {
+                  parsedSpec.aggregationType = rawValue as AggregationType;
+                }
+                break;
+              default:
+                // Handle unexpected keys or log a warning
+                console.warn(`Unknown parameter: ${key}`);
+            }
+          }
+        }
     }
 
     const zoomMatch = spec.match(RegexPatterns.zoom);
