@@ -13,7 +13,7 @@
       "unit": {
         "type": "string",
         "description": "The unit of analysis (e.g., 'segment', 'node').",
-        "enum": ["segment", "node", "point"]
+        "enum": ["segment", "node"]
       },
       "unitDivide": {
         "type": "number",
@@ -25,8 +25,8 @@
       },
       "method": {
         "type": "string",
-        "description": "The rendering method (e.g., 'line', 'rect', 'matrix', 'point', 'heatmap').",
-        "enum": ["line", "rect", "matrix", "point", "heatmap"]
+        "description": "The rendering method (e.g., 'line', 'rect', 'matrix').",
+        "enum": ["line", "rect", "matrix"]
       },
       "lineOpacity": {
         "oneOf": [
