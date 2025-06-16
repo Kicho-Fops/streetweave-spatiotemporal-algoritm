@@ -152,17 +152,19 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
     const queryMatch = spec.match(RegexPatterns.query);
     if(queryMatch) {
       const queryContent = queryMatch[1];
-      const addressMatch = queryContent.match(RegexPatterns.queryAddress);
-      if (addressMatch) {
-        parsedSpec.queryAddress = addressMatch[1].trim();
-      }
+      if(queryContent.length > 0){
+        const addressMatch = queryContent.match(RegexPatterns.queryAddress);
+        if (addressMatch) {
+          parsedSpec.queryAddress = addressMatch[1].trim();
+        }
 
-      const radiusMatch = queryContent.match(RegexPatterns.queryRadius);
-      if (radiusMatch) {
-        const raw = radiusMatch[1];
-        const asNum = Number(raw);
-        if (!Number.isNaN(asNum)) {
-          parsedSpec.queryRadius = asNum;
+        const radiusMatch = queryContent.match(RegexPatterns.queryRadius);
+        if (radiusMatch) {
+          const raw = radiusMatch[1];
+          const asNum = Number(raw);
+          if (!Number.isNaN(asNum)) {
+            parsedSpec.queryRadius = asNum;
+          }
         }
       }
     }

@@ -6,6 +6,7 @@ export default defineConfig({
   root: '.',  // this is the app root
   build: {
     outDir: 'dist',
+    sourcemap: true
   },
   plugins: [react()],
   resolve: {
