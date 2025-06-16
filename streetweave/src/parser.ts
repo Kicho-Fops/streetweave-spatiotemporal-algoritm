@@ -35,11 +35,6 @@ const parseSingleLayer = (spec: string): ParsedSpec | null => {
     }
 
     const relationMatch = spec.match(RegexPatterns.relation);
-    console.log('--- Debugging Regex Match ---');
-    console.log('Input spec string:', spec);
-    console.log('Regex being used:', RegexPatterns.relation); // <--- Crucial check!
-    console.log('Type of Regex being used:', typeof RegexPatterns.relation); // Should be 'object'
-
     if (relationMatch && relationMatch.groups && relationMatch.groups.params) {
       const paramsString = relationMatch.groups.params;
 
