@@ -84,8 +84,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           "light"
         );
 
-        // mapInstanceRef.current.createPane('mimicStreetPane');
-        // mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350'
+        mapInstanceRef.current.createPane('mimicStreetPane');
+        mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350'
       
       } else {
         // Update zoom level if parsedSpec changes
@@ -125,8 +125,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     if (!mapInstanceRef.current) return;
 
     const initMimicLayer = async () => {
-      mapInstanceRef.current!.getPane('mimicStreetPane');
-      mapInstanceRef.current!.createPane('mimicStreetPane');
+      // mapInstanceRef.current!.getPane('mimicStreetPane');
+      // mapInstanceRef.current!.createPane('mimicStreetPane');
+      if (!mapInstanceRef.current!.getPane('mimicStreetPane')) {
+        mapInstanceRef.current!.createPane('mimicStreetPane');
+        mapInstanceRef.current!.getPane('mimicStreetPane')!.style.zIndex = '450';
+      }
 
       if (!mimicLayerRef.current) {
         try {
