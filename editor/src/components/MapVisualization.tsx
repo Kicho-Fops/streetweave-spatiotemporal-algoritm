@@ -84,8 +84,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           "light"
         );
 
-        // mapInstanceRef.current.createPane('mimicStreetPane');
-        // mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350'
+        mapInstanceRef.current.createPane('mimicStreetPane');
+        mapInstanceRef.current.getPane('mimicStreetPane')!.style.zIndex = '350'
       
       } else {
         // Update zoom level if parsedSpec changes
@@ -125,12 +125,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     if (!mapInstanceRef.current) return;
 
     const initMimicLayer = async () => {
-      mapInstanceRef.current!.getPane('mimicStreetPane');
-      mapInstanceRef.current!.createPane('mimicStreetPane');
+      if (!mapInstanceRef.current!.getPane('mimicStreetPane')) {
+        mapInstanceRef.current!.createPane('mimicStreetPane');
+        mapInstanceRef.current!.getPane('mimicStreetPane')!.style.zIndex = '450';
+      }
 
       if (!mimicLayerRef.current) {
         try {
-          const data: { edges: any[] } | undefined = await d3.json('/data/filtered_data.json');
+          const data: { edges: any[] } | undefined = await d3.json(`/data/${parsedSpec[0].data?.physical}`);
 
           if (data !== undefined) {
             const features = data.edges.map(edge => ({
@@ -167,7 +169,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     };
 
     initMimicLayer();
-  }, []);
+  }, [parsedSpec]);
 
 
   // Update mimic street width based on the slider value and filtering conditions.
