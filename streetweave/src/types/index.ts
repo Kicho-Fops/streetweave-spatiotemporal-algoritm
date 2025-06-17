@@ -59,27 +59,48 @@ export interface EdgeStyleProps {
 // DEFINING ParsedSpec here
 export interface ParsedSpec {
   name?: string;
-  unit: string;
-  unitDivide: number;
-  zoom: number;
-  method: string;
-  lineOpacity: string | number;
-  lineColor: string;
-  lineType?: string;
-  lineStrokeWidth: string | number;
-  lineHeight: string | number;
+  unit: "segment" | "node" | "point";
+  splits: number;
+
+  // New 'data' object structure
+  data: { // Required by schema
+    physicalLayer: string; // Required by schema
+    thematicLayer: string; // Required by schema
+  };
+
+  // New 'relation' object structure
+  relation?: { // Optional as per schema, but internal properties have defaults
+    spatial?: SpatialRelationType; // Has default in schema
+    value?: number; // Has default in schema
+    type?: AggregationType; // Has default in schema
+  };
+
+  zoom?: [number, number]; // Changed to array of two numbers as per schema
+
+  method?: "line" | "rect" | "matrix"; // Restricted enum, optional with default in schema
+  lineOpacity?: number; // Optional with default in schema
+  lineColor?: string; // Optional with default in schema
+  lineType?: string; // Optional with default in schema ("solid")
+  lineStrokeWidth?: number; // Optional with default in schema
+  lineHeight?: number; // Optional with default in schema
+
+  // New 'map' object structure
+  map?: { // Optional
+    streetColor?: string;
+    streetWidth?: number;
+  };
+
+  orientation?: "parallel" | "perpendicular"; // Optional with enum
+  alignment?: "left" | "center" | "right"; // Optional with enum
+
+  // New 'query' object structure
+  query?: { // Optional
+    address?: string; // Optional in schema
+    radius?: number; // Optional in schema
+  };
+
   chart?: any;
-  orientation: string;
-  alignment: string;
-  physicalLayerPath?: string;
-  thematicLayerPath?: string;
-  spatialRelation: SpatialRelationType;
-  spatialRelationValue: number;
-  aggregationType: AggregationType; 
-  streetColor?: string;
-  streetWidth?: number;
   methodRow?: number;
   methodColumn?: number;
-  queryAddress?: string;
-  queryRadius?: number;
+
 }

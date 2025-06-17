@@ -12,100 +12,165 @@
       },
       "unit": {
         "type": "string",
-        "description": "The unit of analysis (e.g., 'segment', 'node').",
-        "enum": ["segment", "node"]
+        "description": "The unit of analysis (e.g., 'segment', 'node', 'point').",
+        "enum": ["segment", "node", "point"],
+        "default": "segment"
       },
-      "unitDivide": {
+      "splits": {
         "type": "number",
-        "description": "A division factor for the unit."
+        "description": "A split factor for the unit.",
+        "default": 1
+      },
+      "data": {
+        "type": "object",
+        "description": "Paths to physical and thematic data layers.",
+        "properties": {
+          "physical": {
+            "type": "string",
+            "description": "Path to the physical layer data (e.g., GeoJSON file)."
+          },
+          "thematic": {
+            "type": "string",
+            "description": "Path to the thematic layer data (e.g., CSV file for points)."
+          }
+        },
+        "required": ["physical", "thematic"],
+        "additionalProperties": false
+      },
+      "relation": {
+        "type": "object",
+        "description": "Spatial relation and aggregation parameters.",
+        "properties": {
+          "spatial": {
+            "type": "string",
+            "description": "Type of spatial relation for data aggregation ('buffer', 'nn', 'contains').",
+            "enum": ["buffer", "nn", "contains"],
+            "default": "buffer"
+          },
+          "value": {
+            "type": "number",
+            "description": "Value associated with the spatial relation (e.g., buffer distance).",
+            "default": 5
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of aggregation ('sum', 'mean', 'min', 'max').",
+            "enum": ["sum", "mean", "min", "max"],
+            "default": "mean"
+          }
+        },
+        "additionalProperties": false
       },
       "zoom": {
-        "type": "number",
-        "description": "The zoom level for the map."
+        "type": "array",
+        "description": "The zoom level range for the map, specified as a [minimum_zoom, maximum_zoom] array.",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number",
+          "description": "A single zoom level, typically an integer.",
+          "minimum": 0,
+          "maximum": 22
+        },
+        "default": [18, 18],
+        "examples": [
+          [0, 22],
+          [5, 15],
+          [18, 18]
+        ]
       },
       "method": {
         "type": "string",
-        "description": "The rendering method (e.g., 'line', 'rect', 'matrix').",
-        "enum": ["line", "rect", "matrix"]
+        "description": "The rendering method (e.g., 'line', 'rect', 'matrix', 'point', 'heatmap').",
+        "enum": ["line", "rect", "matrix"],
+        "default": "line"
       },
       "lineOpacity": {
         "oneOf": [
           { "type": "string" },
-          { "type": "number" }
+          { "type": "number", "minimum": 0, "maximum": 1 }
         ],
-        "description": "Opacity for lines, can be a number or a string (e.g., a field name)."
+        "description": "Opacity for lines, can be a number (0-1) or a string (e.g., a field name).",
+        "default": 1
       },
       "lineColor": {
         "type": "string",
-        "description": "Color for lines."
+        "description": "Color for lines (e.g., 'red', '#HEXCODE').",
+        "default": "red"
       },
       "lineType": {
         "type": "string",
-        "description": "Type of line (e.g., 'dashed', 'dotted').",
-        "nullable": true
+        "description": "Type of line (e.g., 'solid', 'dashed', 'dotted').",
+        "default": "solid"
       },
       "lineStrokeWidth": {
         "oneOf": [
           { "type": "string" },
-          { "type": "number" }
+          { "type": "number", "minimum": 0 }
         ],
-        "description": "Stroke width for lines."
+        "description": "Stroke width for lines. Can be a number or a string (field name).",
+        "default": 1
       },
       "lineHeight": {
         "oneOf": [
           { "type": "string" },
-          { "type": "number" }
+          { "type": "number", "minimum": 0 }
         ],
-        "description": "Height for lines."
+        "description": "Height for lines. Can be a number or a string (field name).",
+        "default": 1
       },
-      "chart": {
+      "map": {
         "type": "object",
-        "description": "Optional Vega-Lite chart specification.",
-        "additionalProperties": true,
-        "nullable": true
+        "description": "Map styling properties.",
+        "properties": {
+          "streetColor": {
+            "type": "string",
+            "description": "Color for streets on the map.",
+            "nullable": true
+          },
+          "streetWidth": {
+            "type": "number",
+            "description": "Width for streets on the map.",
+            "minimum": 0,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "orientation": {
         "type": "string",
         "description": "Orientation for rendering (e.g., 'parallel', 'perpendicular').",
-        "enum": ["parallel", "perpendicular"]
+        "enum": ["parallel", "perpendicular"],
+        "nullable": true
       },
       "alignment": {
         "type": "string",
         "description": "Alignment for rendering (e.g., 'left', 'center', 'right').",
-        "enum": ["left", "center", "right"]
-      },
-      "physicalLayerPath": {
-        "type": "string",
-        "description": "Path to the physical layer data (e.g., GeoJSON file).",
+        "enum": ["left", "center", "right"],
         "nullable": true
       },
-      "thematicLayerPath": {
-        "type": "string",
-        "description": "Path to the thematic layer data (e.g., CSV file for points).",
-        "nullable": true
+      "query": {
+        "type": "object",
+        "description": "Parameters for a spatial query.",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Address for a spatial query.",
+            "nullable": true
+          },
+          "radius": {
+            "type": "number",
+            "description": "Radius for a spatial query.",
+            "minimum": 0,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
-      "spatialRelation": {
-        "type": "string",
-        "description": "Type of spatial relation for data aggregation ('buffer', 'nn', 'contains').",
-        "enum": ["buffer", "nn", "contains"]
-      },
-      "spatialRelationValue": {
-        "type": "number",
-        "description": "Value associated with the spatial relation (e.g., buffer distance)."
-      },
-      "aggregationType": {
-        "type": "string",
-        "description": "Type of aggregation ('sum', 'mean', 'min', 'max').",
-        "enum": ["sum", "mean", "min", "max"]
-      },
-      "streetColor": {
-        "type": "string",
-        "description": "Color for streets on the map.",
-        "nullable": true
-      },
-      "streetWidth": {
-        "type": "number",
-        "description": "Width for streets on the map.",
+      "chart": {
+        "type": "object",
+        "description": "Optional Vega-Lite chart specification. Can be any valid JSON object.",
+        "additionalProperties": true,
         "nullable": true
       },
       "methodRow": {
@@ -117,32 +182,11 @@
         "type": "number",
         "description": "Column parameter for methods like 'matrix'.",
         "nullable": true
-      },
-      "queryAddress": {
-        "type": "string",
-        "description": "Address for a spatial query.",
-        "nullable": true
-      },
-      "queryRadius": {
-        "type": "number",
-        "description": "Radius for a spatial query.",
-        "nullable": true
       }
     },
     "required": [
-      "unit",
-      "unitDivide",
-      "zoom",
-      "method",
-      "lineOpacity",
-      "lineColor",
-      "lineStrokeWidth",
-      "lineHeight",
-      "orientation",
-      "alignment",
-      "spatialRelation",
-      "spatialRelationValue",
-      "aggregationType"
+      "data",
+      "splits"
     ],
     "additionalProperties": false
   }

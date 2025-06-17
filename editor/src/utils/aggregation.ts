@@ -2,9 +2,8 @@
 
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
-import { FeatureCollection, Feature, MultiPolygon, Point, Polygon, Position } from 'geojson';
 import { AggregationType, ThematicPoint, GeoJSONData, ProcessedEdge, ParsedSpec } from 'streetweave';
-import { calculateCentroid, calculateMidpoint, calculateDistances, findClosestPoints, filterPointsInBuffer, createBuffer } from './geoHelpers';
+import { calculateMidpoint, calculateDistances, findClosestPoints, filterPointsInBuffer, createBuffer } from './geoHelpers';
 
 
 /**
@@ -62,36 +61,36 @@ export const aggregateValues = (
  * @param aggregationType The type of aggregation.
  * @returns The updated GeoJSON data with aggregated properties.
  */
-const aggregationContainsArea = (
-  geojsonData: GeoJSONData,
-  thematicData: ThematicPoint[],
-  aggregationType: AggregationType
-): GeoJSONData => {
-  if (!geojsonData.features) return geojsonData;
+// const aggregationContainsArea = (
+//   geojsonData: GeoJSONData,
+//   thematicData: ThematicPoint[],
+//   aggregationType: AggregationType
+// ): GeoJSONData => {
+//   if (!geojsonData.features) return geojsonData;
 
-  geojsonData.features.forEach(feature => {
-    const polygon = feature.geometry as Polygon;
-    if (!polygon || !polygon.coordinates || !polygon.coordinates[0]) {
-      console.warn('Skipping feature with invalid polygon geometry:', feature);
-      return;
-    }
+//   geojsonData.features.forEach(feature => {
+//     const polygon = feature.geometry as Polygon;
+//     if (!polygon || !polygon.coordinates || !polygon.coordinates[0]) {
+//       console.warn('Skipping feature with invalid polygon geometry:', feature);
+//       return;
+//     }
 
-    const pointsInPolygon = thematicData.filter(point => {
-      const pointCoordinates: Position = [point.Lon, point.Lat];
-      try {
-        return d3.polygonContains(polygon.coordinates[0] as [number, number][], pointCoordinates as [number, number]);
-      } catch (err) {
-        console.error('Error checking point in polygon:', err);
-        return false;
-      }
-    });
-    feature.properties = {
-      ...feature.properties,
-      ...aggregateValues(pointsInPolygon, aggregationType, thematicData)
-    };
-  });
-  return geojsonData;
-};
+//     const pointsInPolygon = thematicData.filter(point => {
+//       const pointCoordinates: Position = [point.Lon, point.Lat];
+//       try {
+//         return d3.polygonContains(polygon.coordinates[0] as [number, number][], pointCoordinates as [number, number]);
+//       } catch (err) {
+//         console.error('Error checking point in polygon:', err);
+//         return false;
+//       }
+//     });
+//     feature.properties = {
+//       ...feature.properties,
+//       ...aggregateValues(pointsInPolygon, aggregationType, thematicData)
+//     };
+//   });
+//   return geojsonData;
+// };
 
 /**
  * Aggregates thematic data for edge segments based on point-in-polygon containment (using a buffer).
@@ -143,33 +142,33 @@ const aggregationContainsSegment = (
  * @param aggregationType The type of aggregation.
  * @returns The updated GeoJSON data with aggregated properties.
  */
-const aggregateAreaNearestNeighbor = (
-  geojsonData: FeatureCollection<MultiPolygon | Polygon>,
-  thematicData: ThematicPoint[],
-  aggregationType: AggregationType
-): FeatureCollection<MultiPolygon | Polygon> => {
-  geojsonData.features.forEach((feature) => {
-    if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-      console.warn('Skipping feature with unsupported or missing geometry:', feature);
-      return;
-    }
+// const aggregateAreaNearestNeighbor = (
+//   geojsonData: FeatureCollection<MultiPolygon | Polygon>,
+//   thematicData: ThematicPoint[],
+//   aggregationType: AggregationType
+// ): FeatureCollection<MultiPolygon | Polygon> => {
+//   geojsonData.features.forEach((feature) => {
+//     if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+//       console.warn('Skipping feature with unsupported or missing geometry:', feature);
+//       return;
+//     }
 
-    let centroid: Feature<Point>;
-    try {
-      centroid = calculateCentroid(feature.geometry);
-    } catch (err) {
-      console.error('Error computing centroid:', err);
-      return;
-    }
+//     let centroid: Feature<Point>;
+//     try {
+//       centroid = calculateCentroid(feature.geometry);
+//     } catch (err) {
+//       console.error('Error computing centroid:', err);
+//       return;
+//     }
 
-    const distances = calculateDistances(centroid, thematicData);
-    const closestPoints = findClosestPoints(distances, thematicData);
-    const aggregatedValues = aggregateValues(closestPoints, aggregationType, thematicData);
+//     const distances = calculateDistances(centroid, thematicData);
+//     const closestPoints = findClosestPoints(distances, thematicData);
+//     const aggregatedValues = aggregateValues(closestPoints, aggregationType, thematicData);
 
-    feature.properties = { ...feature.properties, ...aggregatedValues };
-  });
-  return geojsonData;
-};
+//     feature.properties = { ...feature.properties, ...aggregatedValues };
+//   });
+//   return geojsonData;
+// };
 
 /**
  * Aggregates thematic data for each edge segment based on nearest neighbors to the midpoint.
@@ -213,39 +212,39 @@ const aggregateSegmentNearestNeighbor = (
  * @param aggregationType The type of aggregation.
  * @returns The updated GeoJSON data with aggregated properties.
  */
-const aggregateAreaBuffer = (
-  geojsonData: FeatureCollection<MultiPolygon | Polygon>,
-  environmentalData: ThematicPoint[],
-  bufferDistance: number,
-  aggregationType: AggregationType
-): FeatureCollection<MultiPolygon | Polygon> => {
-  geojsonData.features.forEach(feature => {
-    if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-      console.warn("Invalid geometry, skipping feature:", feature);
-      return;
-    }
+// const aggregateAreaBuffer = (
+//   geojsonData: FeatureCollection<MultiPolygon | Polygon>,
+//   environmentalData: ThematicPoint[],
+//   bufferDistance: number,
+//   aggregationType: AggregationType
+// ): FeatureCollection<MultiPolygon | Polygon> => {
+//   geojsonData.features.forEach(feature => {
+//     if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+//       console.warn("Invalid geometry, skipping feature:", feature);
+//       return;
+//     }
 
-    let centroid: Feature<Point>;
-    try {
-      centroid = calculateCentroid(feature.geometry);
-    } catch (e) {
-      console.error("Failed to calculate centroid:", e);
-      return;
-    }
+//     let centroid: Feature<Point>;
+//     try {
+//       centroid = calculateCentroid(feature.geometry);
+//     } catch (e) {
+//       console.error("Failed to calculate centroid:", e);
+//       return;
+//     }
 
-    const buffer = createBuffer(centroid, bufferDistance);
-    if (!buffer) {
-      console.warn("Invalid buffer, skipping feature.");
-      return;
-    }
+//     const buffer = createBuffer(centroid, bufferDistance);
+//     if (!buffer) {
+//       console.warn("Invalid buffer, skipping feature.");
+//       return;
+//     }
 
-    const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
-    const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
+//     const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
+//     const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
 
-    feature.properties = { ...feature.properties, ...aggregatedValues };
-  });
-  return geojsonData;
-};
+//     feature.properties = { ...feature.properties, ...aggregatedValues };
+//   });
+//   return geojsonData;
+// };
 
 /**
  * Aggregates thematic data for edge segments based on a buffer around their midpoint.
@@ -301,23 +300,14 @@ export async function applySpatialAggregation(
   thematicData: ThematicPoint[],
   layerSpec: ParsedSpec
 ): Promise<GeoJSONData | ProcessedEdge[]> {
-  if (layerSpec.unit === 'area') {
-    const geojsonData = physicalData as GeoJSONData;
-    if (layerSpec.spatialRelation === 'contains') {
-      return aggregationContainsArea(geojsonData, thematicData, layerSpec.aggregationType!);
-    } else if (layerSpec.spatialRelation === 'nn') {
-      return aggregateAreaNearestNeighbor(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.aggregationType!);
-    } else if (layerSpec.spatialRelation === 'buffer') {
-      return aggregateAreaBuffer(geojsonData as FeatureCollection<MultiPolygon | Polygon>, thematicData, layerSpec.spatialRelationValue!, layerSpec.aggregationType!);
-    }
-  } else if (layerSpec.unit === 'segment' || layerSpec.unit === 'node') {
+  if (layerSpec.unit === 'segment' || layerSpec.unit === 'node') {
     const edgesData = physicalData as any[]; // Raw edges array
-    if (layerSpec.spatialRelation === 'contains') {
-      return aggregationContainsSegment(edgesData, thematicData, layerSpec.aggregationType!);
-    } else if (layerSpec.spatialRelation === 'nn') {
-      return aggregateSegmentNearestNeighbor(edgesData, thematicData, layerSpec.aggregationType!);
-    } else if (layerSpec.spatialRelation === 'buffer') {
-      return aggregateSegmentBuffer(edgesData, thematicData, layerSpec.spatialRelationValue!, layerSpec.aggregationType!);
+    if (layerSpec.relation?.spatial === 'contains') {
+      return aggregationContainsSegment(edgesData, thematicData, layerSpec.relation.type!);
+    } else if (layerSpec.relation?.spatial === 'nn') {
+      return aggregateSegmentNearestNeighbor(edgesData, thematicData, layerSpec.relation.type!);
+    } else if (layerSpec.relation?.spatial === 'buffer') {
+      return aggregateSegmentBuffer(edgesData, thematicData, layerSpec.relation.value!, layerSpec.relation.type!);
     }
   }
   // Return unchanged if no aggregation matches or if unit is not recognized

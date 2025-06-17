@@ -35,7 +35,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   })
 
    useEffect(() => {
-    const address = parsedSpec[0].queryAddress;
+    const address = parsedSpec[0].query?.address;
     if (address) {
       fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`)
         .then(response => response.json())
@@ -48,11 +48,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     } else {
       setAddressCoords(null);
     }
-  }, [parsedSpec[0].queryAddress]);
+  }, [parsedSpec[0].query?.address]);
 
   useEffect(() => {
-    if (parsedSpec[0] && parsedSpec[0].streetWidth !== undefined) {
-      setMimicWidth(parsedSpec[0].streetWidth);
+    if (parsedSpec[0] && parsedSpec[0].map?.streetWidth !== undefined) {
+      setMimicWidth(parsedSpec[0].map.streetWidth);
     }
   }, [parsedSpec]);
 
@@ -60,15 +60,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     // if (!mapInstanceRef.current) return
 
     if (mapRef.current) {
-      const initialZoom = parsedSpec[0]?.zoom || 12;
+      const initialZoom = 18;
       let initialLat: number = 41.8781
       let initialLon: number = -87.6298
 
-      if(parsedSpec[0].unit == 'area'){
-        initialLat = 41.8781;
-        initialLon = -87.6298;
-
-      } else if(parsedSpec[0].unit == 'segment'){
+      if(parsedSpec[0].unit == 'segment'){
 
         initialLat = 41.802515601319314;
         initialLon = -87.64537972052756;
@@ -101,9 +97,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             prev.then(() => {
               // compute Lat/Lon for this spec
               let tLat: number, tLon: number;
-              if (spec.unit === 'area') {
-                tLat = 41.8781; tLon = -87.6298;
-              } else if (spec.unit === 'segment') {
+              if (spec.unit === 'segment') {
                 tLat = 41.802515601319314; tLon = -87.64537972052756;
               } else {
                 tLat = 41.80159035804221; tLon = -87.64538029790135;
@@ -111,14 +105,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
               return new Promise<void>(resolve => {
                 mapInstanceRef.current!
-                  .flyTo([tLat, tLon], spec.zoom, { duration: 1 })
+                  .flyTo([tLat, tLon], 18, { duration: 1 })
                   .once('moveend', () => resolve());
               });
             }),
           // start the chain by first flying from the current view to the first element
           new Promise<void>(resolve => {
             mapInstanceRef.current!
-              .flyTo([initialLat, initialLon], parsedSpec[0].zoom, { duration: 1 })
+              .flyTo([initialLat, initialLon], 18, { duration: 1 })
               .once('moveend', () => resolve());
           })
         );
@@ -127,7 +121,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     }
   }, [parsedSpec]);
   
-    // ================== 2) RIGHT-CLICK => OPEN MINI-MAP POPUP ==================
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -181,7 +174,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   useEffect(() => {
     if (mimicLayerRef.current) {
       mimicLayerRef.current.eachLayer((layer: any) => {
-        const defaultWeight = parsedSpec[0].streetWidth;
+        const defaultWeight = parsedSpec[0].map?.streetWidth;
         let shouldUpdate = true;
 
         // if (parsedSpec[0].roadDirection) {
@@ -197,13 +190,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const lineFeature = turf.lineString(layer.feature.geometry.coordinates);
           const distance = turf.pointToLineDistance(addressPoint, lineFeature, { units: "meters" as turf.Units });
           
-          if (distance > Number(parsedSpec[0].queryRadius)) {
+          if (distance > Number(parsedSpec[0].query?.radius)) {
             shouldUpdate = false;
           }
         }
 
         layer.setStyle({
-          color: parsedSpec[0].streetColor ? parsedSpec[0].streetColor : '#d3d3d6',
+          color: parsedSpec[0].map?.streetColor ? parsedSpec[0].map?.streetColor : '#d3d3d6',
           weight: shouldUpdate ? mimicWidth : defaultWeight,
           opacity: 0.8
         });
@@ -264,20 +257,20 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.physicalLayerPath}`);
+      const physicalData: any = await d3.json(`/data/${layerSpec.data.physicalLayer}`);
       if (!physicalData?.edges) {
         console.error("Physical data is missing edges or is invalid for segment layer.");
         return;
       }
 
-      const thematicData: any = layerSpec.thematicLayerPath
-        ? await d3.json(`/data/${layerSpec.thematicLayerPath}`)
+      const thematicData: any = layerSpec.data.thematicLayer
+        ? await d3.json(`/data/${layerSpec.data.thematicLayer}`)
         : [];
 
       let initialEdges = physicalData.edges;
 
       // Step 1: Subdivide edges if unitDivide is specified
-      if (layerSpec.unitDivide && layerSpec.unitDivide > 1) {
+      if (layerSpec.splits && layerSpec.splits > 1) {
         const subdivided: any[] = [];
         initialEdges.forEach((edge: any) => {
           const [start, end, ...extras] = edge;
@@ -286,18 +279,18 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const dLat = lat1 - lat0, dLon = lon1 - lon0;
 
           let startIndex = 0;
-          let endIndex = layerSpec.unitDivide;
-          if (layerSpec.unitDivide >= 20) {
+          let endIndex = layerSpec.splits;
+          if (layerSpec.splits >= 20) {
             startIndex = 5;
-            endIndex = layerSpec.unitDivide - 5;
-          } else if (layerSpec.unitDivide >= 10 && layerSpec.unitDivide < 20) {
+            endIndex = layerSpec.splits - 5;
+          } else if (layerSpec.splits >= 10 && layerSpec.splits < 20) {
             startIndex = 1;
-            endIndex = layerSpec.unitDivide - 1;
+            endIndex = layerSpec.splits - 1;
           }
 
           for (let i = startIndex; i < endIndex; i++) {
-            const segStart = { lat: lat0 + dLat * (i / layerSpec.unitDivide), lon: lon0 + dLon * (i / layerSpec.unitDivide) };
-            const segEnd = { lat: lat0 + dLat * ((i + 1) / layerSpec.unitDivide), lon: lon0 + dLon * ((i + 1) / layerSpec.unitDivide) };
+            const segStart = { lat: lat0 + dLat * (i / layerSpec.splits), lon: lon0 + dLon * (i / layerSpec.splits) };
+            const segEnd = { lat: lat0 + dLat * ((i + 1) / layerSpec.splits), lon: lon0 + dLon * ((i + 1) / layerSpec.splits) };
             subdivided.push([segStart, segEnd, ...extras]);
           }
         });
@@ -571,7 +564,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current.push(svgLayer);
 
     } catch (error) {
-      console.error(`Error rendering segment layer for ${layerSpec.physicalLayerPath}:`, error);
+      console.error(`Error rendering segment layer for ${layerSpec.data.physicalLayer}:`, error);
     }
   };
 
@@ -587,14 +580,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     currentLayersRef: React.MutableRefObject<L.Layer[]>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.physicalLayerPath}`);
+      const physicalData: any = await d3.json(`/data/${layerSpec.data.physicalLayer}`);
       if (!physicalData?.edges) {
         console.error("Physical data is missing edges or is invalid for node layer.");
         return;
       }
 
-      const thematicData: any = layerSpec.thematicLayerPath
-        ? await d3.json(`/data/${layerSpec.thematicLayerPath}`)
+      const thematicData: any = layerSpec.data.thematicLayer
+        ? await d3.json(`/data/${layerSpec.data.thematicLayer}`)
         : [];
 
       // Aggregates thematic data onto the edges first
@@ -683,7 +676,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current.push(svgLayer);
 
     } catch (error) {
-      console.error(`Error rendering node layer for ${layerSpec.physicalLayerPath}:`, error);
+      console.error(`Error rendering node layer for ${layerSpec.data.physicalLayer}:`, error);
     }
   };
 
