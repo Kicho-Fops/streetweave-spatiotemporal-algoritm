@@ -59,48 +59,37 @@ export interface EdgeStyleProps {
 // DEFINING ParsedSpec here
 export interface ParsedSpec {
   name?: string;
-  unit: "segment" | "node" | "point";
-  splits: number;
-
-  // New 'data' object structure
-  data: { // Required by schema
-    physicalLayer: string; // Required by schema
-    thematicLayer: string; // Required by schema
+  unit: {
+    type: "segment" | "node" | "point";
+    splits: number; 
+    method?: "line" | "rect" | "matrix"; // Optional due to default in schema
+    opacity?: string | number; // Optional due to default in schema, oneOf string/number
+    color?: string; // Optional due to default in schema
+    style?: string; // Optional due to default in schema
+    width?: string | number; // Optional due to default in schema, oneOf string/number
+    height?: string | number; // Optional due to default in schema, oneOf string/number
+    chart?: any; // Optional/nullable
+    rows?: number; // Optional/nullable
+    columns?: number; // Optional/nullable
+    orientation?: "parallel" | "perpendicular"; // Optional due to default in schema
+    alignment?: "left" | "center" | "right"; // Optional due to default in schema
   };
-
-  // New 'relation' object structure
-  relation?: { // Optional as per schema, but internal properties have defaults
-    spatial?: SpatialRelationType; // Has default in schema
-    value?: number; // Has default in schema
-    type?: AggregationType; // Has default in schema
+  data: {
+    physical: string; // Required
+    thematic: string; // Required
   };
-
-  zoom?: [number, number]; // Changed to array of two numbers as per schema
-
-  method?: "line" | "rect" | "matrix"; // Restricted enum, optional with default in schema
-  lineOpacity?: number; // Optional with default in schema
-  lineColor?: string; // Optional with default in schema
-  lineType?: string; // Optional with default in schema ("solid")
-  lineStrokeWidth?: number; // Optional with default in schema
-  lineHeight?: number; // Optional with default in schema
-
-  // New 'map' object structure
-  map?: { // Optional
-    streetColor?: string;
-    streetWidth?: number;
+  relation?: { // Optional
+    spatial?: SpatialRelationType; // Optional due to default
+    value?: number; // Optional due to default
+    type?: AggregationType; // Optional due to default
   };
-
-  orientation?: "parallel" | "perpendicular"; // Optional with enum
-  alignment?: "left" | "center" | "right"; // Optional with enum
-
-  // New 'query' object structure
-  query?: { // Optional
-    address?: string; // Optional in schema
-    radius?: number; // Optional in schema
+  zoom?: [number, number]; // Optional due to default
+  map?: {
+    streetColor?: string; // Optional/nullable
+    streetWidth?: number; // Optional/nullable
   };
-
-  chart?: any;
-  methodRow?: number;
-  methodColumn?: number;
-
+  query?: {
+    address?: string; // Optional/nullable
+    radius?: number; // Optional/nullable
+  };
 }

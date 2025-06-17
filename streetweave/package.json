@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@turf/turf": "^7.1.0",
+    "@types/ajv": "^1.0.4",
     "@types/leaflet": "^1.9.12",
     "d3": "^7.9.0",
     "leaflet": "^1.9.4",
@@ -44,6 +45,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",

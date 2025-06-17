@@ -300,7 +300,7 @@ export async function applySpatialAggregation(
   thematicData: ThematicPoint[],
   layerSpec: ParsedSpec
 ): Promise<GeoJSONData | ProcessedEdge[]> {
-  if (layerSpec.unit === 'segment' || layerSpec.unit === 'node') {
+  if (layerSpec.unit.type === 'segment' || layerSpec.unit.type === 'node') {
     const edgesData = physicalData as any[]; // Raw edges array
     if (layerSpec.relation?.spatial === 'contains') {
       return aggregationContainsSegment(edgesData, thematicData, layerSpec.relation.type!);

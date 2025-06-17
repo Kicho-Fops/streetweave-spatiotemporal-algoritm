@@ -64,12 +64,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       let initialLat: number = 41.8781
       let initialLon: number = -87.6298
 
-      if(parsedSpec[0].unit == 'segment'){
+      if(parsedSpec[0].unit.type == 'segment'){
 
         initialLat = 41.802515601319314;
         initialLon = -87.64537972052756;
 
-      } else if(parsedSpec[0].unit == 'node'){
+      } else if(parsedSpec[0].unit.type == 'node'){
         initialLat = 41.80159035804221;
         initialLon = -87.64538029790135;
       }
@@ -97,7 +97,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             prev.then(() => {
               // compute Lat/Lon for this spec
               let tLat: number, tLon: number;
-              if (spec.unit === 'segment') {
+              if (spec.unit.type === 'segment') {
                 tLat = 41.802515601319314; tLon = -87.64537972052756;
               } else {
                 tLat = 41.80159035804221; tLon = -87.64538029790135;
@@ -224,11 +224,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         if (mapInstanceRef.current !== null) {
           mapInstanceRef.current.off('move zoom');
   
-          if (layerSpec.unit === 'segment'){
+          if (layerSpec.unit.type === 'segment'){
             renderSegmentLayer(mapInstanceRef.current, layerSpec, index, currentLayersRef, alignmentCounters);
           }
   
-          else if(layerSpec.unit === 'node'){
+          else if(layerSpec.unit.type === 'node'){
             renderNodeLayer(mapInstanceRef.current, layerSpec, currentLayersRef);
           }
   
@@ -257,20 +257,20 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.data.physicalLayer}`);
+      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical}`);
       if (!physicalData?.edges) {
         console.error("Physical data is missing edges or is invalid for segment layer.");
         return;
       }
 
-      const thematicData: any = layerSpec.data.thematicLayer
-        ? await d3.json(`/data/${layerSpec.data.thematicLayer}`)
+      const thematicData: any = layerSpec.data.thematic
+        ? await d3.json(`/data/${layerSpec.data.thematic}`)
         : [];
 
       let initialEdges = physicalData.edges;
 
       // Step 1: Subdivide edges if unitDivide is specified
-      if (layerSpec.splits && layerSpec.splits > 1) {
+      if (layerSpec.unit.splits && layerSpec.unit.splits > 1) {
         const subdivided: any[] = [];
         initialEdges.forEach((edge: any) => {
           const [start, end, ...extras] = edge;
@@ -279,18 +279,18 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const dLat = lat1 - lat0, dLon = lon1 - lon0;
 
           let startIndex = 0;
-          let endIndex = layerSpec.splits;
-          if (layerSpec.splits >= 20) {
+          let endIndex = layerSpec.unit.splits;
+          if (layerSpec.unit.splits >= 20) {
             startIndex = 5;
-            endIndex = layerSpec.splits - 5;
-          } else if (layerSpec.splits >= 10 && layerSpec.splits < 20) {
+            endIndex = layerSpec.unit.splits - 5;
+          } else if (layerSpec.unit.splits >= 10 && layerSpec.unit.splits < 20) {
             startIndex = 1;
-            endIndex = layerSpec.splits - 1;
+            endIndex = layerSpec.unit.splits - 1;
           }
 
           for (let i = startIndex; i < endIndex; i++) {
-            const segStart = { lat: lat0 + dLat * (i / layerSpec.splits), lon: lon0 + dLon * (i / layerSpec.splits) };
-            const segEnd = { lat: lat0 + dLat * ((i + 1) / layerSpec.splits), lon: lon0 + dLon * ((i + 1) / layerSpec.splits) };
+            const segStart = { lat: lat0 + dLat * (i / layerSpec.unit.splits), lon: lon0 + dLon * (i / layerSpec.unit.splits) };
+            const segEnd = { lat: lat0 + dLat * ((i + 1) / layerSpec.unit.splits), lon: lon0 + dLon * ((i + 1) / layerSpec.unit.splits) };
             subdivided.push([segStart, segEnd, ...extras]);
           }
         });
@@ -311,7 +311,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       });
 
       // Clear existing layers from relevant panes to prevent duplicates on redraw
-      const paneName = layerSpec.alignment === "center" ? 'overlayPane' : `${layerSpec.alignment}-${layerSpec.orientation}`;
+      const paneName = layerSpec.unit.alignment === "center" ? 'overlayPane' : `${layerSpec.unit.alignment}-${layerSpec.unit.orientation}`;
       if (!map.getPane(paneName)) {
         map.createPane(paneName);
         map.getPane(paneName)!.style.zIndex = '400';
@@ -320,13 +320,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       // Create Leaflet SVG layer and D3 group
       const svgLayer = L.svg({ pane: paneName }).addTo(map);
-      (svgLayer as any).layerGroup = layerSpec.alignment; // Custom property for identification
+      (svgLayer as any).layerGroup = layerSpec.unit.alignment; // Custom property for identification
       const svgGroup = d3.select(map.getPanes()[paneName]).select("svg").append("g").attr("class", "leaflet-zoom-hide");
 
       // Increment alignment counters for parallel/perpendicular rendering
-      if (layerSpec.alignment === "left") {
+      if (layerSpec.unit.alignment === "left") {
         alignmentCountersRef.current.left++;
-      } else if (layerSpec.alignment === "right") {
+      } else if (layerSpec.unit.alignment === "right") {
         alignmentCountersRef.current.right++;
       }
 
@@ -347,9 +347,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           let currentEndPoint = edge[1];
           const currentBearing = bearingBetweenPoints(edge[0].lat, edge[0].lon, edge[1].lat, edge[1].lon);
 
-          if (layerSpec.alignment === "left" || layerSpec.alignment === "right") {
-            const offsetAngle = layerSpec.alignment === "left" ? currentBearing - 90 : currentBearing + 90;
-            const distance = getOffsetDistance(map) * (layerSpec.alignment === "left" ? alignmentCountersRef.current.left : alignmentCountersRef.current.right);
+          if (layerSpec.unit.alignment === "left" || layerSpec.unit.alignment === "right") {
+            const offsetAngle = layerSpec.unit.alignment === "left" ? currentBearing - 90 : currentBearing + 90;
+            const distance = getOffsetDistance(map) * (layerSpec.unit.alignment === "left" ? alignmentCountersRef.current.left : alignmentCountersRef.current.right);
 
             const offsetStartCoords = offsetPoint(edge[0].lat, edge[0].lon, offsetAngle, distance);
             const offsetEndCoords = offsetPoint(edge[1].lat, edge[1].lon, offsetAngle, distance);
@@ -360,7 +360,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const pointsForRendering = [{ lat: currentStartPoint.lat, lon: currentStartPoint.lon }, { lat: currentEndPoint.lat, lon: currentEndPoint.lon }];
           // Retrieve dynamic styles using the helper
           const lineColor = getDynamicStyleValue(
-            layerSpec.lineColor,
+            layerSpec.unit.color,
             edge,
             processedEdges,
             null,
@@ -369,20 +369,20 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           ) as string || 'red';
           
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const baseLineWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, edge, processedEdges, [0, 10]) as number ?? 5;
+          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge, processedEdges, [0, 10]) as number ?? 5;
           const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
 
-          const lineOpacity = getDynamicStyleValue(layerSpec.lineOpacity, edge, processedEdges, [0, 1]) as number ?? 1;
+          const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge, processedEdges, [0, 1]) as number ?? 1;
 
-          const dashArray = getDashArray(layerSpec.lineType, layerSpec.lineType, edge, processedEdges);
-          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.lineType, layerSpec.lineType, edge, processedEdges);
+          const dashArray = getDashArray(layerSpec.unit.style, layerSpec.unit.style, edge, processedEdges);
+          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.style, layerSpec.unit.style, edge, processedEdges);
 
-          if (layerSpec.method === 'line') {
+          if (layerSpec.unit.method === 'line') {
             const lineGenerator = d3.line<any>()
               .x((d: any) => projectPoint(map, d.lat, d.lon)[0])
               .y((d: any) => projectPoint(map, d.lat, d.lon)[1]);
 
-            if (layerSpec.lineType === 'squiggle') {
+            if (layerSpec.unit.style === 'squiggle') {
               const point1 = L.point(projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[0], projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[1]);
               const point2 = L.point(projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[0], projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[1]);
               const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
@@ -402,9 +402,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 .style("stroke-dasharray", dashArray)
                 .attr("fill", "none");
             }
-          } else if (layerSpec.method === 'matrix') {
-            const methodColumn = layerSpec.methodColumn || 1;
-            const methodRow = layerSpec.methodRow || 1;
+          } else if (layerSpec.unit.method === 'matrix') {
+            const methodColumn = layerSpec.unit.columns || 1;
+            const methodRow = layerSpec.unit.rows || 1;
             const currentOffsetDistance = getOffsetDistance(map);
 
             for (let row = 0; row < methodRow; row++) {
@@ -440,19 +440,19 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                   .attr("fill", "none");
               }
             }
-          } else if (layerSpec.method === 'rect') {
-            const baseHeight = getDynamicStyleValue(layerSpec.lineHeight, edge, processedEdges, [0, 7]) as number ?? 5;
+          } else if (layerSpec.unit.method === 'rect') {
+            const baseHeight = getDynamicStyleValue(layerSpec.unit.height, edge, processedEdges, [0, 7]) as number ?? 5;
             const rectWidth = getAdjustedLineWidth(map, baseHeight);
             const inset = 5;
 
-            if (layerSpec.orientation === 'parallel') {
+            if (layerSpec.unit.orientation === 'parallel') {
               let offsetBearing = 0;
               let currentMultiplier = 0;
 
-              if (layerSpec.alignment === "left") {
+              if (layerSpec.unit.alignment === "left") {
                 offsetBearing = (currentBearing + 270) % 360;
                 currentMultiplier = alignmentCountersRef.current.left;
-              } else if (layerSpec.alignment === "right") {
+              } else if (layerSpec.unit.alignment === "right") {
                 offsetBearing = (currentBearing + 90) % 360;
                 currentMultiplier = alignmentCountersRef.current.right;
               }
@@ -461,7 +461,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               const [eOffsetLat, eOffsetLon] = offsetPoint(currentEndPoint.lat, currentEndPoint.lon, offsetBearing, inset + (currentMultiplier * rectWidth));
 
               const lineBearing = bearingBetweenPoints(sOffsetLat, sOffsetLon, eOffsetLat, eOffsetLon);
-              const outwardBearing = layerSpec.alignment === "left" ? (lineBearing + 270) % 360 : (lineBearing + 90) % 360;
+              const outwardBearing = layerSpec.unit.alignment === "left" ? (lineBearing + 270) % 360 : (lineBearing + 90) % 360;
 
               const [s2Lat, s2Lon] = offsetPoint(sOffsetLat, sOffsetLon, outwardBearing, rectWidth);
               const [e2Lat, e2Lon] = offsetPoint(eOffsetLat, eOffsetLon, outwardBearing, rectWidth);
@@ -478,14 +478,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 .style("fill", lineColor)
                 .style("fill-opacity", lineOpacity)
                 .style("stroke", 'none');
-            } else if (layerSpec.orientation === 'perpendicular') {
+            } else if (layerSpec.unit.orientation === 'perpendicular') {
               const midLat = (currentStartPoint.lat + currentEndPoint.lat) / 2;
               const midLon = (currentStartPoint.lon + currentEndPoint.lon) / 2;
 
               let offsetBearing = 0;
-              if (layerSpec.alignment === "left") {
+              if (layerSpec.unit.alignment === "left") {
                 offsetBearing = (currentBearing + 270) % 360;
-              } else if (layerSpec.alignment === "right") {
+              } else if (layerSpec.unit.alignment === "right") {
                 offsetBearing = (currentBearing + 90) % 360;
               }
 
@@ -503,8 +503,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 .style("stroke-width", lineWidth)
                 .style("stroke-linecap", "round");
             }
-          } else if (layerSpec.chart) {
-            const templateSpec = layerSpec.chart;
+          } else if (layerSpec.unit.chart) {
+            const templateSpec = layerSpec.unit.chart;
             const svgChartWidth = 150, svgChartHeight = 150;
             const pane = map.getPanes().overlayPane;
 
@@ -564,7 +564,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current.push(svgLayer);
 
     } catch (error) {
-      console.error(`Error rendering segment layer for ${layerSpec.data.physicalLayer}:`, error);
+      console.error(`Error rendering segment layer for ${layerSpec.data.physical}:`, error);
     }
   };
 
@@ -580,14 +580,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     currentLayersRef: React.MutableRefObject<L.Layer[]>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.data.physicalLayer}`);
+      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical}`);
       if (!physicalData?.edges) {
         console.error("Physical data is missing edges or is invalid for node layer.");
         return;
       }
 
-      const thematicData: any = layerSpec.data.thematicLayer
-        ? await d3.json(`/data/${layerSpec.data.thematicLayer}`)
+      const thematicData: any = layerSpec.data.thematic
+        ? await d3.json(`/data/${layerSpec.data.thematic}`)
         : [];
 
       // Aggregates thematic data onto the edges first
@@ -604,15 +604,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
         nodesList.forEach(node => {
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const shapeColor = getDynamicStyleValue(layerSpec.lineColor, node, nodesList, null, d3.interpolateBuGn) as string || 'red';
-          const shapeWidth = getDynamicStyleValue(layerSpec.lineStrokeWidth, node, nodesList, [5, 30]) as number ?? 5;
+          const shapeColor = getDynamicStyleValue(layerSpec.unit.color, node, nodesList, null, d3.interpolateBuGn) as string || 'red';
+          const shapeWidth = getDynamicStyleValue(layerSpec.unit.width, node, nodesList, [5, 30]) as number ?? 5;
           // const shapeHeight = getDynamicStyleValue(layerSpec.lineHeight, node, nodesList, [5, 30]) as number ?? 5;
-          const shapeOpacity = getDynamicStyleValue(layerSpec.lineOpacity, node, nodesList, [0, 1]) as number ?? 1;
+          const shapeOpacity = getDynamicStyleValue(layerSpec.unit.opacity, node, nodesList, [0, 1]) as number ?? 1;
 
           const pt = L.point(projectPoint(map, node.lat, node.lon)[0], projectPoint(map, node.lat, node.lon)[1]);
 
-          if (layerSpec.chart) {
-            const templateSpec = layerSpec.chart;
+          if (layerSpec.unit.chart) {
+            const templateSpec = layerSpec.unit.chart;
             const svgChartWidth = 150, svgChartHeight = 150;
             const pane = map.getPanes().overlayPane;
 
@@ -676,7 +676,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current.push(svgLayer);
 
     } catch (error) {
-      console.error(`Error rendering node layer for ${layerSpec.data.physicalLayer}:`, error);
+      console.error(`Error rendering node layer for ${layerSpec.data.physical}:`, error);
     }
   };
 
