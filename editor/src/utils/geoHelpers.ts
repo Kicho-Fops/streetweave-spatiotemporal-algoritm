@@ -1,5 +1,6 @@
 // src/utils/geoHelpers.ts
 
+import * as d3 from 'd3';
 import * as turf from '@turf/turf';
 import { Feature, MultiPolygon, Point, Polygon } from 'geojson';
 import { ThematicPoint } from 'streetweave';
@@ -58,7 +59,7 @@ export const calculateDistances = (
   thematicData: ThematicPoint[]
 ): { index: number; distance: number }[] => {
   return thematicData.map((point, index) => {
-    const pointCoords = turf.point([point.Lon, point.Lat]);
+    const pointCoords = turf.point([point.lon, point.lat]);
     const distance = calculateDistance(centroid, pointCoords);
     return { index, distance };
   });
@@ -106,7 +107,7 @@ export function filterPointsInBuffer(
   points: ThematicPoint[]
 ): ThematicPoint[] {
   return points.filter(point => {
-    const pointCoords = turf.point([point.Lon, point.Lat]);
+    const pointCoords = turf.point([point.lon, point.lat]);
     return turf.booleanPointInPolygon(pointCoords, buffer);
   });
 }
@@ -206,4 +207,47 @@ export function normalizeSegment(segment: any[]): void { // Using any[] here as 
     bearing -= 180;
   }
   segment[2].Bearing = bearing;
+}
+
+export async function loadThematicData(
+  path: string,
+  latColumnName: string,
+  lonColumnName: string
+): Promise<ThematicPoint[]> {
+  const processedData: ThematicPoint[] = [];
+
+  const thematicData = await d3.csv(`/data/${path}`);
+
+  for (const d of thematicData) {
+    const newRow: any = { ...d }; // Start with a copy of the original row
+
+    let lat: number | null = null;
+    let lon: number | null = null;
+
+    // Process latitude
+    if (d[latColumnName] !== undefined && d[latColumnName] !== null) {
+      const parsedLat = parseFloat(d[latColumnName]);
+      if (!isNaN(parsedLat)) {
+        lat = parsedLat;
+      }
+    }
+
+    // Process longitude
+    if (d[lonColumnName] !== undefined && d[lonColumnName] !== null) {
+      const parsedLon = parseFloat(d[lonColumnName]);
+      if (!isNaN(parsedLon)) {
+        lon = parsedLon;
+      }
+    }
+
+    if (lat !== null && lon !== null) {
+      newRow.lat = lat;
+      newRow.lon = lon;
+      processedData.push(newRow);
+    } else {
+      console.warn(`Skipping row due to invalid/missing lat/lon: Original data for latCol '${latColumnName}': '${d[latColumnName]}', lonCol '${lonColumnName}': '${d[lonColumnName]}'`, d);
+    }
+  }
+
+  return processedData;
 }

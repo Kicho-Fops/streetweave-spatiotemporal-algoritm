@@ -102,15 +102,40 @@
         "description": "Paths to physical and thematic data layers.",
         "properties": {
           "physical": {
-            "type": "string",
-            "description": "Path to the physical layer data (e.g., GeoJSON file)."
+            "type": "object",
+            "description": "Configuration for the physical layer data (e.g., GeoJSON file).",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Path to the physical layer data file."
+              }
+            },
+            "required": ["path"],
+            "additionalProperties": false
           },
-          "thematic": {
-            "type": "string",
-            "description": "Path to the thematic layer data (e.g., CSV file for points)."
+          "thematic": { 
+            "type": "object",
+            "description": "Configuration for the thematic layer data (e.g., CSV file for points).",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Path to the thematic layer data file."
+              },
+              "latColumn": {
+                "type": "string",
+                "description": "Name of the latitude column in the thematic data.",
+                "default": "lat"
+              },
+              "lonColumn": {
+                "type": "string",
+                "description": "Name of the longitude column in the thematic data.",
+                "default": "lon"
+              }
+            },
+            "required": ["path"],
+            "additionalProperties": false
           }
         },
-        "required": ["physical", "thematic"],
         "additionalProperties": false
       },
       "relation": {
@@ -154,12 +179,6 @@
           [5, 15],
           [18, 18]
         ]
-      },
-      "method": {
-        "type": "string",
-        "description": "The rendering method (e.g., 'line', 'rect', 'matrix', 'point', 'heatmap').",
-        "enum": ["line", "rect", "matrix"],
-        "default": "line"
       },
       "map": {
         "type": "object",
@@ -210,10 +229,6 @@
         "additionalProperties": false
       }
     },
-    "required": [
-      "data",
-      "unit"
-    ],
     "additionalProperties": false
   }
 }

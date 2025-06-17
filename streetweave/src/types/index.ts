@@ -75,8 +75,14 @@ export interface ParsedSpec {
     alignment?: "left" | "center" | "right"; // Optional due to default in schema
   };
   data: {
-    physical: string; // Required
-    thematic: string; // Required
+    physical: {
+      path: string; // Required within physical
+    };
+    thematic: {
+      path: string; // Required within thematic
+      latColumn: string;
+      lonColumn: string;
+    };
   };
   relation?: { // Optional
     spatial?: SpatialRelationType; // Optional due to default

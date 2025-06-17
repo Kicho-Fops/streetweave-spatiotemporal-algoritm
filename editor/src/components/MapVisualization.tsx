@@ -15,7 +15,7 @@ import { ParsedSpec, ProcessedEdge } from 'streetweave'
 // Import utility functions
 import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
 import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, PERPENDICULAR_COLORS } from '../utils/styleHelpers';
-import { bearingBetweenPoints, normalizeSegment, offsetPoint } from '../utils/geoHelpers';
+import { bearingBetweenPoints, loadThematicData, normalizeSegment, offsetPoint } from '../utils/geoHelpers';
 import { initializeMap, projectPoint, getOffsetDistance, getAdjustedLineWidth } from '../utils/mapHelpers';
 
 
@@ -257,15 +257,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical}`);
+      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical.path}`);
       if (!physicalData?.edges) {
         console.error("Physical data is missing edges or is invalid for segment layer.");
         return;
       }
 
-      const thematicData: any = layerSpec.data.thematic
-        ? await d3.json(`/data/${layerSpec.data.thematic}`)
-        : [];
+      const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
+
+      // console.log(thematicData);
 
       let initialEdges = physicalData.edges;
 
@@ -587,8 +587,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
       const thematicData: any = layerSpec.data.thematic
-        ? await d3.json(`/data/${layerSpec.data.thematic}`)
+        ? await d3.csv(`/data/${layerSpec.data.thematic}`)
         : [];
+
+      console.log(thematicData);
 
       // Aggregates thematic data onto the edges first
       const aggregatedEdges: ProcessedEdge[] = await applySpatialAggregation(physicalData.edges, thematicData, layerSpec) as ProcessedEdge[];
