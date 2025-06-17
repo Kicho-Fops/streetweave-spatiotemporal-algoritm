@@ -3,7 +3,7 @@
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
 import { AggregationType, ThematicPoint, GeoJSONData, ProcessedEdge, ParsedSpec } from 'streetweave';
-import { calculateMidpoint, calculateDistances, findClosestPoints, filterPointsInBuffer, createBuffer } from './geoHelpers';
+import { calculateMidpoint, calculateDistances, findClosestPoints, filterPointsInBuffer, createBuffer, normalizeSegment } from './geoHelpers';
 
 
 /**
@@ -20,7 +20,7 @@ export const aggregateValues = (
 ): Record<string, number | null> => {
   const attributes =
     thematicData.length > 0
-      ? Object.keys(thematicData[0]).filter(k => k !== 'Lat' && k !== 'Lon')
+      ? Object.keys(thematicData[0]).filter(k => k !== 'lat' && k !== 'lon')
       : [];
 
   const aggregatedValues: Record<string, number | null> = {};
@@ -100,36 +100,37 @@ export const aggregateValues = (
  * @returns An array of updated edge data with aggregated properties.
  */
 const aggregationContainsSegment = (
-  edgesData: any[], // Raw edges data
+  edgesData: ProcessedEdge[],
   thematicData: ThematicPoint[],
   aggregationType: AggregationType
 ): ProcessedEdge[] => {
   const bboxWidth = 5000; // meters
 
   return edgesData.map(edge => {
-    const pointA = [edge[0].lon, edge[0].lat];
-    const pointB = [edge[1].lon, edge[1].lat];
+    const pointA = [edge.point0.lat, edge.point0.lon];
+    const pointB = [edge.point1.lat, edge.point1.lon];
 
     const line = turf.lineString([pointA, pointB]);
     const bbox = turf.buffer(line, bboxWidth, { units: 'meters' });
 
     if (!bbox) {
       // Return original edge with an empty aggregated attributes object if buffer fails
-      return [edge[0], edge[1], edge[2], edge[3], {}];
+      return {point0: edge.point0, point1: edge.point1, bearing: 0, length: 0, attributes: {}};
     }
 
     const pointsInBoundingBox = thematicData.filter(point => {
-      const thematicPoint = turf.point([point.Lon, point.Lat]);
+      const thematicPoint = turf.point([point.lon, point.lat]);
       return turf.booleanPointInPolygon(thematicPoint, bbox);
     });
-
+    edge = normalizeSegment(edge);
     const aggregated = aggregateValues(pointsInBoundingBox, aggregationType, thematicData);
+    edge.attributes = aggregated;
     // Ensure the structure is consistent: [pointA, pointB, {Bearing}, {Length}, {AggregatedValues}]
     // Handle cases where edge[2] or edge[3] might not be objects
-    const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
-    const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
+    // const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
+    // const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
 
-    return [edge[0], edge[1], existingBearing, existingLength, aggregated] as ProcessedEdge;
+    return edge;
   });
 };
 
@@ -178,29 +179,25 @@ const aggregationContainsSegment = (
  * @returns An array of updated edge data with aggregated attributes.
  */
 const aggregateSegmentNearestNeighbor = (
-  edgesData: any[], // Raw edges data
+  edgesData: ProcessedEdge[], // Raw edges data
   environmentalData: ThematicPoint[],
   aggregationType: AggregationType
 ): ProcessedEdge[] => {
   return edgesData.map(edge => {
-    const [pointA, pointB] = [edge[0], edge[1]];
+    const pointA = { lat: edge.point0.lat, lon: edge.point0.lon };
+    const pointB = { lat: edge.point1.lat, lon: edge.point1.lon };
     const midpointCoords = calculateMidpoint(pointA, pointB);
     const centroid = turf.point([midpointCoords.lon, midpointCoords.lat]);
 
     const distances = calculateDistances(centroid, environmentalData);
     const closestPoints = findClosestPoints(distances, environmentalData, 100);
     const aggregatedValues = aggregateValues(closestPoints, aggregationType, environmentalData);
+    edge = normalizeSegment(edge);
+    edge.attributes = aggregatedValues;
+    // const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
+    // const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
 
-    const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
-    const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
-
-    return [
-      edge[0],
-      edge[1],
-      existingBearing,
-      existingLength,
-      aggregatedValues
-    ] as ProcessedEdge;
+    return edge;
   });
 };
 
@@ -255,36 +252,39 @@ const aggregateSegmentNearestNeighbor = (
  * @returns An array of updated edge data with aggregated attributes.
  */
 const aggregateSegmentBuffer = (
-  edgesData: any[], // Raw edges data
+  edgesData: ProcessedEdge[], // Raw edges data
   environmentalData: ThematicPoint[],
   bufferDistance: number,
   aggregationType: AggregationType
 ): ProcessedEdge[] => {
+  // console.log(edgesData);
+  // let edges: ProcessedEdge[] = [];
   return edgesData.map(edge => {
-    const pointA = { lat: edge[0].lat, lon: edge[0].lon };
-    const pointB = { lat: edge[1].lat, lon: edge[1].lon };
+    const pointA = { lat: edge.point0.lat, lon: edge.point0.lon };
+    const pointB = { lat: edge.point1.lat, lon: edge.point1.lon };
     const midpoint = calculateMidpoint(pointA, pointB);
     const midpointTurf = turf.point([midpoint.lon, midpoint.lat]);
 
     const buffer = createBuffer(midpointTurf, bufferDistance);
     if (!buffer) {
       // Return original edge with an empty aggregated attributes object if buffer fails
-      return [edge[0], edge[1], edge[2], edge[3], {}];
+      return {point0: edge.point0, point1: edge.point1, bearing: 0, length: 0, attributes: {}};
     }
+    console.log(edge);
+    edge = normalizeSegment(edge);
 
     const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
-    const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
+    const calculatedAggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
 
-    const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
-    const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
+    // const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
+    // const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
+    const finalAggregatedAttributes: Record<string, number | null> = {...calculatedAggregatedValues};
+    edge.attributes = finalAggregatedAttributes;
 
-    return [
-      edge[0],
-      edge[1],
-      existingBearing,
-      existingLength,
-      aggregatedValues
-    ] as ProcessedEdge;
+    return edge;
+      // existingBearing,
+      // existingLength,
+    // ] as ProcessedEdge;
   });
 };
 
@@ -324,7 +324,9 @@ export const processEdgesToNodes = (aggregatedEdges: ProcessedEdge[]): (Thematic
   const NodesMap: Record<string, any> = {};
 
   aggregatedEdges.forEach((edge: ProcessedEdge) => {
-    const [firstNode, secondNode, , , aggregatedAttributes] = edge;
+    const firstNode = edge.point0;
+    const secondNode = edge.point1;
+    const aggregatedAttributes = edge.attributes;
 
     // Process both nodes of the edge
     [firstNode, secondNode].forEach(node => {
@@ -353,8 +355,8 @@ export const processEdgesToNodes = (aggregatedEdges: ProcessedEdge[]): (Thematic
       averagedAttrs[attrKey] = (sumValue as number) / node.count;
     }
     return {
-      Lat: node.lat,
-      Lon: node.lon,
+      lat: node.lat,
+      lon: node.lon,
       ...averagedAttrs
     };
   });

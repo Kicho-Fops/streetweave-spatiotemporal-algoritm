@@ -273,8 +273,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       // Step 1: Subdivide edges if unitDivide is specified
       if (layerSpec.unit.splits && layerSpec.unit.splits > 1) {
-        const subdivided: any[] = [];
-        initialEdges.forEach((edge: any) => {
+        const subdivided: ProcessedEdge[] = [];
+        initialEdges.forEach((edge: ProcessedEdge) => {
           const [start, end, ...extras] = edge;
           const lat0 = start.lat, lon0 = start.lon;
           const lat1 = end.lat, lon1 = end.lon;
@@ -301,16 +301,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       // Step 2: Apply spatial aggregation
       let processedEdges: ProcessedEdge[] = await applySpatialAggregation(initialEdges, thematicData, layerSpec) as ProcessedEdge[];
+      console.log(processedEdges);
 
-      // Ensure all edges have the correct structure with an aggregated attributes object at index 4
-      processedEdges = processedEdges.map(edge => {
-        // If the 5th element isn't an object, make it an empty object
-        if (!edge[4] || typeof edge[4] !== 'object') {
-            const newEdge: ProcessedEdge = [edge[0], edge[1], edge[2], edge[3], {}];
-            return newEdge;
-        }
-        return edge;
-      });
+      // // Ensure all edges have the correct structure with an aggregated attributes object at index 4
+      // processedEdges = processedEdges.map(edge => {
+      //   // If the 5th element isn't an object, make it an empty object
+      //   if (!edge[4] || typeof edge[4] !== 'object') {
+      //       const newEdge: ProcessedEdge = [edge[0], edge[1], {}];
+      //       return newEdge;
+      //   }
+      //   return edge;
+      // });
 
       // Clear existing layers from relevant panes to prevent duplicates on redraw
       const paneName = layerSpec.unit.alignment === "center" ? 'overlayPane' : `${layerSpec.unit.alignment}-${layerSpec.unit.orientation}`;
@@ -337,24 +338,24 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
         processedEdges.forEach((edge: ProcessedEdge) => {
           // Ensure bearing and normalize segment
-          if (edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] && typeof edge[2].Bearing === 'number') {
-            normalizeSegment(edge);
-          } else {
-            edge[2] = { Bearing: bearingBetweenPoints(edge[0].lat, edge[0].lon, edge[1].lat, edge[1].lon) };
-            normalizeSegment(edge);
-          }
+          // if (edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] && typeof edge[2].Bearing === 'number') {
+            // normalizeSegment(edge);
+          // } else {
+          //   edge[2] = { Bearing: bearingBetweenPoints(edge[0].lat, edge[0].lon, edge[1].lat, edge[1].lon) };
+          //   normalizeSegment(edge);
+          // }
 
           // Apply alignment offsets for parallel lines/rects
-          let currentStartPoint = edge[0];
-          let currentEndPoint = edge[1];
-          const currentBearing = bearingBetweenPoints(edge[0].lat, edge[0].lon, edge[1].lat, edge[1].lon);
+          let currentStartPoint = edge.point0;
+          let currentEndPoint = edge.point1;
+          const currentBearing = edge.bearing;// bearingBetweenPoints(edge.point0.lat, edge[0].lon, edge[1].lat, edge[1].lon);
 
           if (layerSpec.unit.alignment === "left" || layerSpec.unit.alignment === "right") {
             const offsetAngle = layerSpec.unit.alignment === "left" ? currentBearing - 90 : currentBearing + 90;
             const distance = getOffsetDistance(map) * (layerSpec.unit.alignment === "left" ? alignmentCountersRef.current.left : alignmentCountersRef.current.right);
 
-            const offsetStartCoords = offsetPoint(edge[0].lat, edge[0].lon, offsetAngle, distance);
-            const offsetEndCoords = offsetPoint(edge[1].lat, edge[1].lon, offsetAngle, distance);
+            const offsetStartCoords = offsetPoint(edge.point0.lat, edge.point0.lon, offsetAngle, distance);
+            const offsetEndCoords = offsetPoint(edge.point1.lat, edge.point1.lon, offsetAngle, distance);
             currentStartPoint = { lat: offsetStartCoords[0], lon: offsetStartCoords[1] };
             currentEndPoint = { lat: offsetEndCoords[0], lon: offsetEndCoords[1] };
           }
@@ -413,8 +414,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               const offsetAngle = currentBearing - 90;
               const offsetMultiplier = row - Math.floor(methodRow / 2);
 
-              const startRowOffsetCoords = offsetPoint(edge[0].lat, edge[0].lon, offsetAngle, currentOffsetDistance * offsetMultiplier);
-              const endRowOffsetCoords = offsetPoint(edge[1].lat, edge[1].lon, offsetAngle, currentOffsetDistance * offsetMultiplier);
+              const startRowOffsetCoords = offsetPoint(edge.point0.lat, edge.point0.lon, offsetAngle, currentOffsetDistance * offsetMultiplier);
+              const endRowOffsetCoords = offsetPoint(edge.point1.lat, edge.point1.lon, offsetAngle, currentOffsetDistance * offsetMultiplier);
 
               const dLat = endRowOffsetCoords[0] - startRowOffsetCoords[0];
               const dLon = endRowOffsetCoords[1] - startRowOffsetCoords[1];
@@ -510,7 +511,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             const svgChartWidth = 150, svgChartHeight = 150;
             const pane = map.getPanes().overlayPane;
 
-            const [start, end, , , aggregatedAttrs] = edge;
+            const start = edge.point0;
+            const end = edge.point1;
+            // const bearing = edge.bearing;
+            // const length = edge.length;
+            const aggregatedAttrs = edge.attributes;
             const midpoint = {
               lat: (start.lat + end.lat) / 2,
               lon: (start.lon + end.lon) / 2
@@ -589,8 +594,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
       const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
-
-      console.log(thematicData);
 
       // Aggregates thematic data onto the edges first
       const aggregatedEdges: ProcessedEdge[] = await applySpatialAggregation(physicalData.edges, thematicData, layerSpec) as ProcessedEdge[];

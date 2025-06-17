@@ -3,7 +3,7 @@
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
 import { Feature, MultiPolygon, Point, Polygon } from 'geojson';
-import { ThematicPoint } from 'streetweave';
+import { ProcessedEdge, ThematicPoint } from 'streetweave';
 
 
 /**
@@ -184,16 +184,15 @@ export function bearingBetweenPoints(
  * If bearing > 180, it flips start/end points and adjusts bearing.
  * @param segment The segment array [start, end, {Bearing}, ...extras].
  */
-export function normalizeSegment(segment: any[]): void { // Using any[] here as the full ProcessedEdge type might not be suitable for raw input
-  const start = segment[0];
-  const end = segment[1];
-  let bearing = segment[2]?.Bearing; // Access Bearing property safely
+export function normalizeSegment(segment: ProcessedEdge): ProcessedEdge { // Using any[] here as the full ProcessedEdge type might not be suitable for raw input
+  const start = segment.point0;
+  const end = segment.point1;
+  let bearing = segment.bearing; // Access Bearing property safely
 
   if (typeof bearing !== 'number') {
     // If bearing is not a number, calculate it and assign
     bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
-    if (!segment[2]) segment[2] = {};
-    segment[2].Bearing = bearing;
+    segment.bearing = bearing;
   }
 
   bearing = ((bearing % 360) + 360) % 360; // Normalize to [0, 360)
@@ -206,7 +205,8 @@ export function normalizeSegment(segment: any[]): void { // Using any[] here as 
     end.lon = temp.lon;
     bearing -= 180;
   }
-  segment[2].Bearing = bearing;
+  segment.bearing = bearing;
+  return segment;
 }
 
 export async function loadThematicData(
@@ -216,10 +216,10 @@ export async function loadThematicData(
 ): Promise<ThematicPoint[]> {
   const processedData: ThematicPoint[] = [];
 
-  const thematicData = await d3.csv(`/data/${path}`);
+  const thematicData: Array<Record<string, any>> = await d3.csv(`/data/${path}`,  d3.autoType);
 
   for (const d of thematicData) {
-    const newRow: any = { ...d }; // Start with a copy of the original row
+    const newRow: Record<string, any> = { ...d }; // Start with a copy of the original row
 
     let lat: number | null = null;
     let lon: number | null = null;
@@ -243,11 +243,10 @@ export async function loadThematicData(
     if (lat !== null && lon !== null) {
       newRow.lat = lat;
       newRow.lon = lon;
-      processedData.push(newRow);
+      processedData.push(newRow as ThematicPoint);
     } else {
       console.warn(`Skipping row due to invalid/missing lat/lon: Original data for latCol '${latColumnName}': '${d[latColumnName]}', lonCol '${lonColumnName}': '${d[lonColumnName]}'`, d);
     }
   }
-
   return processedData;
 }

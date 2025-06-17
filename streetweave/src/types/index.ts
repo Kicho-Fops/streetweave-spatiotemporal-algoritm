@@ -1,8 +1,8 @@
 // src/types/index.ts
 
 export type ThematicPoint = {
-  Lat: number;
-  Lon: number;
+  lat: number;
+  lon: number;
   [key: string]: number;
 };
 
@@ -32,13 +32,13 @@ export type SegmentData = {
 };
 
 // Define a type for the processed edge data after aggregation
-export type ProcessedEdge = [
-  SegmentData, // Point A
-  SegmentData, // Point B
-  { Bearing: number | null }, // Bearing property (can be null if not present)
-  { Length: number | null }, // Length property (can be null if not present)
-  Record<string, number | null> // Aggregated attributes (always an object)
-];
+export type ProcessedEdge = {
+  point0: SegmentData, // Point A
+  point1: SegmentData, // Point B
+  bearing: number,
+  length: number,
+  attributes: Record<string, number | null> 
+};
 
 
 // Define an interface for the properties added to an edge for styling (internal to renderers)
