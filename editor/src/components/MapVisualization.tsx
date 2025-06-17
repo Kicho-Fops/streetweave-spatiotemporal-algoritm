@@ -132,7 +132,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       if (!mimicLayerRef.current) {
         try {
-          const data: { edges: any[] } | undefined = await d3.json(`/data/${parsedSpec[0].data?.physical}`);
+          const data: { edges: any[] } | undefined = await d3.json(`/data/${parsedSpec[0].data?.physical.path}`);
 
           if (data !== undefined) {
             const features = data.edges.map(edge => ({
@@ -566,7 +566,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current.push(svgLayer);
 
     } catch (error) {
-      console.error(`Error rendering segment layer for ${layerSpec.data.physical}:`, error);
+      console.error(`Error rendering segment layer for ${layerSpec.data.physical.path}:`, error);
     }
   };
 
@@ -582,15 +582,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     currentLayersRef: React.MutableRefObject<L.Layer[]>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical}`);
+      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical.path}`);
       if (!physicalData?.edges) {
         console.error("Physical data is missing edges or is invalid for node layer.");
         return;
       }
 
-      const thematicData: any = layerSpec.data.thematic
-        ? await d3.csv(`/data/${layerSpec.data.thematic}`)
-        : [];
+      const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
 
       console.log(thematicData);
 
@@ -680,7 +678,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       currentLayersRef.current.push(svgLayer);
 
     } catch (error) {
-      console.error(`Error rendering node layer for ${layerSpec.data.physical}:`, error);
+      console.error(`Error rendering node layer for ${layerSpec.data.physical.path}:`, error);
     }
   };
 
