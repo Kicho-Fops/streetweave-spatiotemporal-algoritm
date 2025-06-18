@@ -14,7 +14,7 @@ import { ParsedSpec, PhysicalEdge, ThematicPoint } from 'streetweave'
 
 // Import utility functions
 import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
-import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, PERPENDICULAR_COLORS } from '../utils/styleHelpers';
+import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath } from '../utils/styleHelpers';
 import { loadThematicData, loadPhysicalData, offsetPoint } from '../utils/geoHelpers';
 import { initializeMap, projectPoint, getOffsetDistance, getAdjustedLineWidth } from '../utils/mapHelpers';
 
@@ -220,14 +220,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       currentLayersRef.current = [];
       
-      parsedSpec.forEach(async (layerSpec, index) => {
+      parsedSpec.forEach(async (layerSpec) => {
         d3.selectAll('.vega-lite-svg').remove();
 
         if (mapInstanceRef.current !== null) {
           mapInstanceRef.current.off('move zoom');
   
           if (layerSpec.unit.type === 'segment'){
-            renderSegmentLayer(mapInstanceRef.current, layerSpec, index, currentLayersRef, alignmentCounters);
+            // renderSegmentLayer(mapInstanceRef.current, layerSpec, index, currentLayersRef, alignmentCounters);
+            renderSegmentLayer(mapInstanceRef.current, layerSpec, currentLayersRef, alignmentCounters);
           }
   
           else if(layerSpec.unit.type === 'node'){
@@ -254,7 +255,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   const renderSegmentLayer = async (
     map: L.Map,
     layerSpec: ParsedSpec,
-    layerIndex: number,
+    // layerIndex: number,
     currentLayersRef: React.MutableRefObject<L.Layer[]>,
     alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
   ) => {
@@ -302,7 +303,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
       // Step 2: Apply spatial aggregation
-      let processedEdges: PhysicalEdge[] = await applySpatialAggregation(initialEdges, thematicData, layerSpec);
+      let processedEdges: PhysicalEdge[] = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
       // console.log(processedEdges);
 
       // // Ensure all edges have the correct structure with an aggregated attributes object at index 4
@@ -364,20 +365,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           const pointsForRendering = [{ lat: currentStartPoint.lat, lon: currentStartPoint.lon }, { lat: currentEndPoint.lat, lon: currentEndPoint.lon }];
           // Retrieve dynamic styles using the helper
-          const lineColor = getDynamicStyleValue(
-            layerSpec.unit.color,
-            edge,
-            processedEdges,
-            null,
-            d3.interpolateBuGn,
-            PERPENDICULAR_COLORS[layerIndex] || ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]
-          ) as string || 'red';
+          const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
           
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge, processedEdges, [0, 10]) as number ?? 5;
+          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
           const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
 
-          const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge, processedEdges, [0, 1]) as number ?? 1;
+          const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge.attributes, thematicData.attributeStats, [0, 1]) as number;
 
           const dashArray = getDashArray(layerSpec.unit.style, layerSpec.unit.style, edge, processedEdges);
           const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.style, layerSpec.unit.style, edge, processedEdges);
@@ -446,7 +440,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               }
             }
           } else if (layerSpec.unit.method === 'rect') {
-            const baseHeight = getDynamicStyleValue(layerSpec.unit.height, edge, processedEdges, [0, 7]) as number ?? 5;
+
+            const baseHeight = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 7]) as number;
             const rectWidth = getAdjustedLineWidth(map, baseHeight);
             const inset = 5;
 
@@ -601,7 +596,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
 
       // Aggregates thematic data onto the edges first
-      const aggregatedEdges: PhysicalEdge[] = await applySpatialAggregation(physicalData, thematicData, layerSpec);
+      const aggregatedEdges: PhysicalEdge[] = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
 
       // Processes the aggregated edges to get unique nodes with their aggregated attributes
       const nodesList = processEdgesToNodes(aggregatedEdges);
@@ -614,10 +609,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
         nodesList.forEach(node => {
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const shapeColor = getDynamicStyleValue(layerSpec.unit.color, node, nodesList, null, d3.interpolateBuGn) as string || 'red';
-          const shapeWidth = getDynamicStyleValue(layerSpec.unit.width, node, nodesList, [5, 30]) as number ?? 5;
+          const shapeColor = getDynamicStyleValue(layerSpec.unit.color, node.attributes, thematicData.attributeStats, d3.schemeBuGn[9]) as string;
+          const shapeWidth = getDynamicStyleValue(layerSpec.unit.width, node.attributes, thematicData.attributeStats, [5, 30]) as number;
           // const shapeHeight = getDynamicStyleValue(layerSpec.lineHeight, node, nodesList, [5, 30]) as number ?? 5;
-          const shapeOpacity = getDynamicStyleValue(layerSpec.unit.opacity, node, nodesList, [0, 1]) as number ?? 1;
+          const shapeOpacity = getDynamicStyleValue(layerSpec.unit.opacity, node.attributes, thematicData.attributeStats, [0, 1]) as number;
 
           const pt = L.point(projectPoint(map, node.lat, node.lon)[0], projectPoint(map, node.lat, node.lon)[1]);
 

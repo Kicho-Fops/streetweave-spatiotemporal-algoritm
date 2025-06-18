@@ -3,7 +3,7 @@
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
 import { Feature, MultiPolygon, Point, Polygon } from 'geojson';
-import { GeoJSONData, GeoJSONFeature, PhysicalEdge, SegmentData, ThematicPoint } from 'streetweave';
+import { GeoJSONData, GeoJSONFeature, PhysicalEdge, SegmentData, ThematicPoint, ThematicData } from 'streetweave';
 
 
 /**
@@ -156,15 +156,17 @@ export async function loadThematicData(
   path: string,
   latColumnName: string,
   lonColumnName: string
-): Promise<ThematicPoint[]> {
+): Promise<ThematicData> {
   const processedData: ThematicPoint[] = [];
+  const attributeMins: Record<string, number> = {};
+  const attributeMaxs: Record<string, number> = {};
 
   let thematicData: Array<Record<string, any>>;
   try {
     thematicData = await d3.csv(`/data/${path}`,  d3.autoType);
   } catch (error) {
     console.error(`Error loading thematic data from data/${path}:`, error);
-    return [];
+    return { data: [], attributeStats: {} };
   }
   
 
@@ -190,6 +192,24 @@ export async function loadThematicData(
       }
     }
 
+    // Process attributes
+    for (const key in newRow) {
+      if (key === 'lat' || key === 'lon' || key === latColumnName || key === lonColumnName) {
+          continue;
+      }
+      const value = newRow[key];
+      let finalValue: number | string | boolean | null = value; 
+      // Track min/max for numeric attributes
+      if (typeof finalValue === 'number' && !isNaN(finalValue)) {
+        if (attributeMins[key] === undefined || finalValue < attributeMins[key]) {
+          attributeMins[key] = finalValue;
+        }
+        if (attributeMaxs[key] === undefined || finalValue > attributeMaxs[key]) {
+          attributeMaxs[key] = finalValue;
+        }
+      }
+    }
+
     if (lat !== null && lon !== null) {
       newRow.lat = lat;
       newRow.lon = lon;
@@ -198,7 +218,21 @@ export async function loadThematicData(
       console.warn(`Skipping row due to invalid/missing lat/lon: Original data for latCol '${latColumnName}': '${d[latColumnName]}', lonCol '${lonColumnName}': '${d[lonColumnName]}'`, d);
     }
   }
-  return processedData;
+
+  const attributeStats: Record<string, { min: number; max: number }> = {};
+  for (const key in attributeMins) {
+    if (attributeMins.hasOwnProperty(key) && attributeMaxs.hasOwnProperty(key)) {
+      attributeStats[key] = {
+        min: attributeMins[key],
+        max: attributeMaxs[key]
+      };
+    }
+  }
+
+  return {
+    data: processedData,
+    attributeStats: attributeStats
+  };
 }
 
 export async function loadPhysicalData(

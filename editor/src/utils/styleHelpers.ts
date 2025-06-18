@@ -36,66 +36,67 @@ export const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: Parsed
  * @returns The computed style value.
  */
 export const getDynamicStyleValue = (
-  specValue: string | number | undefined,
-  dataPoint: PhysicalEdge | Record<string, number | null>, // Can be ProcessedEdge or Node object
-  allDataPoints: (PhysicalEdge | Record<string, number | null>)[],
-  d3ScaleRange: [number, number] | null = null,
-  interpolateFn: ((t: number) => string) | null = null,
-  thresholdColors: string[] | null = null,
-  thresholdSteps: number = 5
-): string | number | null => {
-  console.log(specValue, dataPoint, allDataPoints, d3ScaleRange, interpolateFn, thresholdColors, thresholdSteps);
+  name: string | number | undefined,
+  attributes: Record<string, number | undefined> | undefined,
+  domain: Record<string, { min: number; max: number }> | undefined,
+  range: any | undefined
+  // d3ScaleRange: [number, number] | null = null,
+  // interpolateFn: ((t: number) => string) | null = null,
+  // thresholdColors: string[] | null = null,
+  // thresholdSteps: number = 5
+): string | number | undefined => {
+  // console.log(specValue, dataPoint, allDataPoints, d3ScaleRange, interpolateFn, thresholdColors, thresholdSteps);
 
-//   if (typeof specValue === 'number') {
-//     return specValue;
-//   }
-//   if (typeof specValue === 'string') {
-//       const hexRe = /^#([0-9A-F]{3}|[0-9A-F]{6})$/i
-      
-//       if(hexRe.test(specValue)) return specValue
-
-//       const idx = Array.isArray(dataPoint)
-//         ? dataPoint.findIndex(entry => entry.hasOwnProperty(specValue))
-//         : -1;
-
-//       if (idx === -1) return specValue
-//       // For ProcessedEdge, aggregated attributes are at index 4. For Node object, they are direct properties.
-//       const aggregatedAttributes = Array.isArray(dataPoint) ? dataPoint.attributes : dataPoint;
+  const hexRe = /^#([0-9A-F]{3}|[0-9A-F]{6})$/i;
+  if (typeof name === 'number') {
+    return name;
+  }
+  if (typeof name === 'string' && hexRe.test(name)) {
+    return name;
+  }
+  else if(typeof name === 'string' && attributes && attributes[name] && domain) {
+    let scale;
+    if(range)
+      scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]).range(range);
+    else
+      scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]);
+    return scale(attributes[name]);
+  }
   
-//       if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(specValue)) {
-//         const attributeValue = aggregatedAttributes[specValue];
-//         if (attributeValue === null || typeof attributeValue === 'undefined') return null;
+      // if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(specValue)) {
+        // const attributeValue = aggregatedAttributes[specValue];
+        // if (attributeValue === null || typeof attributeValue === 'undefined') return null;
   
-//         // Collect all valid numbers for the specified attribute from all data points
-//         const allAttributeValues = allDataPoints
-//           .map(dp => (Array.isArray(dp) ? dp.attributes?.[specValue] : dp.attributes))
-//           .filter((v): v is number => typeof v === 'number');
+        // Collect all valid numbers for the specified attribute from all data points
+        // const allAttributeValues = allDataPoints
+        //   .map(dp => (Array.isArray(dp) ? dp.attributes?.[specValue] : dp.attributes))
+        //   .filter((v): v is number => typeof v === 'number');
   
-//         if (allAttributeValues.length === 0) return null;
+        // if (allAttributeValues.length === 0) return null;
   
-//         const minValue = d3.min(allAttributeValues);
-//         const maxValue = d3.max(allAttributeValues);
+        // const minValue = d3.min(allAttributeValues);
+        // const maxValue = d3.max(allAttributeValues);
   
-//         if (minValue === undefined || maxValue === undefined) return null;
+        // if (minValue === undefined || maxValue === undefined) return null;
   
-//         if (d3ScaleRange) {
-//           // Linear scale for width/opacity/height
-//           const scale = d3.scaleLinear().domain([minValue, maxValue]).range(d3ScaleRange);
-//           return scale(attributeValue);
-//         } else if (interpolateFn) {
-//           // Sequential color scale
-//           const scale = d3.scaleSequential(interpolateFn).domain([minValue, maxValue]);
-//           return scale(attributeValue);
-//         } else if (thresholdColors && thresholdColors.length >= thresholdSteps) {
-//           // Threshold color scale
-//           const step = (maxValue - minValue) / thresholdSteps;
-//           const thresholds = Array.from({ length: thresholdSteps - 1 }, (_, i) => minValue + (i + 1) * step);
-//           const scale = d3.scaleThreshold<number, string>().domain(thresholds).range(thresholdColors);
-//           return scale(attributeValue);
-//         }
-//       }
-//   }
-  return null; // Default if attribute not found or no mapping specified
+        // if (d3ScaleRange) {
+        //   // Linear scale for width/opacity/height
+        //   const scale = d3.scaleLinear().domain([minValue, maxValue]).range(d3ScaleRange);
+        //   return scale(attributeValue);
+        // } else if (interpolateFn) {
+        //   // Sequential color scale
+        //   const scale = d3.scaleSequential(interpolateFn).domain([minValue, maxValue]);
+        //   return scale(attributeValue);
+        // } else if (thresholdColors && thresholdColors.length >= thresholdSteps) {
+        //   // Threshold color scale
+        //   const step = (maxValue - minValue) / thresholdSteps;
+        //   const thresholds = Array.from({ length: thresholdSteps - 1 }, (_, i) => minValue + (i + 1) * step);
+        //   const scale = d3.scaleThreshold<number, string>().domain(thresholds).range(thresholdColors);
+        //   return scale(attributeValue);
+        // }
+      // }
+  // }
+  return undefined; // Default if attribute not found or no mapping specified
 };
 
 /**

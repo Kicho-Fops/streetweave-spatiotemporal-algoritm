@@ -17,37 +17,37 @@ export const aggregateValues = (
   points: ThematicPoint[],
   aggregationType: AggregationType,
   thematicData: ThematicPoint[]
-): Record<string, number | null> => {
+): Record<string, number | undefined> => {
   const attributes =
     thematicData.length > 0
       ? Object.keys(thematicData[0]).filter(k => k !== 'lat' && k !== 'lon')
       : [];
 
-  const aggregatedValues: Record<string, number | null> = {};
+  const aggregatedValues: Record<string, number | undefined> = {};
 
   attributes.forEach(attr => {
     const values = points
       .map(point => point[attr])
       .filter(val => typeof val === 'number');
 
-    let value = null;
+    let value = undefined;
     switch (aggregationType) {
       case 'sum':
         value = d3.sum(values);
         break;
       case 'mean':
-        value = values.length ? d3.mean(values) : null;
+        value = values.length ? d3.mean(values) : undefined;
         break;
       case 'min':
-        value = values.length ? d3.min(values) : null;
+        value = values.length ? d3.min(values) : undefined;
         break;
       case 'max':
-        value = values.length ? d3.max(values) : null;
+        value = values.length ? d3.max(values) : undefined;
         break;
       default:
-        value = null;
+        value = undefined;
     }
-    if(!value) value = null;
+    if(!value) value = undefined;
     aggregatedValues[attr] = value;
   });
 
@@ -272,7 +272,7 @@ const aggregateSegmentBuffer = (
     const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
     const calculatedAggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
 
-    const finalAggregatedAttributes: Record<string, number | null> = {...calculatedAggregatedValues};
+    const finalAggregatedAttributes: Record<string, number | undefined> = {...calculatedAggregatedValues};
     edge.attributes = finalAggregatedAttributes;
 
     return edge;
@@ -314,7 +314,7 @@ export async function applySpatialAggregation(
  * @param aggregatedEdges The edges data after initial aggregation.
  * @returns A list of unique nodes with their aggregated attributes.
  */
-export const processEdgesToNodes = (aggregatedEdges: PhysicalEdge[]): (ThematicPoint & Record<string, number | null>)[] => {
+export const processEdgesToNodes = (aggregatedEdges: PhysicalEdge[]): Record<string, any>[] => {
   const NodesMap: Record<string, any> = {};
 
   aggregatedEdges.forEach((edge: PhysicalEdge) => {
@@ -351,7 +351,7 @@ export const processEdgesToNodes = (aggregatedEdges: PhysicalEdge[]): (ThematicP
     return {
       lat: node.lat,
       lon: node.lon,
-      ...averagedAttrs
+      attributes: averagedAttrs
     };
   });
 };

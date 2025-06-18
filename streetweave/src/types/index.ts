@@ -1,5 +1,10 @@
 // src/types/index.ts
 
+export type ThematicData = {
+  data: ThematicPoint[];
+  attributeStats: Record<string, { min: number; max: number }>;
+};
+
 export type ThematicPoint = {
   lat: number;
   lon: number;
@@ -12,7 +17,7 @@ export type PhysicalEdge = {
   point1: SegmentData, // Point B
   bearing: number,
   length: number,
-  attributes: Record<string, number | null> | undefined
+  attributes: Record<string, number | undefined> | undefined
 };
 
 // More specific GeoJSONFeature type
@@ -22,7 +27,7 @@ export type GeoJSONFeature = { // Renamed from CustomGeoJSONFeature to simply Ge
     type: string; // This can remain broad if you handle specific geometry types later
     coordinates: any;
   };
-  properties: Record<string, any> | null | undefined;
+  properties: Record<string, any> | undefined | undefined;
 };
 
 // More specific GeoJSONData type, aligning with Leaflet's expectations
