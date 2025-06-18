@@ -2,7 +2,7 @@
 
 import * as d3 from 'd3';
 import L from 'leaflet'; // Import L for L.Point
-import { ParsedSpec, ProcessedEdge } from 'streetweave';
+import { ParsedSpec, PhysicalEdge } from 'streetweave';
 
 /**
  * Applies opacity based on the type (fill, stroke, line) and layer specification.
@@ -37,8 +37,8 @@ export const applyOpacity = (type: 'fill' | 'stroke' | 'line', layerSpec: Parsed
  */
 export const getDynamicStyleValue = (
   specValue: string | number | undefined,
-  dataPoint: ProcessedEdge | Record<string, number | null>, // Can be ProcessedEdge or Node object
-  allDataPoints: (ProcessedEdge | Record<string, number | null>)[],
+  dataPoint: PhysicalEdge | Record<string, number | null>, // Can be ProcessedEdge or Node object
+  allDataPoints: (PhysicalEdge | Record<string, number | null>)[],
   d3ScaleRange: [number, number] | null = null,
   interpolateFn: ((t: number) => string) | null = null,
   thresholdColors: string[] | null = null,
@@ -109,8 +109,8 @@ export const getDynamicStyleValue = (
 export const getDashArray = (
   lineType: string | undefined,
   lineTypeVal: string | undefined,
-  segment: ProcessedEdge,
-  allSegments: ProcessedEdge[]
+  segment: PhysicalEdge,
+  allSegments: PhysicalEdge[]
 ): string => {
   if (lineType === "dashed" && lineTypeVal) {
     const aggregatedAttributes = segment.attributes;
@@ -155,8 +155,8 @@ export const getDashArray = (
 export const getSquiggleParams = (
   lineType: string | undefined,
   lineTypeVal: string | undefined,
-  segment: ProcessedEdge,
-  allSegments: ProcessedEdge[]
+  segment: PhysicalEdge,
+  allSegments: PhysicalEdge[]
 ): { amplitude: number; frequency: number } => {
   let squiggleAmplitude = 25;
   let squiggleFrequency = 10;

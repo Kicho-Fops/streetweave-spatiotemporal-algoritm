@@ -6,6 +6,15 @@ export type ThematicPoint = {
   [key: string]: number;
 };
 
+// Define a type for the processed edge data after aggregation
+export type PhysicalEdge = {
+  point0: SegmentData, // Point A
+  point1: SegmentData, // Point B
+  bearing: number,
+  length: number,
+  attributes: Record<string, number | null> | undefined
+};
+
 // More specific GeoJSONFeature type
 export type GeoJSONFeature = { // Renamed from CustomGeoJSONFeature to simply GeoJSONFeature as it's the primary one now
   type: "Feature"; // Must be literal "Feature"
@@ -29,15 +38,6 @@ export type SpatialRelationType = 'buffer' | 'nn' | 'contains';
 export type SegmentData = {
   lat: number;
   lon: number;
-};
-
-// Define a type for the processed edge data after aggregation
-export type ProcessedEdge = {
-  point0: SegmentData, // Point A
-  point1: SegmentData, // Point B
-  bearing: number,
-  length: number,
-  attributes: Record<string, number | null> 
 };
 
 

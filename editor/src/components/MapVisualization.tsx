@@ -10,12 +10,12 @@ import * as turf from '@turf/turf';
 import type { GeoJsonObject } from 'geojson';
 
 // Import types
-import { ParsedSpec, ProcessedEdge } from 'streetweave'
+import { ParsedSpec, PhysicalEdge, ThematicPoint } from 'streetweave'
 
 // Import utility functions
 import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
 import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, PERPENDICULAR_COLORS } from '../utils/styleHelpers';
-import { bearingBetweenPoints, loadThematicData, normalizeSegment, offsetPoint } from '../utils/geoHelpers';
+import { loadThematicData, loadPhysicalData, offsetPoint } from '../utils/geoHelpers';
 import { initializeMap, projectPoint, getOffsetDistance, getAdjustedLineWidth } from '../utils/mapHelpers';
 
 
@@ -132,21 +132,21 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       if (!mimicLayerRef.current) {
         try {
-          const data: { edges: any[] } | undefined = await d3.json(`/data/${parsedSpec[0].data?.physical.path}`);
+          const data = await loadPhysicalData(parsedSpec[0].data.physical.path);
 
           if (data !== undefined) {
-            const features = data.edges.map(edge => ({
+            const features = data.map(edge => ({
               type: 'Feature' as const,
               geometry: {
                 type: 'LineString' as const,
                 coordinates: [
-                  [edge[0].lon, edge[0].lat],
-                  [edge[1].lon, edge[1].lat]
+                  [edge.point0.lon, edge.point0.lat],
+                  [edge.point1.lon, edge.point1.lat]
                 ]
               },
               properties: {
-                Bearing: edge[2].Bearing,
-                Length: edge[3].Length
+                Bearing: edge.bearing,
+                Length: edge.length
               }
             }));
   
@@ -259,23 +259,24 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical.path}`);
-      if (!physicalData?.edges) {
-        console.error("Physical data is missing edges or is invalid for segment layer.");
-        return;
-      }
 
+      const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
       const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
 
       // console.log(thematicData);
 
-      let initialEdges = physicalData.edges;
+      let initialEdges = physicalData;
 
       // Step 1: Subdivide edges if unitDivide is specified
       if (layerSpec.unit.splits && layerSpec.unit.splits > 1) {
-        const subdivided: ProcessedEdge[] = [];
-        initialEdges.forEach((edge: ProcessedEdge) => {
-          const [start, end, ...extras] = edge;
+        const subdivided: PhysicalEdge[] = [];
+        initialEdges.forEach((edge: PhysicalEdge) => {
+          // const [start, end, ...extras] = edge;
+          const start = edge.point0;
+          const end = edge.point1;
+          const bearing = edge.bearing;
+          const length = edge.length;
+          const attributes = edge.attributes;
           const lat0 = start.lat, lon0 = start.lon;
           const lat1 = end.lat, lon1 = end.lon;
           const dLat = lat1 - lat0, dLon = lon1 - lon0;
@@ -291,17 +292,18 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           }
 
           for (let i = startIndex; i < endIndex; i++) {
-            const segStart = { lat: lat0 + dLat * (i / layerSpec.unit.splits), lon: lon0 + dLon * (i / layerSpec.unit.splits) };
-            const segEnd = { lat: lat0 + dLat * ((i + 1) / layerSpec.unit.splits), lon: lon0 + dLon * ((i + 1) / layerSpec.unit.splits) };
-            subdivided.push([segStart, segEnd, ...extras]);
+            const point0 = { lat: lat0 + dLat * (i / layerSpec.unit.splits), lon: lon0 + dLon * (i / layerSpec.unit.splits) } as ThematicPoint;
+            const point1 = { lat: lat0 + dLat * ((i + 1) / layerSpec.unit.splits), lon: lon0 + dLon * ((i + 1) / layerSpec.unit.splits) } as ThematicPoint;
+
+            subdivided.push({point0, point1, bearing, length, attributes} as PhysicalEdge);
           }
         });
         initialEdges = subdivided;
       }
 
       // Step 2: Apply spatial aggregation
-      let processedEdges: ProcessedEdge[] = await applySpatialAggregation(initialEdges, thematicData, layerSpec) as ProcessedEdge[];
-      console.log(processedEdges);
+      let processedEdges: PhysicalEdge[] = await applySpatialAggregation(initialEdges, thematicData, layerSpec);
+      // console.log(processedEdges);
 
       // // Ensure all edges have the correct structure with an aggregated attributes object at index 4
       // processedEdges = processedEdges.map(edge => {
@@ -336,7 +338,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       const drawSegmentShapes = () => {
         svgGroup.selectAll("*").remove();
 
-        processedEdges.forEach((edge: ProcessedEdge) => {
+        processedEdges.forEach((edge: PhysicalEdge) => {
           // Ensure bearing and normalize segment
           // if (edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] && typeof edge[2].Bearing === 'number') {
             // normalizeSegment(edge);
@@ -463,7 +465,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               const [sOffsetLat, sOffsetLon] = offsetPoint(currentStartPoint.lat, currentStartPoint.lon, offsetBearing, inset + (currentMultiplier * rectWidth));
               const [eOffsetLat, eOffsetLon] = offsetPoint(currentEndPoint.lat, currentEndPoint.lon, offsetBearing, inset + (currentMultiplier * rectWidth));
 
-              const lineBearing = bearingBetweenPoints(sOffsetLat, sOffsetLon, eOffsetLat, eOffsetLon);
+              const turfStart = turf.point([sOffsetLon, sOffsetLat]); // lon lat
+              const turfEnd = turf.point([eOffsetLon, eOffsetLat]); // lon lat
+              const lineBearing: number = turf.bearing(turfStart, turfEnd);
+
+              // const lineBearing = bearingBetweenPoints(sOffsetLat, sOffsetLon, eOffsetLat, eOffsetLon);
               const outwardBearing = layerSpec.unit.alignment === "left" ? (lineBearing + 270) % 360 : (lineBearing + 90) % 360;
 
               const [s2Lat, s2Lon] = offsetPoint(sOffsetLat, sOffsetLon, outwardBearing, rectWidth);
@@ -535,7 +541,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
                 const updateChartPosition = () => {
                   const point = map.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-                  const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+                  // const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
+                  const turfStart = turf.point([start.lon, start.lat]); // lon lat
+                  const turfEnd = turf.point([end.lon, end.lat]); // lon lat
+                  const bearing: number = turf.bearing(turfStart, turfEnd);
+
                   const angle = bearing + 90;
 
                   const transform = `translate(${point.x - svgChartWidth / 2},${point.y - svgChartHeight / 2})`
@@ -587,16 +597,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     currentLayersRef: React.MutableRefObject<L.Layer[]>
   ) => {
     try {
-      const physicalData: any = await d3.json(`/data/${layerSpec.data.physical.path}`);
-      if (!physicalData?.edges) {
-        console.error("Physical data is missing edges or is invalid for node layer.");
-        return;
-      }
-
+      const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
       const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
 
       // Aggregates thematic data onto the edges first
-      const aggregatedEdges: ProcessedEdge[] = await applySpatialAggregation(physicalData.edges, thematicData, layerSpec) as ProcessedEdge[];
+      const aggregatedEdges: PhysicalEdge[] = await applySpatialAggregation(physicalData, thematicData, layerSpec);
 
       // Processes the aggregated edges to get unique nodes with their aggregated attributes
       const nodesList = processEdgesToNodes(aggregatedEdges);

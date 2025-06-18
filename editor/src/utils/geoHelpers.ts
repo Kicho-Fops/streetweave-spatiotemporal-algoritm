@@ -3,7 +3,7 @@
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
 import { Feature, MultiPolygon, Point, Polygon } from 'geojson';
-import { ProcessedEdge, ThematicPoint } from 'streetweave';
+import { GeoJSONData, GeoJSONFeature, PhysicalEdge, SegmentData, ThematicPoint } from 'streetweave';
 
 
 /**
@@ -151,63 +151,6 @@ export function offsetPoint(lat: number, lon: number, bearing: number, distance:
   return [lat2 * toDeg, lon2 * toDeg];
 }
 
-/**
- * Calculates bearing between two geographic points.
- * @param lat1 Latitude of point 1.
- * @param lon1 Longitude of point 1.
- * @param lat2 Latitude of point 2.
- * @param lon2 Longitude of point 2.
- * @returns Bearing in degrees (0-360).
- */
-export function bearingBetweenPoints(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const toRad = Math.PI / 180;
-  const toDeg = 180 / Math.PI;
-
-  const φ1 = lat1 * toRad;
-  const φ2 = lat2 * toRad;
-  const Δλ = (lon2 - lon1) * toRad;
-
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) -
-            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-
-  return (Math.atan2(y, x) * toDeg + 360) % 360;
-}
-
-/**
- * Normalizes a segment's direction based on its bearing.
- * If bearing > 180, it flips start/end points and adjusts bearing.
- * @param segment The segment array [start, end, {Bearing}, ...extras].
- */
-export function normalizeSegment(segment: ProcessedEdge): ProcessedEdge { // Using any[] here as the full ProcessedEdge type might not be suitable for raw input
-  const start = segment.point0;
-  const end = segment.point1;
-  let bearing = segment.bearing; // Access Bearing property safely
-
-  if (typeof bearing !== 'number') {
-    // If bearing is not a number, calculate it and assign
-    bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
-    segment.bearing = bearing;
-  }
-
-  bearing = ((bearing % 360) + 360) % 360; // Normalize to [0, 360)
-
-  if (bearing >= 180) {
-    const temp = { lat: start.lat, lon: start.lon };
-    start.lat = end.lat;
-    start.lon = end.lon;
-    end.lat = temp.lat;
-    end.lon = temp.lon;
-    bearing -= 180;
-  }
-  segment.bearing = bearing;
-  return segment;
-}
 
 export async function loadThematicData(
   path: string,
@@ -216,7 +159,14 @@ export async function loadThematicData(
 ): Promise<ThematicPoint[]> {
   const processedData: ThematicPoint[] = [];
 
-  const thematicData: Array<Record<string, any>> = await d3.csv(`/data/${path}`,  d3.autoType);
+  let thematicData: Array<Record<string, any>>;
+  try {
+    thematicData = await d3.csv(`/data/${path}`,  d3.autoType);
+  } catch (error) {
+    console.error(`Error loading thematic data from data/${path}:`, error);
+    return [];
+  }
+  
 
   for (const d of thematicData) {
     const newRow: Record<string, any> = { ...d }; // Start with a copy of the original row
@@ -249,4 +199,73 @@ export async function loadThematicData(
     }
   }
   return processedData;
+}
+
+export async function loadPhysicalData(
+  path: string,
+): Promise<PhysicalEdge[]> {
+
+  let geojsonData;
+  try {
+    geojsonData = await d3.json(`/data/${path}`) as GeoJSONData | GeoJSONFeature | undefined;
+  } catch (error) {
+    console.error(`Error loading physical data from data/${path}:`, error);
+    return [];
+  }
+
+  let featuresToProcess: GeoJSONFeature[] = [];
+  if(geojsonData) {
+    if (geojsonData.type === "FeatureCollection" && geojsonData.features) {
+      featuresToProcess = geojsonData.features;
+    } else if (geojsonData.type === "Feature") {
+      featuresToProcess = [geojsonData]; // Wrap single Feature in an array
+    } else {
+      console.error(`GeoJSON from data/${path} is not a valid FeatureCollection or Feature with geometry. Skipping.`);
+      return [];
+    }
+  }
+  else {
+    console.error(`Error loading physical data from data/${path}.`);
+    return [];
+  }
+
+  const processedEdges: PhysicalEdge[] = [];
+  for (const feature of featuresToProcess) {
+    if (feature.geometry && feature.geometry.type === "LineString" && feature.geometry.coordinates) {
+      const coords = feature.geometry.coordinates;
+      if (coords.length >= 2) {
+        for (let i = 0; i < coords.length - 1; i++) {
+          const startCoord = coords[i]; // [lon, lat]
+          const endCoord = coords[i + 1]; // [lon, lat]
+
+          const p0: SegmentData = { lat: startCoord[1], lon: startCoord[0] };
+          const p1: SegmentData = { lat: endCoord[1], lon: endCoord[0] };
+
+          // Create Turf.js points for calculations
+          const turfStart = turf.point(startCoord);
+          const turfEnd = turf.point(endCoord);
+
+          // Calculate Bearing (in degrees) using Turf.js
+          const bearing: number = turf.bearing(turfStart, turfEnd); // Turf.js returns a number
+
+          // Calculate Length
+          const segmentLine = turf.lineString([startCoord, endCoord]);
+          const length: number = turf.length(segmentLine, { units: 'meters' }); // Example: length in meters
+
+          // Create the PhysicalEdge tuple in the format expected by aggregateSegmentBuffer
+          const processedEdgeTuple: PhysicalEdge = {
+            point0: p0,
+            point1: p1,
+            bearing: bearing,
+            length: length,
+            attributes: undefined
+          };
+          processedEdges.push(processedEdgeTuple);
+        }
+      }
+    }
+  }
+
+  return processedEdges;
+  
 }
