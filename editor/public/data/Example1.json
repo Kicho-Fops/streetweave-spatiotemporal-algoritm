@@ -1,0 +1,63 @@
+[
+  {
+    "unit": {
+      "type": "segment",
+      "splits": 1,
+      "method": "line",
+      "color": "#31a354",
+      "width": "CurbRamp",
+      "opacity": "SurfaceProblem",
+      "alignment": "center"
+    },
+    "data": {
+      "physical": {"path": "filtered_data.geojson"},
+      "thematic": {"path": "SideWalk_data.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 10,
+      "type": "mean"
+    }
+  },
+  {
+    "unit": {
+      "type": "segment",
+      "splits": 1,
+      "method": "line",
+      "color": "#756bb1",
+      "width": "CurbRamp",
+      "opacity": "SurfaceProblem",
+      "alignment": "left"
+    },
+    "data": {
+      "physical": {"path": "filtered_data.geojson"},
+      "thematic": {"path": "SideWalk_data.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 10,
+      "type": "mean"
+    }
+  },
+  {
+    "unit": {
+      "type": "segment",
+      "splits": 1,
+      "method": "line",
+      "color": "#d95f0e",
+      "width": "CurbRamp",
+      "opacity": "SurfaceProblem",
+      "alignment": "right"
+    },
+    "data": {
+      "physical": {"path": "filtered_data.geojson"},
+      "thematic": {"path": "SideWalk_data.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 10,
+      "type": "mean"
+    }
+  }
+
+]

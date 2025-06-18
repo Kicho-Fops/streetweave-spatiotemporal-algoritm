@@ -45,6 +45,7 @@ export const getDynamicStyleValue = (
   // thresholdColors: string[] | null = null,
   // thresholdSteps: number = 5
 ): string | number | undefined => {
+  // console.log("checking color thing", attributes)
   // console.log(specValue, dataPoint, allDataPoints, d3ScaleRange, interpolateFn, thresholdColors, thresholdSteps);
 
   const hexRe = /^#([0-9A-F]{3}|[0-9A-F]{6})$/i;

@@ -57,6 +57,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   }, [parsedSpec]);
 
   useEffect(() => {
+    if (parsedSpec[0] && parsedSpec[0].map?.streetWidth !== undefined) {
+      setMimicWidth(parsedSpec[0].map.streetWidth);
+    }
+  }, [parsedSpec]);
+
+  useEffect(() => {
     // if (!mapInstanceRef.current) return
 
     if (mapRef.current) {
@@ -120,6 +126,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
     }
   }, [parsedSpec]);
+
+
   
   useEffect(() => {
     if (!mapInstanceRef.current) return;
@@ -456,8 +464,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               // const lineBearing = bearingBetweenPoints(sOffsetLat, sOffsetLon, eOffsetLat, eOffsetLon);
               const outwardBearing = layerSpec.unit.alignment === "left" ? (lineBearing + 270) % 360 : (lineBearing + 90) % 360;
 
-              const [s2Lat, s2Lon] = offsetPoint(sOffsetLat, sOffsetLon, outwardBearing, rectWidth);
-              const [e2Lat, e2Lon] = offsetPoint(eOffsetLat, eOffsetLon, outwardBearing, rectWidth);
+              const [s2Lat, s2Lon] = offsetPoint(sOffsetLat, sOffsetLon, outwardBearing, rectWidth*6);
+              const [e2Lat, e2Lon] = offsetPoint(eOffsetLat, eOffsetLon, outwardBearing, rectWidth*6);
 
               const corners = [
                 projectPoint(map, sOffsetLat, sOffsetLon),
