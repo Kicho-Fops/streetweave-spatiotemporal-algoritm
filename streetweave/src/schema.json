@@ -42,12 +42,17 @@
           "color": {
             "type": "string",
             "description": "Color (e.g., 'red', '#HEXCODE'). Can also be a field name.",
-            "default": "red"
+            "default": "#FF0000"
           },
-          "style": {
+          "dash": {
             "type": "string",
-            "description": "Style of line (e.g., 'solid', 'dashed', 'dotted').",
-            "default": "solid"
+            "description": "Style of line.",
+            "nullable": true
+          },
+          "squiggle": {
+            "type": "string",
+            "description": "Style of line.",
+            "nullable": true
           },
           "width": {
             "oneOf": [

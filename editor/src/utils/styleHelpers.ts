@@ -108,27 +108,31 @@ export const getDynamicStyleValue = (
  * @returns The dash array string or null.
  */
 export const getDashArray = (
-  lineType: string | undefined,
-  lineTypeVal: string | undefined,
-  segment: PhysicalEdge,
-  allSegments: PhysicalEdge[]
+  name: string | number | undefined,
+  attributes: Record<string, number | undefined> | undefined,
+  domain: Record<string, { min: number; max: number }> | undefined
+
+  // lineType: string | undefined,
+  // lineTypeVal: string | undefined,
+  // segment: PhysicalEdge,
+  // allSegments: PhysicalEdge[]
 ): string => {
-  if (lineType === "dashed" && lineTypeVal) {
-    const aggregatedAttributes = segment.attributes;
-    if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(lineTypeVal)) {
-      const attributeValue = aggregatedAttributes[lineTypeVal];
+  if (name && domain) {
+    const aggregatedAttributes = attributes;
+    if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(name)) {
+      const attributeValue = aggregatedAttributes[name];
       if (attributeValue === null || typeof attributeValue === 'undefined') return "";
 
-      const allAttributeValues = allSegments
-        .map(s => s.attributes?.[lineTypeVal])
-        .filter((v): v is number => typeof v === 'number');
+      // const allAttributeValues = attributes
+        // .map(s => s.attributes?.[lineTypeVal])
+        // .filter((v): v is number => typeof v === 'number');
 
-      if (allAttributeValues.length === 0) return "";
+      // if (allAttributeValues.length === 0) return "";
 
-      const minValue = d3.min(allAttributeValues);
-      const maxValue = d3.max(allAttributeValues);
+      const minValue = domain[name].min; // d3.min(allAttributeValues);
+      const maxValue = domain[name].max; // d3.max(allAttributeValues);
 
-      if (minValue === undefined || maxValue === undefined) return "";
+      // if (minValue === undefined || maxValue === undefined) return "";
 
       if (attributeValue < minValue + (maxValue - minValue) / 3) {
         return "2, 5";
@@ -154,28 +158,31 @@ export const getDashArray = (
  * @returns An object with amplitude and frequency.
  */
 export const getSquiggleParams = (
-  lineType: string | undefined,
-  lineTypeVal: string | undefined,
-  segment: PhysicalEdge,
-  allSegments: PhysicalEdge[]
+  name: string | number | undefined,
+  attributes: Record<string, number | undefined> | undefined,
+  domain: Record<string, { min: number; max: number }> | undefined
+  // lineType: string | undefined,
+  // lineTypeVal: string | undefined,
+  // segment: PhysicalEdge,
+  // allSegments: PhysicalEdge[]
 ): { amplitude: number; frequency: number } => {
   let squiggleAmplitude = 25;
   let squiggleFrequency = 10;
 
-  if (lineType === 'squiggle' && lineTypeVal) {
-    const aggregatedAttributes = segment.attributes;
-    if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(lineTypeVal)) {
-      const attributeValue = aggregatedAttributes[lineTypeVal];
+  if (name && domain) {
+    const aggregatedAttributes = attributes;
+    if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(name)) {
+      const attributeValue = aggregatedAttributes[name];
       if (attributeValue === null || typeof attributeValue === 'undefined') return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
 
-      const allAttributeValues = allSegments
-        .map(s => s.attributes?.[lineTypeVal])
-        .filter((v): v is number => typeof v === 'number');
+      // const allAttributeValues = allSegments
+      //   .map(s => s.attributes?.[lineTypeVal])
+      //   .filter((v): v is number => typeof v === 'number');
 
-      if (allAttributeValues.length === 0) return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
+      // if (allAttributeValues.length === 0) return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
 
-      const minValue = d3.min(allAttributeValues);
-      const maxValue = d3.max(allAttributeValues);
+      const minValue = domain[name].min; // d3.min(allAttributeValues);
+      const maxValue = domain[name].max; // d3.max(allAttributeValues);
 
       if (minValue === undefined || maxValue === undefined) return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
 

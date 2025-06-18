@@ -11,6 +11,11 @@ export type ThematicPoint = {
   [key: string]: number;
 };
 
+export type AggregatedEdges = {
+  edges: PhysicalEdge[],
+  attributeStats: Record<string, { min: number; max: number }>;
+}
+
 // Define a type for the processed edge data after aggregation
 export type PhysicalEdge = {
   point0: SegmentData, // Point A
@@ -70,7 +75,8 @@ export interface ParsedSpec {
     method?: "line" | "rect" | "matrix"; // Optional due to default in schema
     opacity?: string | number; // Optional due to default in schema, oneOf string/number
     color?: string; // Optional due to default in schema
-    style?: string; // Optional due to default in schema
+    squiggle?: string; // Optional due to default in schema
+    dash?: string; // Optional due to default in schema
     width?: string | number; // Optional due to default in schema, oneOf string/number
     height?: string | number; // Optional due to default in schema, oneOf string/number
     chart?: any; // Optional/nullable

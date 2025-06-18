@@ -220,6 +220,7 @@ export async function loadThematicData(
   }
 
   const attributeStats: Record<string, { min: number; max: number }> = {};
+  console.log(attributeMaxs);
   for (const key in attributeMins) {
     if (attributeMins.hasOwnProperty(key) && attributeMaxs.hasOwnProperty(key)) {
       attributeStats[key] = {

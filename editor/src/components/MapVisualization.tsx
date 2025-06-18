@@ -10,7 +10,7 @@ import * as turf from '@turf/turf';
 import type { GeoJsonObject } from 'geojson';
 
 // Import types
-import { ParsedSpec, PhysicalEdge, ThematicPoint } from 'streetweave'
+import { ParsedSpec, PhysicalEdge, ThematicPoint, AggregatedEdges } from 'streetweave'
 
 // Import utility functions
 import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
@@ -303,7 +303,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
       // Step 2: Apply spatial aggregation
-      let processedEdges: PhysicalEdge[] = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
+      let processedEdges: AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
       // console.log(processedEdges);
 
       // // Ensure all edges have the correct structure with an aggregated attributes object at index 4
@@ -339,7 +339,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       const drawSegmentShapes = () => {
         svgGroup.selectAll("*").remove();
 
-        processedEdges.forEach((edge: PhysicalEdge) => {
+        processedEdges.edges.forEach((edge: PhysicalEdge) => {
           // Ensure bearing and normalize segment
           // if (edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] && typeof edge[2].Bearing === 'number') {
             // normalizeSegment(edge);
@@ -368,20 +368,20 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
           
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 10]) as number;
           const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
 
-          const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge.attributes, thematicData.attributeStats, [0, 1]) as number;
+          const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 
-          const dashArray = getDashArray(layerSpec.unit.style, layerSpec.unit.style, edge, processedEdges);
-          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.style, layerSpec.unit.style, edge, processedEdges);
+          const dashArray = getDashArray(layerSpec.unit.dash, edge.attributes, processedEdges.attributeStats);
+          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.squiggle, edge.attributes, processedEdges.attributeStats);
 
           if (layerSpec.unit.method === 'line') {
             const lineGenerator = d3.line<any>()
               .x((d: any) => projectPoint(map, d.lat, d.lon)[0])
               .y((d: any) => projectPoint(map, d.lat, d.lon)[1]);
 
-            if (layerSpec.unit.style === 'squiggle') {
+            if (layerSpec.unit.squiggle) {
               const point1 = L.point(projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[0], projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[1]);
               const point2 = L.point(projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[0], projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[1]);
               const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
@@ -596,10 +596,10 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
 
       // Aggregates thematic data onto the edges first
-      const aggregatedEdges: PhysicalEdge[] = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
+      const aggregatedEdges: AggregatedEdges = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
 
       // Processes the aggregated edges to get unique nodes with their aggregated attributes
-      const nodesList = processEdgesToNodes(aggregatedEdges);
+      const nodesList = processEdgesToNodes(aggregatedEdges.edges);
 
       const svgLayer = L.svg().addTo(map);
       const svgGroup = d3.select(map.getPanes().overlayPane).select("svg").append("g").attr("class", "leaflet-zoom-hide");

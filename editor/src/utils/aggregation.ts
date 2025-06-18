@@ -2,7 +2,7 @@
 
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
-import { AggregationType, ThematicPoint, PhysicalEdge, ParsedSpec } from 'streetweave';
+import { AggregationType, ThematicPoint, PhysicalEdge, ParsedSpec, AggregatedEdges } from 'streetweave';
 import { calculateMidpoint, calculateDistances, findClosestPoints, filterPointsInBuffer, createBuffer } from './geoHelpers';
 
 
@@ -293,19 +293,44 @@ export async function applySpatialAggregation(
   physicalData: PhysicalEdge[],
   thematicData: ThematicPoint[],
   layerSpec: ParsedSpec
-): Promise<PhysicalEdge[]> {
+): Promise<AggregatedEdges> {
+
+  let attributeStats: Record<string, { min: number; max: number }> = {};
+
   if (layerSpec.unit.type === 'segment' || layerSpec.unit.type === 'node') {
-    const edgesData = physicalData as any[]; // Raw edges array
+    let edgesData : PhysicalEdge[];
     if (layerSpec.relation?.spatial === 'contains') {
-      return aggregationContainsSegment(edgesData, thematicData, layerSpec.relation.type!);
+      edgesData = aggregationContainsSegment(physicalData, thematicData, layerSpec.relation.type!);
     } else if (layerSpec.relation?.spatial === 'nn') {
-      return aggregateSegmentNearestNeighbor(edgesData, thematicData, layerSpec.relation.type!);
+      edgesData = aggregateSegmentNearestNeighbor(physicalData, thematicData, layerSpec.relation.type!);
     } else if (layerSpec.relation?.spatial === 'buffer') {
-      return aggregateSegmentBuffer(edgesData, thematicData, layerSpec.relation.value!, layerSpec.relation.type!);
+      edgesData = aggregateSegmentBuffer(physicalData, thematicData, layerSpec.relation.value!, layerSpec.relation.type!);
     }
+    else {
+      return {edges: physicalData, attributeStats};
+    }
+
+    
+    edgesData.forEach(edge => {
+      for (const key in edge.attributes) {
+        if(attributeStats[key] == undefined)
+          attributeStats[key] = {min: Infinity, max: -Infinity}
+
+        const value = edge.attributes[key];
+        let finalValue: number = value ? value : 0; 
+        if (attributeStats[key].min === undefined || finalValue < attributeStats[key].min) {
+          attributeStats[key].min = finalValue;
+        }
+        if (attributeStats[key].max === undefined || finalValue > attributeStats[key].max) {
+          attributeStats[key].max = finalValue;
+        }
+      }
+    });
+
+    return {edges: edgesData, attributeStats};
   }
   // Return unchanged if no aggregation matches or if unit is not recognized
-  return physicalData;
+  return {edges: physicalData, attributeStats};
 }
 
 /**
