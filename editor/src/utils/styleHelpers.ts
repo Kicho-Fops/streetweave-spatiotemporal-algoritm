@@ -2,7 +2,7 @@
 
 import * as d3 from 'd3';
 import L from 'leaflet'; // Import L for L.Point
-import { ParsedSpec, PhysicalEdge } from 'streetweave';
+import { ParsedSpec } from 'streetweave';
 
 /**
  * Applies opacity based on the type (fill, stroke, line) and layer specification.
@@ -62,40 +62,7 @@ export const getDynamicStyleValue = (
       scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]);
     return scale(attributes[name]);
   }
-  
-      // if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(specValue)) {
-        // const attributeValue = aggregatedAttributes[specValue];
-        // if (attributeValue === null || typeof attributeValue === 'undefined') return null;
-  
-        // Collect all valid numbers for the specified attribute from all data points
-        // const allAttributeValues = allDataPoints
-        //   .map(dp => (Array.isArray(dp) ? dp.attributes?.[specValue] : dp.attributes))
-        //   .filter((v): v is number => typeof v === 'number');
-  
-        // if (allAttributeValues.length === 0) return null;
-  
-        // const minValue = d3.min(allAttributeValues);
-        // const maxValue = d3.max(allAttributeValues);
-  
-        // if (minValue === undefined || maxValue === undefined) return null;
-  
-        // if (d3ScaleRange) {
-        //   // Linear scale for width/opacity/height
-        //   const scale = d3.scaleLinear().domain([minValue, maxValue]).range(d3ScaleRange);
-        //   return scale(attributeValue);
-        // } else if (interpolateFn) {
-        //   // Sequential color scale
-        //   const scale = d3.scaleSequential(interpolateFn).domain([minValue, maxValue]);
-        //   return scale(attributeValue);
-        // } else if (thresholdColors && thresholdColors.length >= thresholdSteps) {
-        //   // Threshold color scale
-        //   const step = (maxValue - minValue) / thresholdSteps;
-        //   const thresholds = Array.from({ length: thresholdSteps - 1 }, (_, i) => minValue + (i + 1) * step);
-        //   const scale = d3.scaleThreshold<number, string>().domain(thresholds).range(thresholdColors);
-        //   return scale(attributeValue);
-        // }
-      // }
-  // }
+
   return undefined; // Default if attribute not found or no mapping specified
 };
 
@@ -111,11 +78,6 @@ export const getDashArray = (
   name: string | number | undefined,
   attributes: Record<string, number | undefined> | undefined,
   domain: Record<string, { min: number; max: number }> | undefined
-
-  // lineType: string | undefined,
-  // lineTypeVal: string | undefined,
-  // segment: PhysicalEdge,
-  // allSegments: PhysicalEdge[]
 ): string => {
   if (name && domain) {
     const aggregatedAttributes = attributes;
@@ -123,16 +85,8 @@ export const getDashArray = (
       const attributeValue = aggregatedAttributes[name];
       if (attributeValue === null || typeof attributeValue === 'undefined') return "";
 
-      // const allAttributeValues = attributes
-        // .map(s => s.attributes?.[lineTypeVal])
-        // .filter((v): v is number => typeof v === 'number');
-
-      // if (allAttributeValues.length === 0) return "";
-
       const minValue = domain[name].min; // d3.min(allAttributeValues);
       const maxValue = domain[name].max; // d3.max(allAttributeValues);
-
-      // if (minValue === undefined || maxValue === undefined) return "";
 
       if (attributeValue < minValue + (maxValue - minValue) / 3) {
         return "2, 5";

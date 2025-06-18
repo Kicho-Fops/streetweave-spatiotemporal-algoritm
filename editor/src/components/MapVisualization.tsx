@@ -302,19 +302,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         initialEdges = subdivided;
       }
 
-      // Step 2: Apply spatial aggregation
+      // Apply spatial aggregation
       let processedEdges: AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
-      // console.log(processedEdges);
-
-      // // Ensure all edges have the correct structure with an aggregated attributes object at index 4
-      // processedEdges = processedEdges.map(edge => {
-      //   // If the 5th element isn't an object, make it an empty object
-      //   if (!edge[4] || typeof edge[4] !== 'object') {
-      //       const newEdge: ProcessedEdge = [edge[0], edge[1], {}];
-      //       return newEdge;
-      //   }
-      //   return edge;
-      // });
 
       // Clear existing layers from relevant panes to prevent duplicates on redraw
       const paneName = layerSpec.unit.alignment === "center" ? 'overlayPane' : `${layerSpec.unit.alignment}-${layerSpec.unit.orientation}`;

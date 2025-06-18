@@ -55,44 +55,6 @@ export const aggregateValues = (
 };
 
 /**
- * Aggregates thematic data into GeoJSON features based on point-in-polygon containment.
- * @param geojsonData The GeoJSON data (area units).
- * @param thematicData The thematic point data.
- * @param aggregationType The type of aggregation.
- * @returns The updated GeoJSON data with aggregated properties.
- */
-// const aggregationContainsArea = (
-//   geojsonData: GeoJSONData,
-//   thematicData: ThematicPoint[],
-//   aggregationType: AggregationType
-// ): GeoJSONData => {
-//   if (!geojsonData.features) return geojsonData;
-
-//   geojsonData.features.forEach(feature => {
-//     const polygon = feature.geometry as Polygon;
-//     if (!polygon || !polygon.coordinates || !polygon.coordinates[0]) {
-//       console.warn('Skipping feature with invalid polygon geometry:', feature);
-//       return;
-//     }
-
-//     const pointsInPolygon = thematicData.filter(point => {
-//       const pointCoordinates: Position = [point.Lon, point.Lat];
-//       try {
-//         return d3.polygonContains(polygon.coordinates[0] as [number, number][], pointCoordinates as [number, number]);
-//       } catch (err) {
-//         console.error('Error checking point in polygon:', err);
-//         return false;
-//       }
-//     });
-//     feature.properties = {
-//       ...feature.properties,
-//       ...aggregateValues(pointsInPolygon, aggregationType, thematicData)
-//     };
-//   });
-//   return geojsonData;
-// };
-
-/**
  * Aggregates thematic data for edge segments based on point-in-polygon containment (using a buffer).
  * @param edgesData The raw edge data from the physical layer.
  * @param thematicData The thematic point data.
@@ -124,51 +86,10 @@ const aggregationContainsSegment = (
     });
     const aggregated = aggregateValues(pointsInBoundingBox, aggregationType, thematicData);
     edge.attributes = aggregated;
-    // Ensure the structure is consistent: [pointA, pointB, {Bearing}, {Length}, {AggregatedValues}]
-    // Handle cases where edge[2] or edge[3] might not be objects
-    // const existingBearing = edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] ? edge[2] : { Bearing: null };
-    // const existingLength = edge[3] && typeof edge[3] === 'object' && 'Length' in edge[3] ? edge[3] : { Length: null };
 
     return edge;
   });
 };
-
-
-/**
- * Creates a new GeoJSON dataset by aggregating thematic data to each Polygon/MultiPolygon feature
- * based on nearest neighbors to the centroid.
- * @param geojsonData The GeoJSON FeatureCollection of Polygons/MultiPolygons.
- * @param thematicData The thematic point data.
- * @param aggregationType The type of aggregation.
- * @returns The updated GeoJSON data with aggregated properties.
- */
-// const aggregateAreaNearestNeighbor = (
-//   geojsonData: FeatureCollection<MultiPolygon | Polygon>,
-//   thematicData: ThematicPoint[],
-//   aggregationType: AggregationType
-// ): FeatureCollection<MultiPolygon | Polygon> => {
-//   geojsonData.features.forEach((feature) => {
-//     if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-//       console.warn('Skipping feature with unsupported or missing geometry:', feature);
-//       return;
-//     }
-
-//     let centroid: Feature<Point>;
-//     try {
-//       centroid = calculateCentroid(feature.geometry);
-//     } catch (err) {
-//       console.error('Error computing centroid:', err);
-//       return;
-//     }
-
-//     const distances = calculateDistances(centroid, thematicData);
-//     const closestPoints = findClosestPoints(distances, thematicData);
-//     const aggregatedValues = aggregateValues(closestPoints, aggregationType, thematicData);
-
-//     feature.properties = { ...feature.properties, ...aggregatedValues };
-//   });
-//   return geojsonData;
-// };
 
 /**
  * Aggregates thematic data for each edge segment based on nearest neighbors to the midpoint.
@@ -198,48 +119,6 @@ const aggregateSegmentNearestNeighbor = (
     return edge;
   });
 };
-
-/**
- * Aggregates thematic data into GeoJSON features based on a buffer around the centroid.
- * @param geojsonData The GeoJSON FeatureCollection of Polygons/MultiPolygons.
- * @param environmentalData The thematic point data.
- * @param bufferDistance The buffer distance in kilometers.
- * @param aggregationType The type of aggregation.
- * @returns The updated GeoJSON data with aggregated properties.
- */
-// const aggregateAreaBuffer = (
-//   geojsonData: FeatureCollection<MultiPolygon | Polygon>,
-//   environmentalData: ThematicPoint[],
-//   bufferDistance: number,
-//   aggregationType: AggregationType
-// ): FeatureCollection<MultiPolygon | Polygon> => {
-//   geojsonData.features.forEach(feature => {
-//     if (!feature.geometry || !['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
-//       console.warn("Invalid geometry, skipping feature:", feature);
-//       return;
-//     }
-
-//     let centroid: Feature<Point>;
-//     try {
-//       centroid = calculateCentroid(feature.geometry);
-//     } catch (e) {
-//       console.error("Failed to calculate centroid:", e);
-//       return;
-//     }
-
-//     const buffer = createBuffer(centroid, bufferDistance);
-//     if (!buffer) {
-//       console.warn("Invalid buffer, skipping feature.");
-//       return;
-//     }
-
-//     const pointsInBuffer = filterPointsInBuffer(buffer, environmentalData);
-//     const aggregatedValues = aggregateValues(pointsInBuffer, aggregationType, environmentalData);
-
-//     feature.properties = { ...feature.properties, ...aggregatedValues };
-//   });
-//   return geojsonData;
-// };
 
 /**
  * Aggregates thematic data for edge segments based on a buffer around their midpoint.

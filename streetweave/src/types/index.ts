@@ -50,22 +50,6 @@ export type SegmentData = {
   lon: number;
 };
 
-
-// Define an interface for the properties added to an edge for styling (internal to renderers)
-export interface EdgeStyleProps {
-  __spikeColor?: string;
-  __spikeWidth?: number;
-  __spikeheight?: number;
-  __spikeOpacity?: number;
-  __rectColor?: string;
-  __rectWidth?: number;
-  __rectOpacity?: number;
-  __shapeColor?: string;
-  __shapeWidth?: number;
-  __height?: number;
-  __shapeOpacity?: number;
-}
-
 // DEFINING ParsedSpec here
 export interface ParsedSpec {
   name?: string;
