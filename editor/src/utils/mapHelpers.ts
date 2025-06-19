@@ -60,7 +60,9 @@ export function projectPoint(mapInstance: L.Map, lat: number, lon: number): [num
  */
 export const getAdjustedLineWidth = (mapInstance: L.Map, baseWidth: number): number => {
   const zoom = mapInstance.getZoom();
-  if (zoom <= 16) return baseWidth;
+  if (zoom <= 12) return baseWidth * 0.5;
+  if (zoom > 12 && zoom <= 14) return baseWidth;
+  if (zoom > 14 && zoom <= 16) return baseWidth * 1.2;
   if (zoom > 16 && zoom <= 17) return baseWidth * 1.5;
   if (zoom > 17 && zoom <= 18) return baseWidth * 2;
   return baseWidth * 3;

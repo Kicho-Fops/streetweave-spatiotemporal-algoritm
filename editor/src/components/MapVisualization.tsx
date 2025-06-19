@@ -63,6 +63,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   }, [parsedSpec]);
 
   useEffect(() => {
+    if (parsedSpec[0] && parsedSpec[0].map?.streetWidth !== undefined) {
+      setMimicWidth(parsedSpec[0].map.streetWidth);
+    }
+  }, [parsedSpec]);
+
+  useEffect(() => {
     // if (!mapInstanceRef.current) return
 
     if (mapRef.current) {
@@ -228,7 +234,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       currentLayersRef.current = [];
       
-      parsedSpec.forEach(async (layerSpec) => {
+      parsedSpec.forEach(async (layerSpec, index) => {
         d3.selectAll('.vega-lite-svg').remove();
 
         if (mapInstanceRef.current !== null) {
@@ -236,7 +242,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   
           if (layerSpec.unit.type === 'segment'){
             // renderSegmentLayer(mapInstanceRef.current, layerSpec, index, currentLayersRef, alignmentCounters);
-            renderSegmentLayer(mapInstanceRef.current, layerSpec, currentLayersRef, alignmentCounters);
+            renderSegmentLayer(mapInstanceRef.current, layerSpec, index, currentLayersRef, alignmentCounters);
           }
   
           else if(layerSpec.unit.type === 'node'){
@@ -263,7 +269,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   const renderSegmentLayer = async (
     map: L.Map,
     layerSpec: ParsedSpec,
-    // layerIndex: number,
+    layerIndex: number,
     currentLayersRef: React.MutableRefObject<L.Layer[]>,
     alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
   ) => {
@@ -334,6 +340,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
       const drawSegmentShapes = () => {
+        // console.log("checking if zooming position change working")
         svgGroup.selectAll("*").remove();
 
         processedEdges.edges.forEach((edge: PhysicalEdge) => {
@@ -362,11 +369,19 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           const pointsForRendering = [{ lat: currentStartPoint.lat, lon: currentStartPoint.lon }, { lat: currentEndPoint.lat, lon: currentEndPoint.lon }];
           // Retrieve dynamic styles using the helper
-          const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
+          const colorRamp = layerIndex === 0
+            ? ["#a50f15", "#de2d26", "#fb6a4a", "#fcae91", "#fee5d9"]
+            : layerIndex === 1
+              ? ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"]
+              : ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"];
+          const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, colorRamp) as string;
+          // const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
           
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 10]) as number;
+          const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 5]) as number;
+          // console.log("previous line width", baseLineWidth)
           const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
+          // console.log("after line width", lineWidth)
 
           const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 
@@ -438,7 +453,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             }
           } else if (layerSpec.unit.method === 'rect') {
 
-            const baseHeight = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 7]) as number;
+            const baseHeight = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
             const rectWidth = getAdjustedLineWidth(map, baseHeight);
             const inset = 5;
 
@@ -449,6 +464,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               if (layerSpec.unit.alignment === "left") {
                 offsetBearing = (currentBearing + 270) % 360;
                 currentMultiplier = alignmentCountersRef.current.left;
+                console.log("what is currentMultiplier", currentMultiplier)
               } else if (layerSpec.unit.alignment === "right") {
                 offsetBearing = (currentBearing + 90) % 360;
                 currentMultiplier = alignmentCountersRef.current.right;
@@ -490,8 +506,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 offsetBearing = (currentBearing + 90) % 360;
               }
 
-              const [mOffsetLat, mOffsetLon] = offsetPoint(midLat, midLon, offsetBearing, 5);
-              const [m2Lat, m2Lon] = offsetPoint(mOffsetLat, mOffsetLon, offsetBearing, rectWidth);
+              const [mOffsetLat, mOffsetLon] = offsetPoint(midLat, midLon, offsetBearing, 0);
+              const [m2Lat, m2Lon] = offsetPoint(mOffsetLat, mOffsetLon, offsetBearing, rectWidth*12);
 
               const p1 = projectPoint(map, mOffsetLat, mOffsetLon);
               const p2 = projectPoint(map, m2Lat, m2Lon);
