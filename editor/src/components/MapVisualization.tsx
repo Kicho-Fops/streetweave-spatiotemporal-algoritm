@@ -373,7 +373,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           const dashArray = getDashArray(layerSpec.unit.dash, edge.attributes, processedEdges.attributeStats);
           const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.squiggle, edge.attributes, processedEdges.attributeStats);
 
-          if (layerSpec.unit.method === 'line') {
+          if (layerSpec.unit.method === 'line' && !layerSpec.unit.chart) {
             const lineGenerator = d3.line<any>()
               .x((d: any) => projectPoint(map, d.lat, d.lon)[0])
               .y((d: any) => projectPoint(map, d.lat, d.lon)[1]);
@@ -524,15 +524,19 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
               values: Object.entries(aggregatedAttrs || {}).map(([key, value]) => ({ category: key, value: value }))
             };
 
+            // console.log("vegadata is", chartSpec.data)
+
             vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false })
               .then(result => {
                 const vegaSVG = (result.view as any)._el.querySelector('svg');
                 if (!vegaSVG) return;
 
-                const id = `chart_edge_${midpoint.lat}_${midpoint.lon}`.replace(/[^\w]/g, '');
+                // const id = `chart_edge_${midpoint.lat}_${midpoint.lon}`.replace(/[^\w]/g, '');
 
                 const updateChartPosition = () => {
                   const point = map.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+                  const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
+                  const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
                   // const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
                   const turfStart = turf.point([start.lon, start.lat]); // lon lat
                   const turfEnd = turf.point([end.lon, end.lat]); // lon lat
@@ -540,22 +544,22 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
                   const angle = bearing + 90;
 
-                  const transform = `translate(${point.x - svgChartWidth / 2},${point.y - svgChartHeight / 2})`
-                                  + ` rotate(${angle},${svgChartWidth / 2},${svgChartHeight / 2})`;
+                  const transform = `translate(${point.x - svgChartWidth / 3},${point.y - svgChartHeight / 3})`
+                                  + ` rotate(${angle},${svgChartWidth / 2.5},${svgChartHeight / 2.5})`;
 
-                  const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
-                  if (sel.empty()) {
+                  // const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
+                  if (temp.empty()) {
                     d3.select(pane)
                       .append('svg')
                       .attr('class', 'vega-lite-svg')
-                      .attr('id', id)
+                      .attr('id', tempID)
                       .attr('width', svgChartWidth)
                       .attr('height', svgChartHeight)
                       .attr('transform', transform)
                       .node()
                       ?.appendChild(vegaSVG.cloneNode(true));
                   } else {
-                    sel.attr('transform', transform);
+                    temp.attr('transform', transform);
                   }
                 };
 
@@ -620,34 +624,41 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
             const chartSpec = JSON.parse(JSON.stringify(templateSpec));
             // Filter out lat/lon from data for the chart
+            // chartSpec.data = {
+            //   values: Object.entries(node).filter(([key]) => key !== 'lat' && key !== 'lon').map(([key, value]) => ({ category: key, value: value }))
+            // };
             chartSpec.data = {
-              values: Object.entries(node).filter(([key]) => key !== 'lat' && key !== 'lon').map(([key, value]) => ({ category: key, value: value }))
+              values: Object.entries(node.attributes).filter(([key]) => key !== 'lat' && key !== 'lon').map(([category, value]) => ({category, value}))
             };
+
+            // console.log("vegadata is", node)
 
             vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false })
               .then(result => {
                 const vegaSVG = (result.view as any)._el.querySelector('svg');
                 if (!vegaSVG) return;
 
-                const id = `chart_node_${node.lat}_${node.lon}`.replace(/[^\w.]/g, '');
+                // const id = `chart_node_${node.lat}_${node.lon}`.replace(/[^\w.]/g, '');
 
                 const updateChartPosition = () => {
                   const point = map.latLngToLayerPoint([node.lat, node.lon]);
+                  const tempID = 't' + (node.lat + node.lon + '').replace('.', '').replace('-', '') + 'svg';
                   const transform = `translate(${point.x - svgChartWidth / 2},${point.y - svgChartHeight / 2})`;
+                  const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
 
-                  const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
-                  if (sel.empty()) {
+                  // const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
+                  if (temp.empty()) {
                     d3.select(pane)
                       .append('svg')
                       .attr('class', 'vega-lite-svg')
-                      .attr('id', id)
+                      .attr('id', tempID)
                       .attr('width', svgChartWidth)
                       .attr('height', svgChartHeight)
                       .attr('transform', transform)
                       .node()
                       ?.appendChild(vegaSVG.cloneNode(true));
                   } else {
-                    sel.attr('transform', transform);
+                    temp.attr('transform', transform);
                   }
                 };
 
