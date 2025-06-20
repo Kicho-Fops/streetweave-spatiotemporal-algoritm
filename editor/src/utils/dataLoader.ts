@@ -18,7 +18,7 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
 
   if (layerSpec.unit.splits !== 1) {
     processedEdges = subdivideEdges(processedEdges, thematicData.attributeStats, layerSpec.unit.splits);
-    processedEdges = await applySpatialAggregation(edges, thematicData.data, layerSpec);
+    processedEdges = await applySpatialAggregation(processedEdges.edges, thematicData.data, layerSpec);
   }
 
   return { processedEdges, thematicData };
