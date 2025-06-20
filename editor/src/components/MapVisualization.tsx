@@ -3,21 +3,18 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
 import 'leaflet.heat';
-import vegaEmbed from 'vega-embed';
 import * as turf from '@turf/turf';
 // import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
 
 // Import types
-import { ParsedSpec, AggregatedEdges } from 'streetweave'
+import { ParsedSpec } from 'streetweave'
 
 // Import utility functions
-import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
-import { getDynamicStyleValue,  } from '../utils/styleHelpers';
-import { loadThematicData, loadPhysicalData } from '../utils/geoHelpers';
-import { createPaneIfNeeded, initializeMap, projectPoint, getOffsetDistance, bindMapEvents } from '../utils/mapHelpers';
-import { loadSegmentData } from '../utils/dataLoader';
-import { buildD3Instructions, drawSegments } from '../utils/d3Helpers';
-import { drawVegaLiteCharts } from '../utils/vegaliteHelpers';
+import { loadPhysicalData } from '../utils/geoHelpers';
+import { createPaneIfNeeded, initializeMap, getOffsetDistance, bindMapEvents } from '../utils/mapHelpers';
+import { loadNodeData, loadSegmentData } from '../utils/dataLoader';
+import { buildD3Instructions, drawD3Nodes, drawSegments } from '../utils/d3Helpers';
+import { drawVegaLiteEdges, drawVegaLiteNodes } from '../utils/vegaliteHelpers';
 
 
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }) => {
@@ -27,7 +24,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   const currentLayersRef = useRef<L.Layer[]>([]);
 
   const [map, setMap] = useState<L.Map | null>(null)
-  const [zoom] = useState<number>(18)
+  const [zoom] = useState<number>(13)
 
   const [mimicWidth, setMimicWidth] = useState<number>(0);
   const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
@@ -156,6 +153,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
   d3.selectAll('.vega-lite-svg').remove();
   map.off('move zoom');
+  setMimicWidth(0)
 
   currentLayersRef.current.forEach(layer => {
     if (!(layer.options && layer.options.pane === 'mimicStreetPane')) {
@@ -219,7 +217,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   }, [mimicWidth, parsedSpec, addressCoords]);
 
 
-
   /**
    * Renders a segment-based layer (line, matrix, rect, chart, spike).
    * @param map The Leaflet map instance.
@@ -265,7 +262,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         currentLayersRef.current.push(svgLayer);  
 
       } else {
-        await drawVegaLiteCharts(processedEdges, layerSpec, map);
+        await drawVegaLiteEdges(processedEdges, layerSpec, map);
       }
 
       function redraw() {
@@ -292,108 +289,44 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
    * @param layerSpec The parsed layer specification.
    * @param currentLayersRef Ref to store active Leaflet layers for cleanup.
    */
+
   const renderNodeLayer = async (
     map: L.Map,
     layerSpec: ParsedSpec,
     currentLayersRef: React.MutableRefObject<L.Layer[]>
   ) => {
     try {
-      const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
-      const thematicData = await loadThematicData(layerSpec.data.thematic.path, layerSpec.data.thematic.latColumn, layerSpec.data.thematic.lonColumn);
 
-      // Aggregates thematic data onto the edges first
-      const aggregatedEdges: AggregatedEdges = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
-
-      // Processes the aggregated edges to get unique nodes with their aggregated attributes
-      const nodesList = processEdgesToNodes(aggregatedEdges.edges);
+      const { nodesList, thematicData } = await loadNodeData(layerSpec);
 
       const svgLayer = L.svg().addTo(map);
-      const svgGroup = d3.select(map.getPanes().overlayPane).select("svg").append("g").attr("class", "leaflet-zoom-hide");
+      const svgGroup = d3.select(map.getPanes().overlayPane).select("svg")
+        .append("g").attr("class", "leaflet-zoom-hide");
 
-      const updateNodeShapes = () => {
+      async function redraw() {
         svgGroup.selectAll("*").remove();
+        
+        if (layerSpec.unit.chart) {
+          await drawVegaLiteNodes(nodesList, layerSpec, map)
 
-        nodesList.forEach(node => {
-          // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-          const shapeColor = getDynamicStyleValue(layerSpec.unit.color, node.attributes, thematicData.attributeStats, d3.schemeBuGn[9]) as string;
-          const shapeWidth = getDynamicStyleValue(layerSpec.unit.width, node.attributes, thematicData.attributeStats, [5, 30]) as number;
-          // const shapeHeight = getDynamicStyleValue(layerSpec.lineHeight, node, nodesList, [5, 30]) as number ?? 5;
-          const shapeOpacity = getDynamicStyleValue(layerSpec.unit.opacity, node.attributes, thematicData.attributeStats, [0, 1]) as number;
-
-          const projected = projectPoint(map, node.lat, node.lon);
-          const pt = L.point(projected[0], projected[1]);
-
-          if (layerSpec.unit.chart) {
-            const templateSpec = layerSpec.unit.chart;
-            const svgChartWidth = 150, svgChartHeight = 150;
-            const pane = map.getPanes().overlayPane;
-
-            const chartSpec = JSON.parse(JSON.stringify(templateSpec));
-            // Filter out lat/lon from data for the chart
-            // chartSpec.data = {
-            //   values: Object.entries(node).filter(([key]) => key !== 'lat' && key !== 'lon').map(([key, value]) => ({ category: key, value: value }))
-            // };
-            chartSpec.data = {
-              values: Object.entries(node.attributes).filter(([key]) => key !== 'lat' && key !== 'lon').map(([category, value]) => ({category, value}))
-            };
-
-            // console.log("vegadata is", node)
-
-            vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false })
-              .then(result => {
-                const vegaSVG = (result.view as any)._el.querySelector('svg');
-                if (!vegaSVG) return;
-
-                // const id = `chart_node_${node.lat}_${node.lon}`.replace(/[^\w.]/g, '');
-
-                const updateChartPosition = () => {
-                  const point = map.latLngToLayerPoint([node.lat, node.lon]);
-                  const tempID = 't' + (node.lat + node.lon + '').replace('.', '').replace('-', '') + 'svg';
-                  const transform = `translate(${point.x - svgChartWidth / 2},${point.y - svgChartHeight / 2})`;
-                  const temp = d3.select(map!.getPanes().overlayPane).select('#' + tempID);
-
-                  // const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
-                  if (temp.empty()) {
-                    d3.select(pane)
-                      .append('svg')
-                      .attr('class', 'vega-lite-svg')
-                      .attr('id', tempID)
-                      .attr('width', svgChartWidth)
-                      .attr('height', svgChartHeight)
-                      .attr('transform', transform)
-                      .node()
-                      ?.appendChild(vegaSVG.cloneNode(true));
-                  } else {
-                    temp.attr('transform', transform);
-                  }
-                };
-
-                updateChartPosition();
-                map.on('move zoom', updateChartPosition);
-              })
-              .catch(error => console.error("Error embedding Vega-Lite chart for node:", error));
-          } 
-          else {
-            svgGroup.append("circle")
-              .datum(node)
-              .attr('class', 'nodeShape')
-              .attr('cx', pt.x)
-              .attr('cy', pt.y)
-              .attr('r', shapeWidth / 2)
-              .attr('fill', shapeColor)
-              .attr('fill-opacity', shapeOpacity)
-              .attr('stroke', '#333')
-              .attr('stroke-width', 0.5)
-              .append("title")
-              .text(`Node Data: ${JSON.stringify(node, null, 2)}`);
-          }
-        });
+        } else {
+          drawD3Nodes(nodesList, svgGroup, layerSpec.unit, thematicData.attributeStats, map)
+        }
       };
 
-      updateNodeShapes();
-      map.on("zoomend moveend", updateNodeShapes);
-      currentLayersRef.current.push(svgLayer);
+      await redraw();
+      const handler = () => redraw();
+      map.on("zoomend moveend", handler);
 
+      // Optional: expose cleanup
+      (svgLayer as any).onRemove = function() {
+        map.off("zoomend moveend", handler);
+      };
+
+      currentLayersRef.current.push(svgLayer);
+      return svgLayer;
+
+    
     } catch (error) {
       console.error(`Error rendering node layer for ${layerSpec.data.physical.path}:`, error);
     }

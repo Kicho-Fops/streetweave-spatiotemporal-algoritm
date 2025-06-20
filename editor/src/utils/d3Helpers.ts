@@ -3,8 +3,9 @@ import { AggregatedEdges, PhysicalEdge, ThematicPoint, UnitType } from "streetwe
 
 import { generateSimpleWavyPath, getBivariateColor, getDashArray, getDynamicStyleValue, getSquiggleParams } from "./styleHelpers";
 import { offsetPoint } from "./geoHelpers";
-import { getAdjustedLineWidth } from "./mapHelpers";
+import { getAdjustedLineWidth, projectPoint } from "./mapHelpers";
 import * as d3 from 'd3';
+import L from "leaflet";
 
 
 export function buildD3Instructions(
@@ -280,4 +281,34 @@ export function drawSegments(
       .style('stroke-dasharray', (d: any) => d['stroke-dasharray']);
   }
         
+}
+
+export function drawD3Nodes(
+  nodesList: Record<string, any>[],
+  svgGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
+  unit: UnitType,
+  attributeStats: Record<string, { min: number; max: number; }> | undefined,
+  map: L.Map
+) {
+  nodesList.forEach(node => {
+    const shapeColor = getDynamicStyleValue(unit.color, node.attributes, attributeStats, d3.schemeBuGn[9]) as string;
+    const shapeWidth = getDynamicStyleValue(unit.width, node.attributes, attributeStats, [5, 30]) as number;
+    const shapeOpacity = getDynamicStyleValue(unit.opacity, node.attributes, attributeStats, [0, 1]) as number;
+
+    const projected = projectPoint(map, node.lat, node.lon);
+    const pt = L.point(projected[0], projected[1]);
+
+    svgGroup.append("circle")
+      .datum(node)
+      .attr('class', 'nodeShape')
+      .attr('cx', pt.x)
+      .attr('cy', pt.y)
+      .attr('r', shapeWidth / 2)
+      .attr('fill', shapeColor)
+      .attr('fill-opacity', shapeOpacity)
+      .attr('stroke', '#333')
+      .attr('stroke-width', 0.5)
+      .append("title")
+      .text(`Node Data: ${JSON.stringify(node, null, 2)}`);
+  });
 }

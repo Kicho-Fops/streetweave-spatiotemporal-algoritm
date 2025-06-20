@@ -1,6 +1,6 @@
 
 import { loadPhysicalData, loadThematicData } from "./geoHelpers";
-import { applySpatialAggregation } from "./aggregation";
+import { applySpatialAggregation, processEdgesToNodes } from "./aggregation";
 import { PhysicalEdge, ParsedSpec, ThematicPoint, AggregatedEdges } from "streetweave";
 import { getDynamicStyleValue } from "./styleHelpers";
 
@@ -17,11 +17,28 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
   let processedEdges: AggregatedEdges = await applySpatialAggregation(edges, thematicData.data, layerSpec);
 
   if (layerSpec.unit.splits !== 1) {
-    processedEdges = subdivideEdges(processedEdges, thematicData.attributeStats, layerSpec.unit.splits);
-    processedEdges = await applySpatialAggregation(processedEdges.edges, thematicData.data, layerSpec);
+    processedEdges = await applySpatialAggregation(
+      subdivideEdges(processedEdges, thematicData.attributeStats, layerSpec.unit.splits).edges,
+      thematicData.data,
+      layerSpec
+    );
   }
 
   return { processedEdges, thematicData };
+}
+
+export async function loadNodeData(layerSpec: ParsedSpec) {
+  const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
+  const thematicData = await loadThematicData(
+    layerSpec.data.thematic.path,
+    layerSpec.data.thematic.latColumn,
+    layerSpec.data.thematic.lonColumn
+  );
+
+  const aggregatedEdges: AggregatedEdges = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
+  const nodesList = processEdgesToNodes(aggregatedEdges.edges);
+
+  return { nodesList, thematicData };
 }
 
 function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecSplits: string | number | undefined ) {
