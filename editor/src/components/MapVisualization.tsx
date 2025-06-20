@@ -213,9 +213,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       let processedEdges: AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
       if (layerSpec.unit.splits != 1) {
-        initialEdges = subdivideEdges(initialEdges, thematicData.attributeStats);
+        processedEdges = subdivideEdges(processedEdges, thematicData.attributeStats);
+        processedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
       }
-      processedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
 
       // Clear existing layers from relevant panes to prevent duplicates on redraw
       const paneName = layerSpec.unit.alignment === "center" 
@@ -548,11 +548,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       console.error(`Error rendering segment layer for ${layerSpec.data.physical.path}:`, error);
     }
 
-    function subdivideEdges(edges: PhysicalEdge[], attributeStats: Record<string, any>) {
+    function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>) {
       const subdivided: PhysicalEdge[] = [];
 
 
-      edges.forEach((edge: PhysicalEdge) => {
+      aggregation.edges.forEach((edge: PhysicalEdge) => {
 
         let splits = getDynamicStyleValue(layerSpec.unit.splits, edge.attributes, attributeStats, [1, 20]) as number;
         const start = edge.point0;
@@ -582,7 +582,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           }
       });
 
-      return subdivided;
+      return {edges: subdivided, attributeStats: aggregation.attributeStats};
     }
 
     function updateChartPosition(point: any, bearing: number, svgChartWidth: any, svgChartHeight: any, pane: any, vegaSVG: any) {
