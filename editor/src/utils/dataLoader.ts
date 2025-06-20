@@ -46,32 +46,36 @@ function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<str
 
   aggregation.edges.forEach((edge: PhysicalEdge) => {
 
-    let density = getDynamicStyleValue(layerSpecDensity, edge.attributes, attributeStats, [1, 20]) as number;
-    const start = edge.point0;
+    let density = getDynamicStyleValue(layerSpecDensity, edge.attributes, attributeStats, [0, 100]) as number;
+    if(density > 0) {
+      let length = 200 / density;
+      let numSplits = edge.length / length;
+
+      const start = edge.point0;
       const end = edge.point1;
       const bearing = edge.bearing;
-      const length = edge.length / density;
       const attributes = edge.attributes;
       const lat0 = start.lat, lon0 = start.lon;
       const lat1 = end.lat, lon1 = end.lon;
       const dLat = lat1 - lat0, dLon = lon1 - lon0;
 
       let startIndex = 0;
-      let endIndex = density;
-      if (density >= 20) {
-        startIndex = 5;
-        endIndex = density - 5;
-      } else if (density >= 10 && density < 20) {
-        startIndex = 1;
-        endIndex = density - 1;
-      }
+      let endIndex = numSplits;
+      // if (splits >= 20) {
+      //   startIndex = 5;
+      //   endIndex = splits - 5;
+      // } else if (splits >= 10 && splits < 20) {
+      //   startIndex = 1;
+      //   endIndex = splits - 1;
+      // }
 
       for (let i = startIndex; i < endIndex; i++) {
-        const point0 = { lat: lat0 + dLat * (i / density), lon: lon0 + dLon * (i / density) } as ThematicPoint;
-        const point1 = { lat: lat0 + dLat * ((i + 1) / density), lon: lon0 + dLon * ((i + 1) / density) } as ThematicPoint;
+        const point0 = { lat: lat0 + dLat * (i / numSplits), lon: lon0 + dLon * (i / numSplits) } as ThematicPoint;
+        const point1 = { lat: lat0 + dLat * ((i + 1) / numSplits), lon: lon0 + dLon * ((i + 1) / numSplits) } as ThematicPoint;
 
         subdivided.push({point0, point1, bearing, length, attributes} as PhysicalEdge);
       }
+    }
   });
 
   return {edges: subdivided, attributeStats: aggregation.attributeStats};
