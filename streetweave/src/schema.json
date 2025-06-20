@@ -16,7 +16,7 @@
             "enum": ["segment", "node", "point"],
             "default": "segment"
           },
-          "splits": {
+          "density": {
             "oneOf": [
               { "type": "string" },
               { "type": "number", "minimum": 0, "maximum": 20 }

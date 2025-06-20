@@ -16,9 +16,9 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
   let edges = physicalData;
   let processedEdges: AggregatedEdges = await applySpatialAggregation(edges, thematicData.data, layerSpec);
 
-  if (layerSpec.unit.splits !== 1) {
+  if (layerSpec.unit.density !== 1) {
     processedEdges = await applySpatialAggregation(
-      subdivideEdges(processedEdges, thematicData.attributeStats, layerSpec.unit.splits).edges,
+      subdivideEdges(processedEdges, thematicData.attributeStats, layerSpec.unit.density).edges,
       thematicData.data,
       layerSpec
     );
@@ -41,34 +41,34 @@ export async function loadNodeData(layerSpec: ParsedSpec) {
   return { nodesList, thematicData };
 }
 
-function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecSplits: string | number | undefined ) {
+function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecDensity: string | number | undefined ) {
   const subdivided: PhysicalEdge[] = [];
 
   aggregation.edges.forEach((edge: PhysicalEdge) => {
 
-    let splits = getDynamicStyleValue(layerSpecSplits, edge.attributes, attributeStats, [1, 20]) as number;
+    let density = getDynamicStyleValue(layerSpecDensity, edge.attributes, attributeStats, [1, 20]) as number;
     const start = edge.point0;
       const end = edge.point1;
       const bearing = edge.bearing;
-      const length = edge.length / splits;
+      const length = edge.length / density;
       const attributes = edge.attributes;
       const lat0 = start.lat, lon0 = start.lon;
       const lat1 = end.lat, lon1 = end.lon;
       const dLat = lat1 - lat0, dLon = lon1 - lon0;
 
       let startIndex = 0;
-      let endIndex = splits;
-      if (splits >= 20) {
+      let endIndex = density;
+      if (density >= 20) {
         startIndex = 5;
-        endIndex = splits - 5;
-      } else if (splits >= 10 && splits < 20) {
+        endIndex = density - 5;
+      } else if (density >= 10 && density < 20) {
         startIndex = 1;
-        endIndex = splits - 1;
+        endIndex = density - 1;
       }
 
       for (let i = startIndex; i < endIndex; i++) {
-        const point0 = { lat: lat0 + dLat * (i / splits), lon: lon0 + dLon * (i / splits) } as ThematicPoint;
-        const point1 = { lat: lat0 + dLat * ((i + 1) / splits), lon: lon0 + dLon * ((i + 1) / splits) } as ThematicPoint;
+        const point0 = { lat: lat0 + dLat * (i / density), lon: lon0 + dLon * (i / density) } as ThematicPoint;
+        const point1 = { lat: lat0 + dLat * ((i + 1) / density), lon: lon0 + dLon * ((i + 1) / density) } as ThematicPoint;
 
         subdivided.push({point0, point1, bearing, length, attributes} as PhysicalEdge);
       }

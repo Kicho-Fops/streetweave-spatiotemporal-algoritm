@@ -20,7 +20,7 @@
             "enum": ["segment", "node", "point"],
             "default": "segment"
           },
-          "splits": {
+          "density": {
             "type": "number",
             "description": "A split factor for the unit.",
             "default": 1

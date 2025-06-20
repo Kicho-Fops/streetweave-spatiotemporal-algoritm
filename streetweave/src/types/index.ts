@@ -52,7 +52,7 @@ export type SegmentData = {
 
 export type UnitType = {
   type: "segment" | "node";
-  splits: string | number; 
+  density: string | number; 
   method?: "line" | "rect" | "matrix"; // Optional due to default in schema
   opacity?: string | number; // Optional due to default in schema, oneOf string/number
   color?: string; // Optional due to default in schema
