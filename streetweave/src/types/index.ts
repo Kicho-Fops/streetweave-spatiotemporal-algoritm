@@ -50,25 +50,27 @@ export type SegmentData = {
   lon: number;
 };
 
+export type UnitType = {
+  type: "segment" | "node";
+  splits: string | number; 
+  method?: "line" | "rect" | "matrix"; // Optional due to default in schema
+  opacity?: string | number; // Optional due to default in schema, oneOf string/number
+  color?: string; // Optional due to default in schema
+  squiggle?: string; // Optional due to default in schema
+  dash?: string; // Optional due to default in schema
+  width?: string | number; // Optional due to default in schema, oneOf string/number
+  height?: string | number; // Optional due to default in schema, oneOf string/number
+  chart?: any; // Optional/nullable
+  rows?: number; // Optional/nullable
+  columns?: number; // Optional/nullable
+  orientation?: "parallel" | "perpendicular" | "fixed"; // Optional due to default in schema
+  alignment?: "left" | "center" | "right"; // Optional due to default in schema
+};
+
 // DEFINING ParsedSpec here
 export interface ParsedSpec {
   name?: string;
-  unit: {
-    type: "segment" | "node";
-    splits: string | number; 
-    method?: "line" | "rect" | "matrix"; // Optional due to default in schema
-    opacity?: string | number; // Optional due to default in schema, oneOf string/number
-    color?: string; // Optional due to default in schema
-    squiggle?: string; // Optional due to default in schema
-    dash?: string; // Optional due to default in schema
-    width?: string | number; // Optional due to default in schema, oneOf string/number
-    height?: string | number; // Optional due to default in schema, oneOf string/number
-    chart?: any; // Optional/nullable
-    rows?: number; // Optional/nullable
-    columns?: number; // Optional/nullable
-    orientation?: "parallel" | "perpendicular" | "fixed"; // Optional due to default in schema
-    alignment?: "left" | "center" | "right"; // Optional due to default in schema
-  };
+  unit: UnitType;
   data: {
     physical: {
       path: string; // Required within physical

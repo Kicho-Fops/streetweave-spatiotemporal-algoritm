@@ -2,6 +2,18 @@
 
 import L from 'leaflet';
 
+export const createPaneIfNeeded = (map: L.Map, paneName: string) => {
+  if (!map.getPane(paneName)) {
+    map.createPane(paneName);
+    map.getPane(paneName)!.style.zIndex = '400';
+  }
+}
+
+export function bindMapEvents(map: L.Map, onRedraw) {
+  map.on('moveend zoomend', onRedraw);
+  return () => map.off('moveend zoomend', onRedraw);
+}
+
 /**
  * Initializes the Leaflet map with a base tile layer.
  * @param mapContainer The HTML element for the map.
