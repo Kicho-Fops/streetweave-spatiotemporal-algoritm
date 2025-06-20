@@ -7,8 +7,6 @@ import vegaEmbed from 'vega-embed';
 import * as turf from '@turf/turf';
 // import '@maplibre/maplibre-gl-leaflet';  // Plugin bridging MapLibre & Leaflet
 
-import type { GeoJsonObject } from 'geojson';
-
 // Import types
 import { ParsedSpec, PhysicalEdge, ThematicPoint, AggregatedEdges } from 'streetweave'
 
@@ -23,14 +21,12 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const mimicLayerRef = useRef<L.GeoJSON | null>(null);
   const currentLayersRef = useRef<L.Layer[]>([]);
 
   const [map, setMap] = useState<L.Map | null>(null)
-  const [zoom, setZoom] = useState<number>(18)
+  const [zoom] = useState<number>(18)
 
   const [mimicWidth, setMimicWidth] = useState<number>(0);
-  const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
 
   const alignmentCounters = useRef({
     left: 0,
@@ -252,12 +248,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         const svgChartHeight = 150;
         const pane = map.getPanes().overlayPane;
 
+        d3.selectAll('.vega-lite-svg').remove();
         processedEdges.edges.forEach(async (edge: PhysicalEdge) => {
           const aggregatedAttrs = edge.attributes;
-          const midpoint = {
-            lat: (edge.point0.lat + edge.point1.lat) / 2,
-            lon: (edge.point0.lon + edge.point1.lon) / 2
-          };
 
           const chartSpec = JSON.parse(JSON.stringify(templateSpec));
           chartSpec.data = {
@@ -268,13 +261,19 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           const vegaSVG = (result.view as any)._el.querySelector('svg');
           if (!vegaSVG) return;
+          console.log(chartSpec.data);
 
-          updateChartPosition(midpoint, edge.point0, edge.point1, svgChartWidth, svgChartHeight, pane, vegaSVG)
+          let [p0, p1] = [
+            map.latLngToLayerPoint([edge.point0.lat, edge.point0.lon]),
+            map.latLngToLayerPoint([edge.point1.lat, edge.point1.lon])
+          ];
+
+          const midpoint = {x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2};
+          updateChartPosition(midpoint, edge.bearing, svgChartWidth, svgChartHeight, pane, vegaSVG)
 
         })
 
-
-        // map.on('move zoom', updateChartPosition);
+        // map.on('move zoom', drawVegaLite);
 
       }
 
@@ -320,7 +319,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           
           let dByColor: Record<string,string> = {};
           
-          const baseWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 5]);
+          const baseWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 5]) as number;
 
           if (layerSpec.unit.method === 'line' && layerSpec.unit.orientation === 'parallel') {
             if (layerSpec.unit.squiggle) {
@@ -404,9 +403,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
             
             for (let r = 0; r < numRows; r++) {
               for (let c = 0; c < numColumns; c++) {
-                // const cellX_relative = c * cellWidthAligned;
-                // const matrixCenterYOffset = -totalMatrixPerpendicularHeight / 2; // Center Y on the segment
-                // const cellY_relative = matrixCenterYOffset + r * cellHeightAligned;
                 
                 const value1 = getDynamicStyleValue(colorVar1Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
                 const value2 = getDynamicStyleValue(colorVar2Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
@@ -417,14 +413,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 
                 const subpath = `M${x},${y}h${cellWidthAligned}v${cellHeightAligned}h${-cellWidthAligned}Z`;
                 dByColor[cellColor] = (dByColor[cellColor] || "") + subpath;
-                
-                // matrixGroup.append("rect")
-                //   .attr("x", cellX_relative)
-                //   .attr("y", cellY_relative)
-                //   .attr("width", cellWidthAligned)
-                //   .attr("height", cellHeightAligned)
-                //   .attr("fill", cellColor)
-                //   .attr("stroke-width", 0);
               }
             }
             
@@ -497,313 +485,63 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         if (layerSpec.unit.method === 'matrix') {
           // 1. Select or create one <g> per edge
           const groups = svgGroup.selectAll('g.matrix-edge')
-            .data(instructions, d => d.id);
+            .data(instructions, (d: any) => d.id);
 
           const groupsEnter = groups.enter()
             .append('g')
               .attr('class', 'matrix-edge')
-              .attr('transform', d => d.transform);
+              .attr('transform', (d: any) => d.transform);
 
           // Remove any old groups
           groups.exit().remove();
 
           // 2. For each group, draw one <path> per color band
-          groupsEnter.merge(groups)
-            .attr('transform', d => d.transform)      // update position on zoom/move
+          groupsEnter.merge(groups as any)
+            .attr('transform', (d: any) => d.transform)      // update position on zoom/move
             .each(function(d) {
-              const g = d3.select(this);
-              // turn { color: dStr, … } into [ [color, dStr], … ]
-              const bands = Object.entries(d.dByColor);
+              if(d) {
+                const g = d3.select(this);
+                // turn { color: dStr, … } into [ [color, dStr], … ]
+                const bands = Object.entries(d.dByColor as any);
 
-              const paths = g.selectAll('path')
-                .data(bands);
+                const paths = g.selectAll('path')
+                  .data(bands);
 
-              // enter + update
-              paths.enter().append('path')
-                  .merge(paths)
-                  .attr('d', ([color, dStr]) => dStr)
-                  .attr('fill', ([color]) => color)
-                  .attr('stroke-width', 0);
+                // enter + update
+                paths.enter().append('path')
+                    .merge(paths as any)
+                    .attr('d', ([color, dStr]) => dStr as any)
+                    .attr('fill', ([color]) => color)
+                    .attr('stroke-width', 0);
 
-              // exit
-              paths.exit().remove();
+                // exit
+                paths.exit().remove();
+              }
             });
         }
         else {
-          const paths = svgGroup.selectAll('path').data(instructions, d => d.id);
+          const paths = svgGroup.selectAll('path').data(instructions, (d: any) => d.id);
           const enter = paths.enter().append('path').attr('fill', 'none');
           
-          enter.merge(paths)
-            .attr('d', d => d.d)
-            .style('fill', d => d.fill)
-            .style('fill-opacity', d => d["fill-opacity"])
-            .style('stroke', d => d.stroke)
-            .style('stroke-width', d => d['stroke-width'])
-            .style('stroke-opacity', d => d['stroke-opacity'])
-            .style('stroke-dasharray', d => d['stroke-dasharray']);
+          enter.merge(paths as any)
+            .attr('d', (d: any) => d.d)
+            .style('fill', (d: any) => d.fill)
+            .style('fill-opacity', (d: any) => d["fill-opacity"] as any)
+            .style('stroke', (d: any) => d.stroke)
+            .style('stroke-width', (d: any) => d['stroke-width'])
+            .style('stroke-opacity', (d: any) => d['stroke-opacity'])
+            .style('stroke-dasharray', (d: any) => d['stroke-dasharray']);
         }
-
-
-        // // console.log(processedEdges);
-        // processedEdges.edges.forEach((edge: PhysicalEdge) => {
-
-        //   // Apply alignment offsets for parallel lines/rects
-        //   let currentStartPoint = edge.point0;
-        //   let currentEndPoint = edge.point1;
-        //   const currentBearing = edge.bearing;// bearingBetweenPoints(edge.point0.lat, edge[0].lon, edge[1].lat, edge[1].lon);
-
-        //   if (layerSpec.unit.alignment === "left" || layerSpec.unit.alignment === "right") {
-        //     const offsetAngle = layerSpec.unit.alignment === "left" ? currentBearing - 90 : currentBearing + 90;
-        //     const distance = getOffsetDistance(map) * (layerSpec.unit.alignment === "left" ? alignmentCountersRef.current.left : alignmentCountersRef.current.right);
-
-        //     const offsetStartCoords = offsetPoint(edge.point0.lat, edge.point0.lon, offsetAngle, distance);
-        //     const offsetEndCoords = offsetPoint(edge.point1.lat, edge.point1.lon, offsetAngle, distance);
-        //     currentStartPoint = { lat: offsetStartCoords[0], lon: offsetStartCoords[1] };
-        //     currentEndPoint = { lat: offsetEndCoords[0], lon: offsetEndCoords[1] };
-        //   }
-
-        //   const pointsForRendering = [{ lat: currentStartPoint.lat, lon: currentStartPoint.lon }, { lat: currentEndPoint.lat, lon: currentEndPoint.lon }];
-        //   // Retrieve dynamic styles using the helper
-        //   // const colorRamp = layerIndex === 0
-        //     // ? ["#a50f15", "#de2d26", "#fb6a4a", "#fcae91", "#fee5d9"]
-        //     // : layerIndex === 1
-        //       // ? ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"]
-        //       // : ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"];
-        //   // const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, colorRamp) as string;
-        //   const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
-          
-        //   // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
-        //   const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 5]) as number;
-        //   // console.log("previous line width", baseLineWidth)
-        //   const lineWidth = getAdjustedLineWidth(map, baseLineWidth);
-        //   // console.log("after line width", lineWidth)
-
-        //   const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
-
-        //   if (layerSpec.unit.method === 'line' && layerSpec.unit.orientation === 'parallel') {
-        //     const lineGenerator = d3.line<any>()
-        //       .x((d: any) => projectPoint(map, d.lat, d.lon)[0])
-        //       .y((d: any) => projectPoint(map, d.lat, d.lon)[1]);
-
-        //     if (layerSpec.unit.squiggle) {
-        //       const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.squiggle, edge.attributes, processedEdges.attributeStats);
-        //       console.log(squiggleAmplitude, squiggleFrequency);
-        //       const point1 = L.point(projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[0], projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[1]);
-        //       const point2 = L.point(projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[0], projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[1]);
-        //       const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
-        //       svgGroup.append("path")
-        //         .attr("d", squigglyPath)
-        //         .style("stroke", lineColor)
-        //         .style("stroke-width", lineWidth)
-        //         .style("stroke-opacity", lineOpacity)
-        //     } else {
-        //       const dashArray = getDashArray(layerSpec.unit.dash, edge.attributes, processedEdges.attributeStats);
-        //       svgGroup.append("path")
-        //         .datum(pointsForRendering)
-        //         .attr("d", lineGenerator)
-        //         .style("stroke", lineColor)
-        //         .style("stroke-width", lineWidth)
-        //         .style("stroke-opacity", lineOpacity)
-        //         .style("stroke-dasharray", dashArray)
-        //     }
-        //   }
-        //   else if(layerSpec.unit.method === 'line' && layerSpec.unit.orientation === 'perpendicular') {
-        //     const height = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
-        //     const p1 = projectPoint(map, edge.point0.lat, edge.point0.lon);
-        //     const p2 = projectPoint(map, edge.point1.lat, edge.point1.lon);
-        //     const midpoint_x = (p1[0] + p2[0]) / 2;
-        //     const midpoint_y = (p1[1] + p2[1]) / 2;
-        //     const midpoint_screen = [midpoint_x, midpoint_y];
-
-        //     const dx_base = p2[0] - p1[0];
-        //     const dy_base = p2[1] - p1[1];
-
-        //     const segmentLength = Math.sqrt(dx_base * dx_base + dy_base * dy_base);
-
-        //     let normal_x = -dy_base / segmentLength;
-        //     let normal_y = dx_base / segmentLength;
-            
-        //     if (normal_y > 0) {
-        //       normal_x = -normal_x;
-        //       normal_y = -normal_y;
-        //     }
-
-        //     const endPoint_x = midpoint_screen[0] + (normal_x * height);
-        //     const endPoint_y = midpoint_screen[1] + (normal_y * height);
-
-        //     svgGroup.append("line")
-        //     .attr("x1", midpoint_screen[0])
-        //     .attr("y1", midpoint_screen[1])
-        //     .attr("x2", endPoint_x)
-        //     .attr("y2", endPoint_y)
-        //     .attr("stroke", lineColor)       // Use the dynamic line color
-        //     .attr("opacity", lineOpacity)     // Use the dynamic line opacity
-        //     .attr("stroke-width", lineWidth);
-
-        //   }
-        //   else if (layerSpec.unit.method === 'matrix') {
-        //     const numRows = layerSpec.unit.columns || 1;
-        //     const numColumns = layerSpec.unit.rows || 1;
-
-        //     const colorVar1Name = layerSpec.unit.width as string;
-        //     const colorVar2Name = layerSpec.unit.height as string;
-
-        //     const p1_screen = { x: projectPoint(map, edge.point0.lat, edge.point0.lon)[0], y: projectPoint(map, edge.point0.lat, edge.point0.lon)[1] };
-        //     const p2_screen = { x: projectPoint(map, edge.point1.lat, edge.point1.lon)[0], y: projectPoint(map, edge.point1.lat, edge.point1.lon)[1] };
-        //     const dx_segment = p2_screen.x - p1_screen.x;
-        //     const dy_segment = p2_screen.y - p1_screen.y;
-
-        //     const segmentLength = Math.sqrt(dx_segment * dx_segment + dy_segment * dy_segment);
-        //     const angleRad = Math.atan2(dy_segment, dx_segment);
-        //     const angleDeg = angleRad * (180 / Math.PI);
-            
-        //     const totalMatrixPerpendicularHeight = 25; // getDynamicStyleValue(layerSpec.unit.width, edge.attributes, thematicData.attributeStats, [1, 20]) as number;
-        //     const cellWidthAligned = segmentLength / numColumns; // Each cell's width spans part of the segment length
-        //     const cellHeightAligned = totalMatrixPerpendicularHeight / numRows;
-
-        //     const matrixGroup = svgGroup.append("g")
-        //       .attr("transform", `translate(${p1_screen.x}, ${p1_screen.y}) rotate(${angleDeg})`);
-
-
-        //     for (let r = 0; r < numRows; r++) {
-        //       for (let c = 0; c < numColumns; c++) {
-        //         const cellX_relative = c * cellWidthAligned;
-        //         const matrixCenterYOffset = -totalMatrixPerpendicularHeight / 2; // Center Y on the segment
-        //         const cellY_relative = matrixCenterYOffset + r * cellHeightAligned;
-
-        //         const value1 = getDynamicStyleValue(colorVar1Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
-        //         const value2 = getDynamicStyleValue(colorVar2Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
-        //         const cellColor = getBivariateColor(value1, value2);
-
-        //         matrixGroup.append("rect")
-        //           .attr("x", cellX_relative)
-        //           .attr("y", cellY_relative)
-        //           .attr("width", cellWidthAligned)
-        //           .attr("height", cellHeightAligned)
-        //           .attr("fill", cellColor)
-        //           .attr("stroke-width", 0);
-        //       }
-        //     }
-        //   }
-        //   else if (layerSpec.unit.method === 'rect' && layerSpec.unit.orientation === 'perpendicular') {
-        //     const height = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
-        //     const p1 = projectPoint(map, edge.point0.lat, edge.point0.lon);
-        //     const p2 = projectPoint(map, edge.point1.lat, edge.point1.lon);
-
-        //     const dx = p2[0] - p1[0];
-        //     const dy = p2[1] - p1[1];
-        //     const segmentLength = Math.sqrt(dx * dx + dy * dy);
-        //     const nx = -dy / segmentLength; // Normalized perpendicular x
-        //     const ny = dx / segmentLength;  // Normalized perpendicular y
-        //     const height_offset_x = nx * height;
-        //     const height_offset_y = ny * height;
-        //     const p1_base = { x: p1[0], y: p1[1]};
-        //     const p2_base = { x: p2[0], y: p2[1]};
-        //     const p1_top = { x: p1[0] + height_offset_x, y: p1[1] + height_offset_y };
-        //     const p2_top = { x: p2[0] + height_offset_x, y: p2[1] + height_offset_y };
-
-        //     const polygonPoints = [
-        //       p1_base,
-        //       p2_base,
-        //       p2_top,
-        //       p1_top
-        //     ].map(p => `${p.x},${p.y}`).join(" ");
-
-        //     svgGroup.append("polygon")
-        //       .attr("points", polygonPoints)
-        //       .attr("opacity", lineOpacity)
-        //       .attr("fill", lineColor);
-        //   }
-        //   else if (layerSpec.unit.method === 'rect' && layerSpec.unit.orientation === 'parallel') {
-        //     const height = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
-        //     const p1 = projectPoint(map, edge.point0.lat, edge.point0.lon);
-        //     const p2 = projectPoint(map, edge.point1.lat, edge.point1.lon);
-
-        //     svgGroup.append("line")
-        //       .attr("x1", p1[0])
-        //       .attr("y1", p1[1])
-        //       .attr("x2", p2[0])
-        //       .attr("y2", p2[1])
-        //       .attr("opacity", lineOpacity)
-        //       .attr("stroke", lineColor)
-        //       .attr("stroke-width", height)
-        //       .attr("stroke-linecap", "butt");
-        //   } 
-        //   else if (layerSpec.unit.chart) {
-        //     const templateSpec = layerSpec.unit.chart;
-        //     const svgChartWidth = 150, svgChartHeight = 150;
-        //     const pane = map.getPanes().overlayPane;
-
-        //     const start = edge.point0;
-        //     const end = edge.point1;
-        //     // const bearing = edge.bearing;
-        //     // const length = edge.length;
-        //     const aggregatedAttrs = edge.attributes;
-        //     const midpoint = {
-        //       lat: (start.lat + end.lat) / 2,
-        //       lon: (start.lon + end.lon) / 2
-        //     };
-
-        //     const chartSpec = JSON.parse(JSON.stringify(templateSpec));
-        //     chartSpec.data = {
-        //       values: Object.entries(aggregatedAttrs || {}).map(([key, value]) => ({ category: key, value: value }))
-        //     };
-
-        //     // console.log("vegadata is", chartSpec.data)
-
-        //     vegaEmbed('#vis', chartSpec, { renderer: 'svg', actions: false })
-        //       .then(result => {
-        //         const vegaSVG = (result.view as any)._el.querySelector('svg');
-        //         if (!vegaSVG) return;
-
-        //         // const id = `chart_edge_${midpoint.lat}_${midpoint.lon}`.replace(/[^\w]/g, '');
-
-        //         const updateChartPosition = () => {
-        //           const point = map.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-        //           const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
-        //           const temp = d3.select(mapInstanceRef.current!.getPanes().overlayPane).select('#' + tempID);
-        //           // const bearing = bearingBetweenPoints(start.lat, start.lon, end.lat, end.lon);
-        //           const turfStart = turf.point([start.lon, start.lat]); // lon lat
-        //           const turfEnd = turf.point([end.lon, end.lat]); // lon lat
-        //           const bearing: number = turf.bearing(turfStart, turfEnd);
-
-        //           const angle = bearing + 90;
-
-        //           const transform = `translate(${point.x - svgChartWidth / 3},${point.y - svgChartHeight / 3})`
-        //                           + ` rotate(${angle},${svgChartWidth / 2.5},${svgChartHeight / 2.5})`;
-
-        //           // const sel = d3.select(pane).select<SVGSVGElement>(`#${id}`);
-        //           if (temp.empty()) {
-        //             d3.select(pane)
-        //               .append('svg')
-        //               .attr('class', 'vega-lite-svg')
-        //               .attr('id', tempID)
-        //               .attr('width', svgChartWidth)
-        //               .attr('height', svgChartHeight)
-        //               .attr('transform', transform)
-        //               .node()
-        //               ?.appendChild(vegaSVG.cloneNode(true));
-        //           } else {
-        //             temp.attr('transform', transform);
-        //           }
-        //         };
-
-        //         updateChartPosition();
-        //         map.on('move zoom', updateChartPosition);
-        //       })
-        //       .catch(error => console.error("Error embedding Vega-Lite chart:", error));
-
-        //   } 
-        // });
       };
 
-      if(layerSpec.unit.chart) {
+      if(layerSpec.unit.chart == undefined) {
         drawSegmentShapes();
         map.on('moveend zoomend', drawSegmentShapes);
         currentLayersRef.current.push(svgLayer);
 
       } else {
         drawVegaLite()
+        map.on('moveend zoomend', drawVegaLite);
       }
 
 
@@ -811,7 +549,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       console.error(`Error rendering segment layer for ${layerSpec.data.physical.path}:`, error);
     }
 
-    function subdivideEdges(edges: PhysicalEdge[], attributeStats) {
+    function subdivideEdges(edges: PhysicalEdge[], attributeStats: Record<string, any>) {
       const subdivided: PhysicalEdge[] = [];
 
 
@@ -848,14 +586,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       return subdivided;
     }
 
-    function updateChartPosition(midpoint, start, end, svgChartWidth, svgChartHeight, pane, vegaSVG) {
-      const point = map.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
-      const tempID = 't' + (midpoint.lat + midpoint.lon + '').replace('.', '').replace('-', '') + 'svg';
+    function updateChartPosition(point: any, bearing: number, svgChartWidth: any, svgChartHeight: any, pane: any, vegaSVG: any) {
+      // const point = map.latLngToLayerPoint([midpoint.lat, midpoint.lon]);
+      const tempID = 't' + (point.x + point.y + '').replace('.', '').replace('-', '') + 'svg';
       const temp = d3.select(map!.getPanes().overlayPane).select('#' + tempID);
 
-      const turfStart = turf.point([start.lon, start.lat]); // lon lat
-      const turfEnd = turf.point([end.lon, end.lat]); // lon lat
-      const bearing: number = turf.bearing(turfStart, turfEnd);
+      // const turfStart = turf.point([start.lon, start.lat]); // lon lat
+      // const turfEnd = turf.point([end.lon, end.lat]); // lon lat
+      // const bearing: number = turf.bearing(turfStart, turfEnd);
 
       const angle = bearing + 90;
 
@@ -914,7 +652,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           // const shapeHeight = getDynamicStyleValue(layerSpec.lineHeight, node, nodesList, [5, 30]) as number ?? 5;
           const shapeOpacity = getDynamicStyleValue(layerSpec.unit.opacity, node.attributes, thematicData.attributeStats, [0, 1]) as number;
 
-          const pt = L.point(projectPoint(map, node.lat, node.lon)[0], projectPoint(map, node.lat, node.lon)[1]);
+          const projected = projectPoint(map, node.lat, node.lon);
+          const pt = L.point(projected[0], projected[1]);
 
           if (layerSpec.unit.chart) {
             const templateSpec = layerSpec.unit.chart;
