@@ -54,8 +54,8 @@ export type SegmentData = {
 export interface ParsedSpec {
   name?: string;
   unit: {
-    type: "segment" | "node" | "point";
-    splits: number; 
+    type: "segment" | "node";
+    splits: string | number; 
     method?: "line" | "rect" | "matrix"; // Optional due to default in schema
     opacity?: string | number; // Optional due to default in schema, oneOf string/number
     color?: string; // Optional due to default in schema
@@ -66,7 +66,7 @@ export interface ParsedSpec {
     chart?: any; // Optional/nullable
     rows?: number; // Optional/nullable
     columns?: number; // Optional/nullable
-    orientation?: "parallel" | "perpendicular"; // Optional due to default in schema
+    orientation?: "parallel" | "perpendicular" | "fixed"; // Optional due to default in schema
     alignment?: "left" | "center" | "right"; // Optional due to default in schema
   };
   data: {

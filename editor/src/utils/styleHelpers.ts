@@ -55,13 +55,16 @@ export const getDynamicStyleValue = (
   if (typeof name === 'string' && hexRe.test(name)) {
     return name;
   }
-  else if(typeof name === 'string' && attributes && attributes[name] && domain) {
+  else if(typeof name === 'string' && attributes && name in attributes && domain) {
     let scale;
     if(range)
       scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]).range(range);
     else
       scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]);
-    return scale(attributes[name]);
+    if(attributes[name] != undefined)
+      return scale(attributes[name]);
+    else
+      return undefined;
   }
 
   return undefined; // Default if attribute not found or no mapping specified
@@ -104,6 +107,25 @@ export const getDashArray = (
   return "";
 };
 
+export function getBivariateColor(val1: number, val2: number): string {
+  const colorInterpolator1 = d3.interpolateBuGn; // From green to blue
+  const colorInterpolator2 = d3.interpolateOrRd; // From orange to red
+
+  const color1 = d3.color(colorInterpolator1(val1)) as d3.RGBColor;
+  const color2 = d3.color(colorInterpolator2(val2)) as d3.RGBColor;
+
+  if (!color1 || !color2) { // Handle potential null colors if interpolators return null
+      return "gray";
+  }
+
+  // Blend the two colors. Example: average RGB components
+  const blendedR = (color1.r + color2.r) / 2;
+  const blendedG = (color1.g + color2.g) / 2;
+  const blendedB = (color1.b + color2.b) / 2;
+
+  return `rgb(${Math.round(blendedR)}, ${Math.round(blendedG)}, ${Math.round(blendedB)})`;
+}
+
 /**
  * Computes squiggle amplitude and frequency based on an attribute value.
  * @param lineType The line type.
@@ -121,44 +143,19 @@ export const getSquiggleParams = (
   // segment: PhysicalEdge,
   // allSegments: PhysicalEdge[]
 ): { amplitude: number; frequency: number } => {
-  let squiggleAmplitude = 25;
-  let squiggleFrequency = 10;
 
   if (name && domain) {
     const aggregatedAttributes = attributes;
     if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(name)) {
       const attributeValue = aggregatedAttributes[name];
-      if (attributeValue === null || typeof attributeValue === 'undefined') return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
+      if(attributeValue != undefined)
+        return { amplitude: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([0,10])(attributeValue), frequency: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([1,10])(attributeValue) };
 
-      // const allAttributeValues = allSegments
-      //   .map(s => s.attributes?.[lineTypeVal])
-      //   .filter((v): v is number => typeof v === 'number');
-
-      // if (allAttributeValues.length === 0) return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
-
-      const minValue = domain[name].min; // d3.min(allAttributeValues);
-      const maxValue = domain[name].max; // d3.max(allAttributeValues);
-
-      if (minValue === undefined || maxValue === undefined) return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
-
-      const range = maxValue - minValue;
-      const stepSize = range / 3;
-      const boundary1 = minValue + stepSize;
-      const boundary2 = minValue + 2 * stepSize;
-
-      if (attributeValue >= minValue && attributeValue < boundary1) {
-        squiggleAmplitude = 25;
-        squiggleFrequency = 60;
-      } else if (attributeValue >= boundary1 && attributeValue < boundary2) {
-        squiggleAmplitude = 25;
-        squiggleFrequency = 20;
-      } else {
-        squiggleAmplitude = 25;
-        squiggleFrequency = 5;
-      }
     }
   }
-  return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
+  
+  return { amplitude: 0, frequency: 1 };
+  // return { amplitude: squiggleAmplitude, frequency: squiggleFrequency };
 };
 
 /**

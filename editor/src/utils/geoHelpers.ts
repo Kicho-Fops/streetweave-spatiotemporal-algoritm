@@ -84,11 +84,11 @@ export const findClosestPoints = (
 /**
  * Creates a buffer around a given point.
  * @param point The Turf.js Point feature.
- * @param bufferDistance The buffer distance in kilometers.
+ * @param bufferDistance The buffer distance in meters.
  * @returns A Turf.js Polygon or MultiPolygon feature representing the buffer, or null if invalid.
  */
 export function createBuffer(point: Feature<Point>, bufferDistance: number): Feature<Polygon | MultiPolygon> | null {
-  const buffered = turf.buffer(point, bufferDistance, { units: 'kilometers' });
+  const buffered = turf.buffer(point, bufferDistance, { units: 'meters' });
   if (!buffered || !buffered.geometry ||
     (buffered.geometry.type !== 'Polygon' && buffered.geometry.type !== 'MultiPolygon')) {
     return null;
@@ -285,7 +285,7 @@ export async function loadPhysicalData(
 
           // Calculate Length
           const segmentLine = turf.lineString([startCoord, endCoord]);
-          const length: number = turf.length(segmentLine, { units: 'meters' }); // Example: length in meters
+          const length: number = turf.length(segmentLine, { units: 'meters' }); // Length in meters
 
           // Create the PhysicalEdge tuple in the format expected by aggregateSegmentBuffer
           const processedEdgeTuple: PhysicalEdge = {

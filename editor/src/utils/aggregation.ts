@@ -36,18 +36,18 @@ export const aggregateValues = (
         value = d3.sum(values);
         break;
       case 'mean':
-        value = values.length ? d3.mean(values) : undefined;
+        value = values.length ? d3.mean(values) : 0;
         break;
       case 'min':
-        value = values.length ? d3.min(values) : undefined;
+        value = values.length ? d3.min(values) : 0;
         break;
       case 'max':
-        value = values.length ? d3.max(values) : undefined;
+        value = values.length ? d3.max(values) : 0;
         break;
       default:
-        value = undefined;
+        value = 0;
     }
-    if(!value) value = undefined;
+    if(!value) value = 0;
     aggregatedValues[attr] = value;
   });
 
@@ -124,7 +124,7 @@ const aggregateSegmentNearestNeighbor = (
  * Aggregates thematic data for edge segments based on a buffer around their midpoint.
  * @param edgesData The raw edge data.
  * @param environmentalData The thematic point data.
- * @param bufferDistance The buffer distance in kilometers.
+ * @param bufferDistance The buffer distance in meters.
  * @param aggregationType The type of aggregation.
  * @returns An array of updated edge data with aggregated attributes.
  */

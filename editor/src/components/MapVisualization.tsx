@@ -14,7 +14,7 @@ import { ParsedSpec, PhysicalEdge, ThematicPoint, AggregatedEdges } from 'street
 
 // Import utility functions
 import { applySpatialAggregation, processEdgesToNodes } from '../utils/aggregation';
-import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath } from '../utils/styleHelpers';
+import { getDynamicStyleValue, getDashArray, getSquiggleParams, generateSimpleWavyPath, getBivariateColor } from '../utils/styleHelpers';
 import { loadThematicData, loadPhysicalData, offsetPoint } from '../utils/geoHelpers';
 import { initializeMap, projectPoint, getOffsetDistance, getAdjustedLineWidth } from '../utils/mapHelpers';
 
@@ -49,18 +49,6 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       setAddressCoords(null);
     }
   }, [parsedSpec[0].query?.address]);
-
-  useEffect(() => {
-    if (parsedSpec[0] && parsedSpec[0].map?.streetWidth !== undefined) {
-      setMimicWidth(parsedSpec[0].map.streetWidth);
-    }
-  }, [parsedSpec]);
-
-  useEffect(() => {
-    if (parsedSpec[0] && parsedSpec[0].map?.streetWidth !== undefined) {
-      setMimicWidth(parsedSpec[0].map.streetWidth);
-    }
-  }, [parsedSpec]);
 
   useEffect(() => {
     if (parsedSpec[0] && parsedSpec[0].map?.streetWidth !== undefined) {
@@ -281,34 +269,36 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       // console.log(thematicData);
 
       let initialEdges = physicalData;
-
-      // Step 1: Subdivide edges if unitDivide is specified
-      if (layerSpec.unit.splits && layerSpec.unit.splits > 1) {
+      let processedEdges: AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
+      // Step 1: Subdivide edges if splits is specified
+      if (layerSpec.unit.splits != 1) {
         const subdivided: PhysicalEdge[] = [];
         initialEdges.forEach((edge: PhysicalEdge) => {
+          let splits = getDynamicStyleValue(layerSpec.unit.splits, edge.attributes, thematicData.attributeStats, [1, 20]) as number;
+
           // const [start, end, ...extras] = edge;
           const start = edge.point0;
           const end = edge.point1;
           const bearing = edge.bearing;
-          const length = edge.length;
+          const length = edge.length / splits;
           const attributes = edge.attributes;
           const lat0 = start.lat, lon0 = start.lon;
           const lat1 = end.lat, lon1 = end.lon;
           const dLat = lat1 - lat0, dLon = lon1 - lon0;
 
           let startIndex = 0;
-          let endIndex = layerSpec.unit.splits;
-          if (layerSpec.unit.splits >= 20) {
+          let endIndex = splits;
+          if (splits >= 20) {
             startIndex = 5;
-            endIndex = layerSpec.unit.splits - 5;
-          } else if (layerSpec.unit.splits >= 10 && layerSpec.unit.splits < 20) {
+            endIndex = splits - 5;
+          } else if (splits >= 10 && splits < 20) {
             startIndex = 1;
-            endIndex = layerSpec.unit.splits - 1;
+            endIndex = splits - 1;
           }
 
           for (let i = startIndex; i < endIndex; i++) {
-            const point0 = { lat: lat0 + dLat * (i / layerSpec.unit.splits), lon: lon0 + dLon * (i / layerSpec.unit.splits) } as ThematicPoint;
-            const point1 = { lat: lat0 + dLat * ((i + 1) / layerSpec.unit.splits), lon: lon0 + dLon * ((i + 1) / layerSpec.unit.splits) } as ThematicPoint;
+            const point0 = { lat: lat0 + dLat * (i / splits), lon: lon0 + dLon * (i / splits) } as ThematicPoint;
+            const point1 = { lat: lat0 + dLat * ((i + 1) / splits), lon: lon0 + dLon * ((i + 1) / splits) } as ThematicPoint;
 
             subdivided.push({point0, point1, bearing, length, attributes} as PhysicalEdge);
           }
@@ -317,7 +307,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
       // Apply spatial aggregation
-      let processedEdges: AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
+      processedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
+      console.log(processedEdges);
 
       // Clear existing layers from relevant panes to prevent duplicates on redraw
       const paneName = layerSpec.unit.alignment === "center" ? 'overlayPane' : `${layerSpec.unit.alignment}-${layerSpec.unit.orientation}`;
@@ -343,6 +334,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         // console.log("checking if zooming position change working")
         svgGroup.selectAll("*").remove();
 
+        // console.log(processedEdges);
         processedEdges.edges.forEach((edge: PhysicalEdge) => {
           // Ensure bearing and normalize segment
           // if (edge[2] && typeof edge[2] === 'object' && 'Bearing' in edge[2] && typeof edge[2].Bearing === 'number') {
@@ -369,13 +361,13 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           const pointsForRendering = [{ lat: currentStartPoint.lat, lon: currentStartPoint.lon }, { lat: currentEndPoint.lat, lon: currentEndPoint.lon }];
           // Retrieve dynamic styles using the helper
-          const colorRamp = layerIndex === 0
-            ? ["#a50f15", "#de2d26", "#fb6a4a", "#fcae91", "#fee5d9"]
-            : layerIndex === 1
-              ? ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"]
-              : ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"];
-          const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, colorRamp) as string;
-          // const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
+          // const colorRamp = layerIndex === 0
+            // ? ["#a50f15", "#de2d26", "#fb6a4a", "#fcae91", "#fee5d9"]
+            // : layerIndex === 1
+              // ? ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"]
+              // : ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"];
+          // const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, colorRamp) as string;
+          const lineColor = getDynamicStyleValue(layerSpec.unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
           
           // Use nullish coalescing (??) for numeric values to provide a default if null/undefined
           const baseLineWidth = getDynamicStyleValue(layerSpec.unit.width, edge.attributes, processedEdges.attributeStats, [0, 5]) as number;
@@ -385,15 +377,14 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
           const lineOpacity = getDynamicStyleValue(layerSpec.unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 
-          const dashArray = getDashArray(layerSpec.unit.dash, edge.attributes, processedEdges.attributeStats);
-          const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.squiggle, edge.attributes, processedEdges.attributeStats);
-
-          if (layerSpec.unit.method === 'line' && !layerSpec.unit.chart) {
+          if (layerSpec.unit.method === 'line' && layerSpec.unit.orientation === 'parallel') {
             const lineGenerator = d3.line<any>()
               .x((d: any) => projectPoint(map, d.lat, d.lon)[0])
               .y((d: any) => projectPoint(map, d.lat, d.lon)[1]);
 
             if (layerSpec.unit.squiggle) {
+              const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(layerSpec.unit.squiggle, edge.attributes, processedEdges.attributeStats);
+              console.log(squiggleAmplitude, squiggleFrequency);
               const point1 = L.point(projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[0], projectPoint(map, pointsForRendering[0].lat, pointsForRendering[0].lon)[1]);
               const point2 = L.point(projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[0], projectPoint(map, pointsForRendering[1].lat, pointsForRendering[1].lon)[1]);
               const squigglyPath = generateSimpleWavyPath(point1, point2, squiggleAmplitude, squiggleFrequency);
@@ -402,8 +393,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 .style("stroke", lineColor)
                 .style("stroke-width", lineWidth)
                 .style("stroke-opacity", lineOpacity)
-                .attr("fill", "none");
             } else {
+              const dashArray = getDashArray(layerSpec.unit.dash, edge.attributes, processedEdges.attributeStats);
               svgGroup.append("path")
                 .datum(pointsForRendering)
                 .attr("d", lineGenerator)
@@ -411,116 +402,131 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
                 .style("stroke-width", lineWidth)
                 .style("stroke-opacity", lineOpacity)
                 .style("stroke-dasharray", dashArray)
-                .attr("fill", "none");
             }
-          } else if (layerSpec.unit.method === 'matrix') {
-            const methodColumn = layerSpec.unit.columns || 1;
-            const methodRow = layerSpec.unit.rows || 1;
-            const currentOffsetDistance = getOffsetDistance(map);
+          }
+          else if(layerSpec.unit.method === 'line' && layerSpec.unit.orientation === 'perpendicular') {
+            const height = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+            const p1 = projectPoint(map, edge.point0.lat, edge.point0.lon);
+            const p2 = projectPoint(map, edge.point1.lat, edge.point1.lon);
+            const midpoint_x = (p1[0] + p2[0]) / 2;
+            const midpoint_y = (p1[1] + p2[1]) / 2;
+            const midpoint_screen = [midpoint_x, midpoint_y];
 
-            for (let row = 0; row < methodRow; row++) {
-              const offsetAngle = currentBearing - 90;
-              const offsetMultiplier = row - Math.floor(methodRow / 2);
+            const dx_base = p2[0] - p1[0];
+            const dy_base = p2[1] - p1[1];
 
-              const startRowOffsetCoords = offsetPoint(edge.point0.lat, edge.point0.lon, offsetAngle, currentOffsetDistance * offsetMultiplier);
-              const endRowOffsetCoords = offsetPoint(edge.point1.lat, edge.point1.lon, offsetAngle, currentOffsetDistance * offsetMultiplier);
+            const segmentLength = Math.sqrt(dx_base * dx_base + dy_base * dy_base);
 
-              const dLat = endRowOffsetCoords[0] - startRowOffsetCoords[0];
-              const dLon = endRowOffsetCoords[1] - startRowOffsetCoords[1];
+            let normal_x = -dy_base / segmentLength;
+            let normal_y = dx_base / segmentLength;
+            
+            if (normal_y > 0) {
+              normal_x = -normal_x;
+              normal_y = -normal_y;
+            }
 
-              for (let col = 0; col < methodColumn; col++) {
-                const segStartLat = startRowOffsetCoords[0] + (dLat * col) / methodColumn;
-                const segStartLon = startRowOffsetCoords[1] + (dLon * col) / methodColumn;
-                const segEndLat = startRowOffsetCoords[0] + (dLat * (col + 1)) / methodColumn;
-                const segEndLon = startRowOffsetCoords[1] + (dLon * (col + 1)) / methodColumn;
+            const endPoint_x = midpoint_screen[0] + (normal_x * height);
+            const endPoint_y = midpoint_screen[1] + (normal_y * height);
 
-                const linePoints = [
-                  { lat: segStartLat, lon: segStartLon },
-                  { lat: segEndLat, lon: segEndLon }
-                ];
-                const lineGenerator = d3.line<any>()
-                  .x((d: any) => projectPoint(map, d.lat, d.lon)[0])
-                  .y((d: any) => projectPoint(map, d.lat, d.lon)[1]);
+            svgGroup.append("line")
+            .attr("x1", midpoint_screen[0])
+            .attr("y1", midpoint_screen[1])
+            .attr("x2", endPoint_x)
+            .attr("y2", endPoint_y)
+            .attr("stroke", lineColor)       // Use the dynamic line color
+            .attr("opacity", lineOpacity)     // Use the dynamic line opacity
+            .attr("stroke-width", lineWidth);
 
-                svgGroup.append("path")
-                  .datum(linePoints)
-                  .attr("d", lineGenerator)
-                  .style("stroke", lineColor)
-                  .style("stroke-width", lineWidth)
-                  .style("stroke-opacity", lineOpacity)
-                  .attr("fill", "none");
+          }
+          else if (layerSpec.unit.method === 'matrix') {
+            const numRows = layerSpec.unit.columns || 1;
+            const numColumns = layerSpec.unit.rows || 1;
+
+            const colorVar1Name = layerSpec.unit.width as string;
+            const colorVar2Name = layerSpec.unit.height as string;
+
+            const p1_screen = { x: projectPoint(map, edge.point0.lat, edge.point0.lon)[0], y: projectPoint(map, edge.point0.lat, edge.point0.lon)[1] };
+            const p2_screen = { x: projectPoint(map, edge.point1.lat, edge.point1.lon)[0], y: projectPoint(map, edge.point1.lat, edge.point1.lon)[1] };
+            const dx_segment = p2_screen.x - p1_screen.x;
+            const dy_segment = p2_screen.y - p1_screen.y;
+
+            const segmentLength = Math.sqrt(dx_segment * dx_segment + dy_segment * dy_segment);
+            const angleRad = Math.atan2(dy_segment, dx_segment);
+            const angleDeg = angleRad * (180 / Math.PI);
+            
+            const totalMatrixPerpendicularHeight = 25; // getDynamicStyleValue(layerSpec.unit.width, edge.attributes, thematicData.attributeStats, [1, 20]) as number;
+            const cellWidthAligned = segmentLength / numColumns; // Each cell's width spans part of the segment length
+            const cellHeightAligned = totalMatrixPerpendicularHeight / numRows;
+
+            const matrixGroup = svgGroup.append("g")
+              .attr("transform", `translate(${p1_screen.x}, ${p1_screen.y}) rotate(${angleDeg})`);
+
+
+            for (let r = 0; r < numRows; r++) {
+              for (let c = 0; c < numColumns; c++) {
+                const cellX_relative = c * cellWidthAligned;
+                const matrixCenterYOffset = -totalMatrixPerpendicularHeight / 2; // Center Y on the segment
+                const cellY_relative = matrixCenterYOffset + r * cellHeightAligned;
+
+                const value1 = getDynamicStyleValue(colorVar1Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
+                const value2 = getDynamicStyleValue(colorVar2Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
+                const cellColor = getBivariateColor(value1, value2);
+
+                matrixGroup.append("rect")
+                  .attr("x", cellX_relative)
+                  .attr("y", cellY_relative)
+                  .attr("width", cellWidthAligned)
+                  .attr("height", cellHeightAligned)
+                  .attr("fill", cellColor)
+                  .attr("stroke-width", 0);
               }
             }
-          } else if (layerSpec.unit.method === 'rect') {
+          }
+          else if (layerSpec.unit.method === 'rect' && layerSpec.unit.orientation === 'perpendicular') {
+            const height = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+            const p1 = projectPoint(map, edge.point0.lat, edge.point0.lon);
+            const p2 = projectPoint(map, edge.point1.lat, edge.point1.lon);
 
-            const baseHeight = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
-            const rectWidth = getAdjustedLineWidth(map, baseHeight);
-            const inset = 5;
+            const dx = p2[0] - p1[0];
+            const dy = p2[1] - p1[1];
+            const segmentLength = Math.sqrt(dx * dx + dy * dy);
+            const nx = -dy / segmentLength; // Normalized perpendicular x
+            const ny = dx / segmentLength;  // Normalized perpendicular y
+            const height_offset_x = nx * height;
+            const height_offset_y = ny * height;
+            const p1_base = { x: p1[0], y: p1[1]};
+            const p2_base = { x: p2[0], y: p2[1]};
+            const p1_top = { x: p1[0] + height_offset_x, y: p1[1] + height_offset_y };
+            const p2_top = { x: p2[0] + height_offset_x, y: p2[1] + height_offset_y };
 
-            if (layerSpec.unit.orientation === 'parallel') {
-              let offsetBearing = 0;
-              let currentMultiplier = 0;
+            const polygonPoints = [
+              p1_base,
+              p2_base,
+              p2_top,
+              p1_top
+            ].map(p => `${p.x},${p.y}`).join(" ");
 
-              if (layerSpec.unit.alignment === "left") {
-                offsetBearing = (currentBearing + 270) % 360;
-                currentMultiplier = alignmentCountersRef.current.left;
-                console.log("what is currentMultiplier", currentMultiplier)
-              } else if (layerSpec.unit.alignment === "right") {
-                offsetBearing = (currentBearing + 90) % 360;
-                currentMultiplier = alignmentCountersRef.current.right;
-              }
+            svgGroup.append("polygon")
+              .attr("points", polygonPoints)
+              .attr("opacity", lineOpacity)
+              .attr("fill", lineColor);
+          }
+          else if (layerSpec.unit.method === 'rect' && layerSpec.unit.orientation === 'parallel') {
+            const height = getDynamicStyleValue(layerSpec.unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+            const p1 = projectPoint(map, edge.point0.lat, edge.point0.lon);
+            const p2 = projectPoint(map, edge.point1.lat, edge.point1.lon);
 
-              const [sOffsetLat, sOffsetLon] = offsetPoint(currentStartPoint.lat, currentStartPoint.lon, offsetBearing, inset + (currentMultiplier * rectWidth));
-              const [eOffsetLat, eOffsetLon] = offsetPoint(currentEndPoint.lat, currentEndPoint.lon, offsetBearing, inset + (currentMultiplier * rectWidth));
-
-              const turfStart = turf.point([sOffsetLon, sOffsetLat]); // lon lat
-              const turfEnd = turf.point([eOffsetLon, eOffsetLat]); // lon lat
-              const lineBearing: number = turf.bearing(turfStart, turfEnd);
-
-              // const lineBearing = bearingBetweenPoints(sOffsetLat, sOffsetLon, eOffsetLat, eOffsetLon);
-              const outwardBearing = layerSpec.unit.alignment === "left" ? (lineBearing + 270) % 360 : (lineBearing + 90) % 360;
-
-              const [s2Lat, s2Lon] = offsetPoint(sOffsetLat, sOffsetLon, outwardBearing, rectWidth*6);
-              const [e2Lat, e2Lon] = offsetPoint(eOffsetLat, eOffsetLon, outwardBearing, rectWidth*6);
-
-              const corners = [
-                projectPoint(map, sOffsetLat, sOffsetLon),
-                projectPoint(map, eOffsetLat, eOffsetLon),
-                projectPoint(map, e2Lat, e2Lon),
-                projectPoint(map, s2Lat, s2Lon)
-              ];
-
-              svgGroup.append("polygon")
-                .attr("points", corners.map(pt => pt.join(",")).join(" "))
-                .style("fill", lineColor)
-                .style("fill-opacity", lineOpacity)
-                .style("stroke", 'none');
-            } else if (layerSpec.unit.orientation === 'perpendicular') {
-              const midLat = (currentStartPoint.lat + currentEndPoint.lat) / 2;
-              const midLon = (currentStartPoint.lon + currentEndPoint.lon) / 2;
-
-              let offsetBearing = 0;
-              if (layerSpec.unit.alignment === "left") {
-                offsetBearing = (currentBearing + 270) % 360;
-              } else if (layerSpec.unit.alignment === "right") {
-                offsetBearing = (currentBearing + 90) % 360;
-              }
-
-              const [mOffsetLat, mOffsetLon] = offsetPoint(midLat, midLon, offsetBearing, 0);
-              const [m2Lat, m2Lon] = offsetPoint(mOffsetLat, mOffsetLon, offsetBearing, rectWidth*12);
-
-              const p1 = projectPoint(map, mOffsetLat, mOffsetLon);
-              const p2 = projectPoint(map, m2Lat, m2Lon);
-
-              svgGroup.append("line")
-                .attr("x1", p1[0]).attr("y1", p1[1])
-                .attr("x2", p2[0]).attr("y2", p2[1])
-                .style("stroke", lineColor)
-                .style("stroke-opacity", lineOpacity)
-                .style("stroke-width", lineWidth)
-                .style("stroke-linecap", "round");
-            }
-          } else if (layerSpec.unit.chart) {
+            svgGroup.append("line")
+              .attr("x1", p1[0])
+              .attr("y1", p1[1])
+              .attr("x2", p2[0])
+              .attr("y2", p2[1])
+              .attr("opacity", lineOpacity)
+              .attr("stroke", lineColor)
+              .attr("stroke-width", height)
+              .attr("stroke-linecap", "butt");
+          } 
+          else if (layerSpec.unit.chart) {
             const templateSpec = layerSpec.unit.chart;
             const svgChartWidth = 150, svgChartHeight = 150;
             const pane = map.getPanes().overlayPane;

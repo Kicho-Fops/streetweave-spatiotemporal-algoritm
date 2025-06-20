@@ -6,10 +6,6 @@
   "items": {
     "type": "object",
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "Optional name for the specification layer."
-      },
       "unit": {
         "type": "object",
         "description": "Defines the unit of analysis and its associated rendering properties.",
@@ -21,7 +17,10 @@
             "default": "segment"
           },
           "splits": {
-            "type": "number",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "number", "minimum": 0, "maximum": 20 }
+            ],
             "description": "A split factor for the unit.",
             "default": 1
           },
@@ -97,7 +96,7 @@
             "type": "string",
             "description": "Alignment for rendering (e.g., 'left', 'center', 'right').",
             "enum": ["left", "center", "right"],
-            "default": "left"
+            "default": "center"
           }
         },
         "additionalProperties": false
@@ -202,18 +201,6 @@
           }
         },
         "additionalProperties": false
-      },
-      "orientation": {
-        "type": "string",
-        "description": "Orientation for rendering (e.g., 'parallel', 'perpendicular').",
-        "enum": ["parallel", "perpendicular"],
-        "nullable": true
-      },
-      "alignment": {
-        "type": "string",
-        "description": "Alignment for rendering (e.g., 'left', 'center', 'right').",
-        "enum": ["left", "center", "right"],
-        "nullable": true
       },
       "query": {
         "type": "object",
