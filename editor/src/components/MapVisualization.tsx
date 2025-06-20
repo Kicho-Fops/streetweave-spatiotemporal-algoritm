@@ -211,12 +211,11 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       let initialEdges = physicalData;
 
+      let processedEdges: AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
       if (layerSpec.unit.splits != 1) {
         initialEdges = subdivideEdges(initialEdges, thematicData.attributeStats);
       }
-
-      const processedEdges : AggregatedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
-      console.log(processedEdges);
+      processedEdges = await applySpatialAggregation(initialEdges, thematicData.data, layerSpec);
 
       // Clear existing layers from relevant panes to prevent duplicates on redraw
       const paneName = layerSpec.unit.alignment === "center" 
