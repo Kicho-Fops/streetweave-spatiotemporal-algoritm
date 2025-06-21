@@ -45,8 +45,8 @@ function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<str
   const subdivided: PhysicalEdge[] = [];
 
   aggregation.edges.forEach((edge: PhysicalEdge) => {
-
     let density = getDynamicStyleValue(layerSpecDensity, edge.attributes, attributeStats, [0, 100]) as number;
+
     if(density > 0) {
       let length = 200 / density;
       let numSplits = edge.length / length;
