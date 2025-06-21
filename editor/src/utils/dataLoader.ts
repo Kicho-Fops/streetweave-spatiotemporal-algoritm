@@ -1,6 +1,6 @@
 
 import { loadPhysicalData, loadThematicData } from "./geoHelpers";
-import { applySpatialAggregation } from "./aggregation";
+import { applySpatialAggregation, processEdgesToNodes } from "./aggregation";
 import { PhysicalEdge, ParsedSpec, ThematicPoint, AggregatedEdges } from "streetweave";
 import { getDynamicStyleValue } from "./styleHelpers";
 
@@ -16,20 +16,37 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
   let edges = physicalData;
   let processedEdges: AggregatedEdges = await applySpatialAggregation(edges, thematicData.data, layerSpec);
 
-  if (layerSpec.unit.density != undefined) {
-    processedEdges = subdivideEdges(processedEdges, processedEdges.attributeStats, layerSpec.unit.density);
-    processedEdges = await applySpatialAggregation(processedEdges.edges, thematicData.data, layerSpec);
+  if (layerSpec.unit.density !== 1) {
+    processedEdges = await applySpatialAggregation(
+      subdivideEdges(processedEdges, thematicData.attributeStats, layerSpec.unit.density).edges,
+      thematicData.data,
+      layerSpec
+    );
   }
 
   return { processedEdges, thematicData };
 }
 
-function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecSplits: string | number | undefined ) {
+export async function loadNodeData(layerSpec: ParsedSpec) {
+  const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
+  const thematicData = await loadThematicData(
+    layerSpec.data.thematic.path,
+    layerSpec.data.thematic.latColumn,
+    layerSpec.data.thematic.lonColumn
+  );
+
+  const aggregatedEdges: AggregatedEdges = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
+  const nodesList = processEdgesToNodes(aggregatedEdges.edges);
+
+  return { nodesList, thematicData };
+}
+
+function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecDensity: string | number | undefined ) {
   const subdivided: PhysicalEdge[] = [];
 
   aggregation.edges.forEach((edge: PhysicalEdge) => {
+    let density = getDynamicStyleValue(layerSpecDensity, edge.attributes, attributeStats, [0, 100]) as number;
 
-    let density = getDynamicStyleValue(layerSpecSplits, edge.attributes, attributeStats, [0, 100]) as number;
     if(density > 0) {
       let length = 200 / density;
       let numSplits = edge.length / length;
