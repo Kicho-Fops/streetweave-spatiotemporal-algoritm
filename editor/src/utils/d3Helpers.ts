@@ -3,7 +3,7 @@ import { AggregatedEdges, PhysicalEdge, ThematicPoint, UnitType } from "streetwe
 
 import { generateSimpleWavyPath, getBivariateColor, getDashArray, getDynamicStyleValue, getSquiggleParams } from "./styleHelpers";
 import { offsetPoint } from "./geoHelpers";
-import { getAdjustedLineWidth, projectPoint } from "./mapHelpers";
+import { getAdjustedLineWidth } from "./mapHelpers";
 import * as d3 from 'd3';
 import L from "leaflet";
 
@@ -287,28 +287,36 @@ export function drawD3Nodes(
   nodesList: Record<string, any>[],
   svgGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
   unit: UnitType,
-  attributeStats: Record<string, { min: number; max: number; }> | undefined,
+  attributeStats: Record<string, { min: number; max: number }> | undefined,
   map: L.Map
 ) {
-  nodesList.forEach(node => {
-    const shapeColor = getDynamicStyleValue(unit.color, node.attributes, attributeStats, d3.schemeBuGn[9]) as string;
-    const shapeWidth = getDynamicStyleValue(unit.width, node.attributes, attributeStats, [5, 30]) as number;
-    const shapeOpacity = getDynamicStyleValue(unit.opacity, node.attributes, attributeStats, [0, 1]) as number;
+  type NodeDatum = typeof nodesList[number] & { projected: L.Point };
 
-    const projected = projectPoint(map, node.lat, node.lon);
-    const pt = L.point(projected[0], projected[1]);
+  const projectedNodes: NodeDatum[] = nodesList.map(node => ({
+    ...node,
+    projected: map.latLngToLayerPoint([node.lat, node.lon]),
+  }));
 
-    svgGroup.append("circle")
-      .datum(node)
-      .attr('class', 'nodeShape')
-      .attr('cx', pt.x)
-      .attr('cy', pt.y)
-      .attr('r', shapeWidth / 2)
-      .attr('fill', shapeColor)
-      .attr('fill-opacity', shapeOpacity)
-      .attr('stroke', '#333')
-      .attr('stroke-width', 0.5)
-      .append("title")
-      .text(`Node Data: ${JSON.stringify(node, null, 2)}`);
-  });
+  const circles = svgGroup
+    .selectAll<SVGCircleElement, NodeDatum>('circle.nodeShape')
+    .data(projectedNodes, (d: NodeDatum, i: number) => d.id ?? i);
+
+  circles.exit().remove();
+
+  const circlesEnter = circles.enter()
+    .append('circle')
+    .attr('class', 'nodeShape');
+
+  circlesEnter.merge(circles)
+    .attr('cx', d => d.projected.x)
+    .attr('cy', d => d.projected.y)
+    .attr('r', d => (getDynamicStyleValue(unit.width, d.attributes, attributeStats, [5, 30]) as number) / 2)
+    .attr('fill', d => getDynamicStyleValue(unit.color, d.attributes, attributeStats, d3.schemeBuGn[9]) as string)
+    .attr('fill-opacity', d => getDynamicStyleValue(unit.opacity, d.attributes, attributeStats, [0, 1]) as number)
+    .attr('stroke', '#333')
+    .attr('stroke-width', 0.5);
+
+  
+  circlesEnter.append('title')
+    .text(d => `Node Data: ${JSON.stringify(d, null, 2)}`);
 }

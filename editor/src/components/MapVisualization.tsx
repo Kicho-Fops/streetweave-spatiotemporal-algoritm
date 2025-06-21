@@ -315,13 +315,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       };
 
       await redraw();
-      const handler = () => redraw();
-      map.on("zoomend moveend", handler);
+      bindMapEvents(map, redraw);
 
-      // Optional: expose cleanup
-      (svgLayer as any).onRemove = function() {
-        map.off("zoomend moveend", handler);
-      };
+      // const handler = () => redraw();
+      // map.on("zoomend moveend", handler);
+
+      // // Optional: expose cleanup
+      // (svgLayer as any).onRemove = function() {
+      //   map.off("zoomend moveend", handler);
+      // };
 
       currentLayersRef.current.push(svgLayer);
       return svgLayer;
