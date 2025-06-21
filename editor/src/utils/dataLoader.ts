@@ -17,8 +17,11 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
   let processedEdges: AggregatedEdges = await applySpatialAggregation(edges, thematicData.data, layerSpec);
 
   if (layerSpec.unit.density != undefined) {
-    processedEdges = subdivideEdges(processedEdges, processedEdges.attributeStats, layerSpec.unit.density);
-    processedEdges = await applySpatialAggregation(processedEdges.edges, thematicData.data, layerSpec);
+    processedEdges = await applySpatialAggregation(
+      subdivideEdges(processedEdges, processedEdges.attributeStats, layerSpec.unit.density).edges, 
+      thematicData.data, 
+      layerSpec
+    );
   }
 
   return { processedEdges, thematicData };
