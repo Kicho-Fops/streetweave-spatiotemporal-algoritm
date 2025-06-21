@@ -9,7 +9,7 @@ export const createPaneIfNeeded = (map: L.Map, paneName: string) => {
   }
 }
 
-export function bindMapEvents(map: L.Map, onRedraw) {
+export function bindMapEvents(map: L.Map, onRedraw: any) {
   map.on('moveend zoomend', onRedraw);
   return () => map.off('moveend zoomend', onRedraw);
 }
