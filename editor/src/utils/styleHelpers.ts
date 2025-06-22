@@ -149,7 +149,7 @@ export const getSquiggleParams = (
     if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(name)) {
       const attributeValue = aggregatedAttributes[name];
       if(attributeValue != undefined)
-        return { amplitude: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([0,10])(attributeValue), frequency: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([1,10])(attributeValue) };
+        return { amplitude: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([0,20])(attributeValue), frequency: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([1,20])(attributeValue) };
 
     }
   }

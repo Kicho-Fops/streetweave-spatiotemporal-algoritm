@@ -27,6 +27,20 @@ export function buildD3Instructions(
     let point0 = edge.point0;
     let point1 = edge.point1;
 
+    let Bearing = edge.bearing;
+    Bearing = ((Bearing % 360) + 360) % 360;
+    if (Bearing >= 180) {
+      // Swap start & end
+      const temp = { lat: point0.lat, lon: point0.lon };
+      point0.lat = point1.lat;   
+      point0.lon = point1.lon;
+      point1.lat = temp.lat;    
+      point1.lon = temp.lon;
+      Bearing -= 180;
+    }
+    edge.bearing = Bearing;
+
+
     if (unit.alignment === "left" || unit.alignment === "right") {
     const offsetStartCoords = offsetPoint(edge.point0.lat, edge.point0.lon, edge.bearing + offsetAngle, distance);
     const offsetEndCoords = offsetPoint(edge.point1.lat, edge.point1.lon, edge.bearing + offsetAngle, distance);
@@ -53,7 +67,7 @@ export function buildD3Instructions(
     
     let dByColor: Record<string,string> = {};
     
-    const baseWidth = getDynamicStyleValue(unit.width, edge.attributes, processedEdges.attributeStats, [0, 5]) as number;
+    const baseWidth = getDynamicStyleValue(unit.width, edge.attributes, processedEdges.attributeStats, [0, 10]) as number;
 
     if (unit.method === 'line' && unit.orientation === 'parallel') {
     if (unit.squiggle) {

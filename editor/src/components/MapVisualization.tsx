@@ -147,6 +147,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   useEffect(() => {
   if (!map) return;
 
+    alignmentCounters.current.left  = 0;  // FIX
+    alignmentCounters.current.right = 0;  // FIX
+
   if (parsedSpec[0]?.map?.streetWidth !== undefined) {
     setMimicWidth(parsedSpec[0].map.streetWidth);
   }
@@ -252,7 +255,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
         .attr('class', 'leaflet-zoom-hide');
   
       if (layerSpec.unit.alignment === 'left') alignmentCountersRef.current.left++;
+      console.log("alignmentCountersRef.current.left", alignmentCountersRef.current.left)
       if (layerSpec.unit.alignment === 'right') alignmentCountersRef.current.right++;
+      console.log("alignmentCountersRef.current.right", alignmentCountersRef.current.right)
   
       const { processedEdges, thematicData } = await loadSegmentData(layerSpec);
 
