@@ -98,6 +98,7 @@ export function buildD3Instructions(
     const midpoint_x = (p0.x + p1.x) / 2;
     const midpoint_y = (p0.y + p1.y) / 2;
 
+
     const midpoint_screen = [midpoint_x, midpoint_y];
 
     const dx_base = p1.x - p0.x;
@@ -107,16 +108,24 @@ export function buildD3Instructions(
 
     let normal_x = -dy_base / segmentLength;
     let normal_y = dx_base / segmentLength;
-    
-    if (normal_y > 0) {
-        normal_x = -normal_x;
-        normal_y = -normal_y;
-    }
 
+    // ─── flip the normal if user wants “right” instead of default “left” ──────
+    if (unit.alignment === 'right') {
+      normal_x = -normal_x;
+      normal_y = -normal_y;
+    }
+    
+    // if (normal_y > 0) {
+    //     normal_x = -normal_x;
+    //     normal_y = -normal_y;
+    // }
+
+    
     const endPoint_x = midpoint_screen[0] + (normal_x * height);
     const endPoint_y = midpoint_screen[1] + (normal_y * height);
-
     d = `M${midpoint_screen[0]},${midpoint_screen[1]} L${endPoint_x},${endPoint_y}`;
+
+    // d = `M${startpoint_screen[0]},${startpoint_screen[1]} L${endPoint_x},${endPoint_y}`;
     stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
     strokeWidth = getAdjustedLineWidth(map, baseWidth)
     strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
@@ -167,7 +176,7 @@ export function buildD3Instructions(
     finalObj = { id: `edge-${i}`, dByColor: dByColor , transform: `translate(${p0_screen.x}, ${p0_screen.y}) rotate(${angleDeg})` }
 
     } else if (unit.method === 'rect' && unit.orientation === 'perpendicular') {
-    const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+    const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 20]) as number;
 
     [p0, p1] = [
         map.latLngToLayerPoint([edge.point0.lat, edge.point0.lon]),
@@ -207,7 +216,7 @@ export function buildD3Instructions(
     d = `M${p0.x},${p0.y} L${p1.x},${p1.y}`;
 
     stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
-    strokeWidth = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+    strokeWidth = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 20]) as number;
     opacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
     strokeLinecap = "butt"
     
