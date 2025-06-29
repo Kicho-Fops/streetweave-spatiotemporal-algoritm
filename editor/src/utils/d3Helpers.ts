@@ -1,11 +1,13 @@
 
-import { AggregatedEdges, PhysicalEdge, ThematicPoint, UnitType } from "streetweave";
-
+import { AggregationType, AggregatedEdges, PhysicalEdge, ThematicPoint, UnitType } from "streetweave";
 import { generateSimpleWavyPath, getBivariateColor, getDashArray, getDynamicStyleValue, getSquiggleParams } from "./styleHelpers";
 import { offsetPoint } from "./geoHelpers";
 import { getAdjustedLineWidth } from "./mapHelpers";
 import * as d3 from 'd3';
 import L from "leaflet";
+// let aggregationType: AggregationType;
+// console.log(aggregationType)
+
 
 
 export function buildD3Instructions(
@@ -14,7 +16,13 @@ export function buildD3Instructions(
   processedEdges:AggregatedEdges, 
   thematicData: { data?: ThematicPoint[]; attributeStats: any; }, 
   distance: number, 
+  aggregationType: AggregationType,
   map: L.Map) {
+    // console.log("processedEdge", processedEdges)
+    // let aggregationType: AggregationType;
+    // console.log(aggregationType)
+
+  // let aggregationType: AggregationType;
 
   const offsetAngle = unit.alignment === "left" 
     ? -90 
@@ -73,13 +81,13 @@ export function buildD3Instructions(
     if (unit.squiggle) {
         const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(unit.squiggle, edge.attributes, processedEdges.attributeStats);
         d = generateSimpleWavyPath(p0, p1, squiggleAmplitude, squiggleFrequency);
-        stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
+        stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
         strokeWidth = getAdjustedLineWidth(map, baseWidth)
         strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 
     } else {
         d = `M${p0.x},${p0.y}L${p1.x},${p1.y}`;
-        stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
+        stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
         strokeWidth = getAdjustedLineWidth(map, baseWidth)
         strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
         strokeDasharray =  getDashArray(unit.dash, edge.attributes, processedEdges.attributeStats)
@@ -87,13 +95,25 @@ export function buildD3Instructions(
     }
 
     } else if(unit.method === 'line' && unit.orientation === 'perpendicular') {
-    const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+      let height: any;
+      if(aggregationType === 'sum'){
+        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 1]) as number;
+      }else{
+        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+      }
+
+      // const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 3]) as number;
+
+
+      const [newPoint0Lat, newPoint0Lon] = offsetPoint(edge.point0.lat, edge.point0.lon, edge.bearing + offsetAngle, 8);
+      const [newPoint1Lat, newPoint1Lon] = offsetPoint(edge.point1.lat, edge.point1.lon, edge.bearing + offsetAngle, 8);
 
 
     [p0, p1] = [
-        map.latLngToLayerPoint([edge.point0.lat, edge.point0.lon]),
-        map.latLngToLayerPoint([edge.point1.lat, edge.point1.lon])
+        map.latLngToLayerPoint([newPoint0Lat, newPoint0Lon]),
+        map.latLngToLayerPoint([newPoint1Lat, newPoint1Lon])
     ];
+    
 
     const midpoint_x = (p0.x + p1.x) / 2;
     const midpoint_y = (p0.y + p1.y) / 2;
@@ -106,10 +126,10 @@ export function buildD3Instructions(
 
     const segmentLength = Math.sqrt(dx_base * dx_base + dy_base * dy_base);
 
-    let normal_x = -dy_base / segmentLength;
-    let normal_y = dx_base / segmentLength;
+    let normal_x = dy_base / segmentLength;
+    let normal_y = -dx_base / segmentLength;
 
-    // ─── flip the normal if user wants “right” instead of default “left” ──────
+    // flip the normal if “right” instead of default “left” 
     if (unit.alignment === 'right') {
       normal_x = -normal_x;
       normal_y = -normal_y;
@@ -123,15 +143,18 @@ export function buildD3Instructions(
     
     const endPoint_x = midpoint_screen[0] + (normal_x * height);
     const endPoint_y = midpoint_screen[1] + (normal_y * height);
+
     d = `M${midpoint_screen[0]},${midpoint_screen[1]} L${endPoint_x},${endPoint_y}`;
 
     // d = `M${startpoint_screen[0]},${startpoint_screen[1]} L${endPoint_x},${endPoint_y}`;
-    stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
+    stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
     strokeWidth = getAdjustedLineWidth(map, baseWidth)
     strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 
 
     } else if (unit.method === 'matrix') {
+      console.log("edge attributes", edge);
+      console.log("thematic", thematicData);
     [p0, p1] = [
         map.latLngToLayerPoint([edge.point0.lat, edge.point0.lon]),
         map.latLngToLayerPoint([edge.point1.lat, edge.point1.lon])
@@ -157,13 +180,27 @@ export function buildD3Instructions(
     const cellWidthAligned = segmentLength / numColumns; // Each cell's width spans part of the segment length
     const cellHeightAligned = totalMatrixPerpendicularHeight / numRows;
 
+    const d1 = thematicData.attributeStats[colorVar1Name];
+    const d2 = thematicData.attributeStats[colorVar2Name];
+
+
     
     for (let r = 0; r < numRows; r++) {
         for (let c = 0; c < numColumns; c++) {
         
-        const value1 = getDynamicStyleValue(colorVar1Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
-        const value2 = getDynamicStyleValue(colorVar2Name, edge.attributes, thematicData.attributeStats, [0,1]) as number;
+        const value1 = getDynamicStyleValue(colorVar1Name, edge.attributes, thematicData.attributeStats, [0,5]) as number;//0.2
+        const value2 = getDynamicStyleValue(colorVar2Name, edge.attributes, thematicData.attributeStats, [0,5]) as number;//0.5
+        const totalCells = numRows * numColumns;
+        const cellIndex = r * numColumns + c;
+        // const v1 = d1.min + ((cellIndex + 0.5)/totalCells) * (d1.max - d1.min);
+        // const v2 = d2.min + ((cellIndex + 0.5)/totalCells) * (d2.max - d2.min);
+        // const n1 = (v1 - d1.min)/(d1.max - d1.min);
+        // const n2 = (v2 - d2.min)/(d2.max - d2.min);
+        // const cellColor = getBivariateColor(n1, n2);
+        // console.log(`row is ${r}, column is ${c}, val1 is ${value1}, val 2 is ${value2}`)
+        
         const cellColor = getBivariateColor(value1, value2);
+        // console.log("cell color val", cellColor)
         
         const x = c * cellWidthAligned;
         const y = -totalMatrixPerpendicularHeight/2 + r * cellHeightAligned;
@@ -176,20 +213,41 @@ export function buildD3Instructions(
     finalObj = { id: `edge-${i}`, dByColor: dByColor , transform: `translate(${p0_screen.x}, ${p0_screen.y}) rotate(${angleDeg})` }
 
     } else if (unit.method === 'rect' && unit.orientation === 'perpendicular') {
-    const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 20]) as number;
+      let height: any;
+      if(aggregationType === 'sum'){
+        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 1]) as number;
+      }else{
+        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+      }
+      // const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 3]) as number;
+
+
+      const [newPoint0Lat, newPoint0Lon] = offsetPoint(edge.point0.lat, edge.point0.lon, edge.bearing + offsetAngle, 10);
+      const [newPoint1Lat, newPoint1Lon] = offsetPoint(edge.point1.lat, edge.point1.lon, edge.bearing + offsetAngle, 10);
+      // console.log("height is", height);
 
     [p0, p1] = [
-        map.latLngToLayerPoint([edge.point0.lat, edge.point0.lon]),
-        map.latLngToLayerPoint([edge.point1.lat, edge.point1.lon])
+        map.latLngToLayerPoint([newPoint0Lat, newPoint0Lon]),
+        map.latLngToLayerPoint([newPoint1Lat, newPoint1Lon])
     ];
 
     const dx = p1.x - p0.x;
     const dy = p1.y - p0.y;
     const segmentLength = Math.sqrt(dx * dx + dy * dy);
-    const nx = -dy / segmentLength; // Normalized perpendicular x
-    const ny = dx / segmentLength;  // Normalized perpendicular y
+    let nx = dy / segmentLength; // Normalized perpendicular x
+    let ny = -dx / segmentLength;  // Normalized perpendicular y
+
+    // flip the normal if “right” instead of default “left” 
+    if (unit.alignment === 'right') {
+      nx = -nx;
+      ny = -ny;
+    }
+
+
     const height_offset_x = nx * height;
     const height_offset_y = ny * height;
+
+
     const p0_base = { x: p0.x, y: p0.y};
     const p1_base = { x: p1.x, y: p1.y};
     const p0_top = { x: p0.x + height_offset_x, y: p0.y + height_offset_y };
@@ -203,19 +261,23 @@ export function buildD3Instructions(
         "Z"
     ].join(" ");
 
-    fill = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
-    opacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
+
+    fill = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
+    opacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0.5, 1]) as number;
 
     } else if (unit.method === 'rect' && unit.orientation === 'parallel') {
 
+      const [newPoint0Lat, newPoint0Lon] = offsetPoint(edge.point0.lat, edge.point0.lon, edge.bearing + offsetAngle, 10);
+      const [newPoint1Lat, newPoint1Lon] = offsetPoint(edge.point1.lat, edge.point1.lon, edge.bearing + offsetAngle, 10);
+
     [p0, p1] = [
-        map.latLngToLayerPoint([edge.point0.lat, edge.point0.lon]),
-        map.latLngToLayerPoint([edge.point1.lat, edge.point1.lon])
+        map.latLngToLayerPoint([newPoint0Lat, newPoint0Lon]),
+        map.latLngToLayerPoint([newPoint1Lat, newPoint1Lon])
     ];
 
     d = `M${p0.x},${p0.y} L${p1.x},${p1.y}`;
 
-    stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["black", "red"]) as string;
+    stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
     strokeWidth = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 20]) as number;
     opacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
     strokeLinecap = "butt"
@@ -298,6 +360,7 @@ export function drawSegments(
       .attr('d', (d: any) => d.d)
       .style('fill', (d: any) => d.fill)
       .style('fill-opacity', (d: any) => d["fill-opacity"] as any)
+      .style('opacity', (d: any) => d["opacity"] as any)
       .style('stroke', (d: any) => d.stroke)
       .style('stroke-width', (d: any) => d['stroke-width'])
       .style('stroke-opacity', (d: any) => d['stroke-opacity'])

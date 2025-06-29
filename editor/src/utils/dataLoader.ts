@@ -18,11 +18,12 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
 
   if (layerSpec.unit.density != undefined) {
     processedEdges = await applySpatialAggregation(
-      subdivideEdges(processedEdges, processedEdges.attributeStats, layerSpec.unit.density).edges, 
+      subdivideEdges(processedEdges, processedEdges.attributeStats, layerSpec.unit.density, layerSpec.unit.method, layerSpec.unit.orientation, layerSpec.unit.chart).edges, 
       thematicData.data, 
       layerSpec
     );
   }
+  // console.log("checking the edges:", processedEdges)
 
   return { processedEdges, thematicData };
 }
@@ -41,8 +42,9 @@ export async function loadNodeData(layerSpec: ParsedSpec) {
   return { nodesList, thematicData };
 }
 
-function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecDensity: string | number | undefined ) {
+function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<string, any>, layerSpecDensity: string | number | undefined, layerSpecMethod: string | number | undefined, layerSpecOrientation: string | number | undefined, layerChart: string ) {
   const subdivided: PhysicalEdge[] = [];
+  // console.log("checking the edges:", aggregation)
 
   aggregation.edges.forEach((edge: PhysicalEdge) => {
     let density = getDynamicStyleValue(layerSpecDensity, edge.attributes, attributeStats, [0, 100]) as number;
@@ -59,21 +61,39 @@ function subdivideEdges(aggregation: AggregatedEdges, attributeStats: Record<str
       const lat1 = end.lat, lon1 = end.lon;
       const dLat = lat1 - lat0, dLon = lon1 - lon0;
 
+      // shrink window
+      const shrinkStart = 0.2;        // 20%
+      const shrinkSpan  = 0.8 - 0.2;  // 60%
+
       let startIndex = 0;
       let endIndex = numSplits;
-      // if (splits >= 20) {
-      //   startIndex = 5;
-      //   endIndex = splits - 5;
-      // } else if (splits >= 10 && splits < 20) {
-      //   startIndex = 1;
-      //   endIndex = splits - 1;
-      // }
+      let point0: any;
+      let point1: any;
 
       for (let i = startIndex; i < endIndex; i++) {
-        const point0 = { lat: lat0 + dLat * (i / numSplits), lon: lon0 + dLon * (i / numSplits) } as ThematicPoint;
-        const point1 = { lat: lat0 + dLat * ((i + 1) / numSplits), lon: lon0 + dLon * ((i + 1) / numSplits) } as ThematicPoint;
+        if((layerSpecMethod === 'line' && layerSpecOrientation === 'perpendicular') || layerSpecMethod === 'rect'){
+          const t0 = shrinkStart + (i / numSplits) * shrinkSpan;
+          const t1 = shrinkStart + ((i+1)/ numSplits) * shrinkSpan;
+          point0 = {
+            lat: lat0 + dLat * t0,
+            lon: lon0 + dLon * t0
+          } as ThematicPoint;
+          point1 = {
+            lat: lat0 + dLat * t1,
+            lon: lon0 + dLon * t1
+          }
+        }else{
+          point0 = { lat: lat0 + dLat * (i / numSplits), lon: lon0 + dLon * (i / numSplits) } as ThematicPoint;
+          point1 = { lat: lat0 + dLat * ((i + 1) / numSplits), lon: lon0 + dLon * ((i + 1) / numSplits) } as ThematicPoint;
+        }
 
         subdivided.push({point0, point1, bearing, length, attributes} as PhysicalEdge);
+      }
+    }
+    else{
+      //subdivided.push(edge);
+      if((layerSpecMethod === 'line' && layerSpecOrientation === 'parallel') || layerChart){
+        subdivided.push(edge);
       }
     }
   });

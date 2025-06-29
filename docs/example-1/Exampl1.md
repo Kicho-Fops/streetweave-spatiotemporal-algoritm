@@ -4,65 +4,139 @@ In this example we use Project Sidewalk dataset for Chicago, which includes geo-
 
 Follow the steps below, and after each modification to the specification, click `Apply` to see the updated visualization.
 
-## Step 1: Adding a map
+## Step 1: Adding a map and specifying data layers
 
-At first we need to specify the unit level. The concept of a unit defines the spatial granularity at which data can be aggregated, analyzed, and visualized, providing users with flexible options for spatial analysis.
+At first we need to specify the unit level. The concept of a unit defines the spatial granularity at which data can be aggregated, analyzed, and visualized, providing users with flexible options for spatial analysis. StreetWeave’s grammar allows users to load, visualize, and integrate physical layers (e.g., streets, intersections) and thematic layers (e.g., crime, pollution, pedestrian counts)
 
-`Layer1 = gMap(unit="segment")`
+```
+[
+  {
+    "unit": {
+      "type": "segment"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    }
+  }
+]
+```
 
 You should see the following:
 
 ![StreetWeave example](step1.png?raw=true)
 
-## Step 2: Specifying data layers
-StreetWeave’s grammar allows users to load, visualize, and integrate physical layers (e.g., streets, intersections) and thematic layers (e.g., crime, pollution, pedestrian counts)
-
-`.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")`
-
-You should see the following:
-
-![StreetWeave example](step2.png?raw=true)
-
-## Step 3: Specifying spatial relations
+## Step 2: Specifying spatial relations
 
  The grammar supports defining spatial relationships (buffer, contains, nearest neighbor) and applying aggregation operations (mean, sum, max, min) to summarize thematic data on physical features.
 
-`.relation(spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")`
+```
+[
+  {
+    "unit": {
+      "type": "segment"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  }
+]
+```
 
 You should see the following:
 
 ![StreetWeave example](step2.png?raw=true)
 
-## Step 4: Visual encoding specification
+## Step 3: Visual encoding specification
 
 StreetWeave’s grammar allows to specify how data is visually encoded onto the physical network using customizable visual properties.
 
-`.ft(method = "line", color = "#31a354", opacity = "Crosswalk" , width = "CurbRamp").alignment("center")`
+```
+[
+  {
+    "unit": {
+      "type": "segment",
+      "density":0,
+      "method": "line",
+      "color": "#31a354",
+      "width": "CurbRamp",
+      "opacity": 1,
+      "alignment": "center",
+      "orientation": "parallel"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  }
+]
+```
 
 
 You should see the following:
 
 ![StreetWeave example](step4.png?raw=true)
 
-## Step 5: Creating multilayer visualizations
+## Step 4: Creating multilayer visualizations
 
 StreetWeave also supports adding multiple layers of visualization, enabling the integration of different data aspects in a single view.
 
 ```
-Layer2 = gMap(unit = "segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation( spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#756bb1",  opacity = "NoCurbRamp", width = "NoSidewalk")
-.alignment("left")
+{
+    "unit": {
+      "type": "segment",
+      "density": 0,
+      "method": "line",
+      "color": "#756bb1",
+      "width": "SurfaceProblem",
+      "opacity": 1,
+      "alignment": "left"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  }
 ```
 
 
 ```
-Layer3 = gMap(unit = "segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation( spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#d95f0e", opacity = "SurfaceProblem", width = "Obstacle")
-.alignment("right")
+{
+    "unit": {
+      "type": "segment",
+      "density": 0,
+      "method": "line",
+      "color": "#d95f0e",
+      "width": "Crosswalk",
+      "opacity": 1,
+      "alignment": "right"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  }
 ```
 
 
@@ -75,22 +149,68 @@ You should see the following:
 <summary>StreetWeave specification (click to expand)</summary>
 
 ```diff
-Layer1 = gMap(unit="segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation(spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#31a354", opacity = "Crosswalk" , width = "CurbRamp")
-.alignment("center")
-
-Layer2 = gMap(unit = "segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation( spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#756bb1",  opacity = "NoCurbRamp", width = "NoSidewalk")
-.alignment("left")
-
-Layer3 = gMap(unit = "segment")
-.data(physicalLayer = "filtered_data.json", thematicLayer = "SideWalk_data.json")
-.relation( spatialRelation = "buffer(10)", operation = "aggregation", type = "mean")
-.ft(method = "line", color = "#d95f0e", opacity = "SurfaceProblem", width = "Obstacle")
-.alignment("right")
+[
+  {
+    "unit": {
+      "type": "segment",
+      "density":0,
+      "method": "line",
+      "color": "#31a354",
+      "width": "CurbRamp",
+      "opacity": 1,
+      "alignment": "center",
+      "orientation": "parallel"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  },
+  {
+    "unit": {
+      "type": "segment",
+      "density": 0,
+      "method": "line",
+      "color": "#756bb1",
+      "width": "SurfaceProblem",
+      "opacity": 1,
+      "alignment": "left"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  },
+  {
+    "unit": {
+      "type": "segment",
+      "density": 0,
+      "method": "line",
+      "color": "#d95f0e",
+      "width": "Crosswalk",
+      "opacity": 1,
+      "alignment": "right"
+    },
+    "data": {
+      "physical": {"path": "2.geojson"},
+      "thematic": {"path": "2.csv"}
+    },
+    "relation": {
+      "spatial": "buffer",
+      "value": 50,
+      "type": "sum"
+    }
+  }
+]
 ```
 </details>

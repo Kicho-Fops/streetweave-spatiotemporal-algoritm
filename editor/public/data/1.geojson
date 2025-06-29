@@ -43947,26 +43947,6 @@
         "type": "LineString",
         "coordinates": [
           [
-            -87.740684,
-            42.009054
-          ],
-          [
-            -87.738316,
-            42.008988
-          ]
-        ]
-      },
-      "properties": {
-        "bearing": 92.1,
-        "length": 197.746
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
             -87.719331,
             41.997674
           ],
@@ -47499,26 +47479,6 @@
       "properties": {
         "bearing": 4.4,
         "length": 8.61
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -87.782873,
-            41.992471
-          ],
-          [
-            -87.782542,
-            41.99237
-          ]
-        ]
-      },
-      "properties": {
-        "bearing": 112.4,
-        "length": 29.909
       }
     },
     {

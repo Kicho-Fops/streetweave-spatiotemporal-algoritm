@@ -56,9 +56,15 @@ export const getDynamicStyleValue = (
     return name;
   }
   else if(typeof name === 'string' && attributes && name in attributes && domain) {
+    // console.log("here check attributes", attributes)
+    // console.log("here check domain", domain)
     let scale;
-    if(range)
+    if(range){
+      // console.log("range is", range);
+      // console.log("min is", domain[name].min);
+      // console.log("max is", domain[name].max);
       scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]).range(range);
+    }
     else
       scale = d3.scaleLinear().domain([domain[name].min, domain[name].max]);
     if(attributes[name] != undefined)
@@ -93,14 +99,14 @@ export const getDashArray = (
       const maxValue = domain[name].max; // d3.max(allAttributeValues);
 
       if (attributeValue < minValue + (maxValue - minValue) / 3) {
-        return "2, 5";
+        return "5, 3";
       } else if (
         attributeValue >= minValue + (maxValue - minValue) / 3 &&
         attributeValue < minValue + (2 * (maxValue - minValue)) / 3
       ) {
-        return "10, 10";
+        return "7, 5";
       } else {
-        return "15, 10";
+        return "12, 8";
       }
     }
   }
@@ -124,6 +130,7 @@ export function getBivariateColor(val1: number, val2: number): string {
   const blendedB = (color1.b + color2.b) / 2;
 
   return `rgb(${Math.round(blendedR)}, ${Math.round(blendedG)}, ${Math.round(blendedB)})`;
+  // return `rgb(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255})`;
 }
 
 /**
@@ -148,8 +155,31 @@ export const getSquiggleParams = (
     const aggregatedAttributes = attributes;
     if (aggregatedAttributes && aggregatedAttributes.hasOwnProperty(name)) {
       const attributeValue = aggregatedAttributes[name];
-      if(attributeValue != undefined)
-        return { amplitude: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([0,20])(attributeValue), frequency: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([1,20])(attributeValue) };
+      if(attributeValue != undefined){
+        const min = domain[name].min;
+        const max = domain[name].max;
+        const range = max - min;
+        const stepSize = range / 4;
+        const boundary1 = min + stepSize;
+        const boundary2 = min + 2 * stepSize;
+        const boundary3 = min + 3 * stepSize;
+
+        let frequency: number;
+        if (attributeValue >= min && attributeValue < boundary1) {
+          frequency = 5;
+        } else if (attributeValue >= boundary1 && attributeValue < boundary2) {
+          frequency = 20;
+        }
+        else if (attributeValue >= boundary2 && attributeValue < boundary3) {
+          frequency = 40;
+        } else {
+          frequency = 60;
+        }
+        const amplitude = 25;
+        console.log("freq is", frequency)
+        return { amplitude, frequency };
+        // return { amplitude: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([22,])(attributeValue), frequency: d3.scaleLinear().domain([domain[name].min, domain[name].max]).range([5, 20, 60])(attributeValue) };
+      }
 
     }
   }

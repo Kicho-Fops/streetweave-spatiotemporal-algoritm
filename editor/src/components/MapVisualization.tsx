@@ -17,14 +17,18 @@ import { buildD3Instructions, drawD3Nodes, drawSegments } from '../utils/d3Helpe
 import { drawVegaLiteEdges, drawVegaLiteNodes } from '../utils/vegaliteHelpers';
 
 
+
 const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }) => {
 
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mimicLayerRef = useRef<L.GeoJSON | null>(null);
   const currentLayersRef = useRef<L.Layer[]>([]);
+  // console.log("checking parsedSpec", parsedSpec)
 
   const [map, setMap] = useState<L.Map | null>(null)
-  const [zoom] = useState<number>(13)
+  const [zoom, setZoom] = useState<number>(
+      parsedSpec[0]?.zoom?.[0] ?? 17
+    );
 
   const [mimicWidth, setMimicWidth] = useState<number>(0);
   const [addressCoords, setAddressCoords] = useState<{ lat: number; lon: number } | null>(null);
@@ -33,6 +37,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     left: 0,
     right: 0
   })
+
+  //address change
 
   useEffect(() => {
     const address = parsedSpec[0]?.query?.address;
@@ -58,6 +64,9 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     
     return () => { cancelled = true; };
   }, [parsedSpec[0]?.query?.address]);
+
+
+  //initialize the leaflet
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +95,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       if (mapInstance) mapInstance.remove();
     };
   }, []);
+  
 
   useEffect(() => {
     if (!map) return;
@@ -144,6 +154,126 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     };
   }, [map, parsedSpec]);
 
+  //clear and redraw all spec
+
+//1st one-->
+
+  // useEffect(() => {
+  //   if (!map) return;
+
+  //   // ─── 1) TEAR DOWN OLD LAYERS (on “Apply”) ────────────────────────────────
+  //   map.off('zoomend');
+
+  //   currentLayersRef.current.forEach(layer => {
+  //     // remove the Leaflet layer itself
+  //     if (map.hasLayer(layer)) {
+  //       map.removeLayer(layer);
+  //     }
+  //     // remove its injected <svg> from the DOM
+  //     const container = (layer as any)._container as SVGSVGElement | undefined;
+  //     if (container && container.parentNode) {
+  //       container.parentNode.removeChild(container);
+  //     }
+  //   });
+  //   currentLayersRef.current = [];
+
+  //   // reset your alignment counters
+  //   alignmentCounters.current.left  = 0;
+  //   alignmentCounters.current.right = 0;
+
+  //   // ─── 2) BUILD & ADD NEW LAYERS ───────────────────────────────────────────
+  //   // every renderX returns Promise<L.Layer> and DOES `.addTo(map)`
+  //   const layerPromises: Promise<L.Layer>[] = parsedSpec.map(spec =>
+  //     spec.unit.type === 'segment'
+  //       ? renderSegmentLayer(map, spec, alignmentCounters)
+  //       : renderNodeLayer(map, spec, alignmentCounters)
+  //   );
+
+  //   Promise.all(layerPromises).then(layers => {
+  //     currentLayersRef.current = layers;
+
+  //     // ─── 3) CSS SHOW/HIDE ON ZOOM ─────────────────────────────────────────
+  //     const updateVisibility = () => {
+  //       const z = Math.floor(map.getZoom());
+  //       layers.forEach((layer, i) => {
+  //         const [minZ, maxZ] = parsedSpec[i].zoom;   // your [min,max]
+  //         const container = (layer as any)._container as HTMLElement;
+  //         if (!container) return;
+  //         container.style.display = z >= minZ && z <= maxZ ? '' : 'none';
+  //       });
+  //     };
+
+  //     updateVisibility();
+  //     map.on('zoomend', updateVisibility);
+  //   });
+
+  //   // ─── 4) FINAL CLEANUP (unmount or next Apply) ─────────────────────────────
+  //   return () => {
+  //     map.off('zoomend');
+  //     currentLayersRef.current.forEach(layer => {
+  //       if (map.hasLayer(layer)) map.removeLayer(layer);
+  //       const container = (layer as any)._container as SVGSVGElement | undefined;
+  //       if (container && container.parentNode) container.parentNode.removeChild(container);
+  //     });
+  //     currentLayersRef.current = [];
+  //   };
+  // }, [map, parsedSpec]);
+
+
+//2nd one-->
+//   useEffect(() => {
+//   if (!map) return;
+
+//   const renderByZoom = () => {
+//     const z = map.getZoom();
+
+//     // clear out old layers, counters, SVGs…
+//     alignmentCounters.current.left  = 0;
+//     alignmentCounters.current.right = 0;
+//     d3.selectAll('.vega-lite-svg').remove();
+//     currentLayersRef.current.forEach(l => map.removeLayer(l));
+//     currentLayersRef.current = [];
+
+//     parsedSpec.forEach((spec, idx) => {
+//       // grab whatever form your zoom is in:
+//       const rawZoom = spec.map?.zoom ?? spec.zoom;
+//       let minZ: number, maxZ: number;
+
+//       if (Array.isArray(rawZoom) && rawZoom.length === 2) {
+//         [minZ, maxZ] = rawZoom;
+//       } else if (rawZoom && typeof rawZoom.min === 'number' && typeof rawZoom.max === 'number') {
+//         minZ = rawZoom.min;
+//         maxZ = rawZoom.max;
+//       } else {
+//         // no zoom range declared → either always render or always skip:
+//         // here we’ll skip
+//         return;
+//       }
+
+//       const inRange = z >= minZ && z <= maxZ;
+//       console.log(` spec[${idx}] range=[${minZ},${maxZ}] →`, inRange ? '🟢' : '🔴');
+
+//       if (!inRange) return;
+//       if (spec.unit.type === 'segment') {
+//         renderSegmentLayer(map, spec, currentLayersRef, alignmentCounters);
+//       } else if (spec.unit.type === 'node') {
+//         renderNodeLayer(map, spec, currentLayersRef);
+//       }
+//     });
+//   };
+
+//   map.on('zoomend', renderByZoom);
+//   renderByZoom();
+
+//   return () => {
+//     map.off('zoomend', renderByZoom);
+//     currentLayersRef.current.forEach(l => map.hasLayer(l) && map.removeLayer(l));
+//     currentLayersRef.current = [];
+//   };
+// }, [map, parsedSpec]);
+
+
+
   useEffect(() => {
   if (!map) return;
 
@@ -156,6 +286,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
   d3.selectAll('.vega-lite-svg').remove();
   map.off('move zoom');
+  // map.off('move zoom zoomend moveend');
   setMimicWidth(0)
 
   currentLayersRef.current.forEach(layer => {
@@ -193,6 +324,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     currentLayersRef.current = [];
   };
 }, [map, parsedSpec]);
+
 
   
   useEffect(() => {
@@ -278,6 +410,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
           processedEdges,
           thematicData,
           dynamicDistance,
+          layerSpec.relation.type,
           map
         );
         drawSegments(layerSpec.unit.method, svgGroup, instructions);
@@ -288,6 +421,76 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     }
   }
 
+  // const renderSegmentLayer = async (
+  //   map: L.Map,
+  //   layerSpec: ParsedSpec,
+  //   currentLayersRef: React.MutableRefObject<L.Layer[]>,
+  //   alignmentCountersRef: React.MutableRefObject<{ left: number; right: number }>
+  // ): Promise<L.Layer> => {
+  //   const paneName =
+  //     layerSpec.unit.alignment === 'center'
+  //       ? 'overlayPane'
+  //       : `${layerSpec.unit.alignment}-${layerSpec.unit.orientation}`;
+  //   createPaneIfNeeded(map, paneName);
+
+  //   // clear old SVG and add a fresh one
+  //   d3.select(map.getPanes()[paneName]).selectAll('svg').remove();
+  //   const svgLayer = L.svg({ pane: paneName }).addTo(map);
+  //   ;(svgLayer as any).layerGroup = layerSpec.unit.alignment;
+
+  //   const container = (svgLayer as any)._container as SVGSVGElement;
+  //   const svg = d3.select(container);
+
+  //   // single <g> we’ll draw into—always clear it first
+  //   const group = svg
+  //     .selectAll('g.leaflet-zoom-hide')
+  //     .data([null])
+  //     .join('g')
+  //     .attr('class', 'leaflet-zoom-hide');
+  //   group.selectAll('*').remove();
+
+  //   // bump offsets
+  //   if (layerSpec.unit.alignment === 'left') {
+  //     alignmentCountersRef.current.left++;
+  //   } else {
+  //     alignmentCountersRef.current.right++;
+  //   }
+
+  //   // load data
+  //   const { processedEdges, thematicData } = await loadSegmentData(layerSpec);
+
+  //   if (!layerSpec.unit.chart) {
+  //     // D3 path mode
+  //     const redraw = () => {
+  //       const count = layerSpec.unit.alignment === 'left'
+  //         ? alignmentCountersRef.current.left
+  //         : alignmentCountersRef.current.right;
+  //       const instructions = buildD3Instructions(
+  //         processedEdges.edges,
+  //         layerSpec.unit,
+  //         processedEdges,
+  //         thematicData,
+  //         getOffsetDistance(map) * count,
+  //         map
+  //       );
+  //       drawSegments(layerSpec.unit.method, group, instructions);
+  //     };
+  //     redraw();
+  //     bindMapEvents(map, redraw);
+
+  //   } else {
+  //     // Vega‐Lite mode: clear <g> then call your helper
+  //     // (we assume drawVegaLiteEdges now draws into that same <g>)
+  //     await drawVegaLiteEdges(processedEdges, layerSpec, map);
+  //   }
+
+  //   // remember this layer for zoom/apply cleanup
+  //   currentLayersRef.current.push(svgLayer);
+  //   return svgLayer;
+  // };
+
+
+  
     /**
    * Renders a node-based layer (chart, spike, rect, or simple points).
    * @param map The Leaflet map instance.
@@ -320,7 +523,15 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       };
 
       await redraw();
-      bindMapEvents(map, redraw);
+      map.on("moveend", redraw);
+      map.on("zoomend", redraw);
+
+      (svgLayer as any).onRemove = () => {
+        map.off("moveend", redraw);
+        map.off("zoomend", redraw);
+      };
+
+      // bindMapEvents(map, redraw);
 
       // const handler = () => redraw();
       // map.on("zoomend moveend", handler);
