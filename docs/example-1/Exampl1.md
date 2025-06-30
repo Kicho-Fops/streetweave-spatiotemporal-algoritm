@@ -15,8 +15,8 @@ At first we need to specify the unit level. The concept of a unit defines the sp
       "type": "segment"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     }
   }
 ]
@@ -37,8 +37,8 @@ You should see the following:
       "type": "segment"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
@@ -71,8 +71,8 @@ StreetWeave’s grammar allows to specify how data is visually encoded onto the 
       "orientation": "parallel"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
@@ -104,8 +104,8 @@ StreetWeave also supports adding multiple layers of visualization, enabling the 
       "alignment": "left"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
@@ -123,13 +123,13 @@ StreetWeave also supports adding multiple layers of visualization, enabling the 
       "density": 0,
       "method": "line",
       "color": "#d95f0e",
-      "width": "Crosswalk",
+      "width": "NoSidewalk",
       "opacity": 1,
       "alignment": "right"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
@@ -162,8 +162,8 @@ You should see the following:
       "orientation": "parallel"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
@@ -182,8 +182,8 @@ You should see the following:
       "alignment": "left"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
@@ -197,13 +197,13 @@ You should see the following:
       "density": 0,
       "method": "line",
       "color": "#d95f0e",
-      "width": "Crosswalk",
+      "width": "NoSidewalk",
       "opacity": 1,
       "alignment": "right"
     },
     "data": {
-      "physical": {"path": "2.geojson"},
-      "thematic": {"path": "2.csv"}
+      "physical": {"path": "1.geojson"},
+      "thematic": {"path": "1.csv"}
     },
     "relation": {
       "spatial": "buffer",
