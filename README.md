@@ -6,11 +6,11 @@
 
 <!-- *A structured, machine-readable knowledge base of components and dependencies found in Visual Analytics (VA) systems, derived systematically from research literature.* -->
 
----
+
 
 **Main page:** [https://urbantk.org/streetweave/](https://urbantk.org/streetweave/) 
 
----
+
 ## Overview 
 
 StreetWeave is a declarative grammar that helps users create custom, street-overlaid visualizations of multivariate spatial network data at multiple resolutions. Designed for urban planners, climate researchers, health experts, it removes technical barriers by simplifying the integration of thematic data (like demographics or pollution) with physical data (like street networks) across varying spatial and temporal scales. Based on a review of 45 prior studies, StreetWeave provides a flexible design space that supports rich, domain-specific exploration and analysis without requiring programming expertise.
@@ -58,7 +58,7 @@ Follow these steps to run the StreetWeave project on your local machine:
    After the server starts, it will display a local URL: http://localhost:5173/
 
 
-## StreetWeave Examples
+## StreetWeave examples
 A set of examples can be found [here](docs/).
 
 
