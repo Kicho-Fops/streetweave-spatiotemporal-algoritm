@@ -96,8 +96,9 @@ export function buildD3Instructions(
 
     } else if(unit.method === 'line' && unit.orientation === 'perpendicular') {
       let height: any;
+      // console.log("checking aggregation:", aggregationType)
       if(aggregationType === 'sum'){
-        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 1]) as number;
+        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 2]) as number;
       }else{
         height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
       }
@@ -215,7 +216,7 @@ export function buildD3Instructions(
     } else if (unit.method === 'rect' && unit.orientation === 'perpendicular') {
       let height: any;
       if(aggregationType === 'sum'){
-        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 1]) as number;
+        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 2]) as number;
       }else{
         height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
       }

@@ -44,15 +44,21 @@ export async function drawVegaLiteEdges(processedEdges: AggregatedEdges, layerSp
 
     if(layerSpec.unit.orientation === 'parallel'){
       if(isHorizontal){
-        xOffset = -100;
+        xOffset = -50;
         yOffset = 0;
       }else{
         xOffset = -180;
         yOffset = 20;
       }
     }else if(layerSpec.unit.orientation === 'perpendicular'){
-      xOffset = -200;
-      yOffset = 25;
+
+      if(isHorizontal){
+        xOffset = -150;
+        yOffset = 50;
+      }else{
+        xOffset = -220;
+        yOffset = -80;
+      }
     }
 
 
