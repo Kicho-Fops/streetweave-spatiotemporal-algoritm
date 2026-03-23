@@ -73,3 +73,19 @@ A set of examples can be found [here](docs/).
 
 
 
+[
+  {
+    "data": {
+      "physical": { "path": "http://localhost:5000/route" }
+    },
+    "unit": {
+      "type": "segment",
+      "method": "line",
+      "color": "heat_exposure", 
+      "width": "duration", 
+      "opacity": 1,
+      "alignment": "center",
+      "orientation": "parallel"
+    }
+  }
+]

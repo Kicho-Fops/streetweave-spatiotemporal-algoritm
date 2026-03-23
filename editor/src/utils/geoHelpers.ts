@@ -236,6 +236,123 @@ export async function loadThematicData(
   };
 }
 
+export async function fetchGeoJSON(path: string) {
+
+    const request = new Request(path, {
+      method: "POST",
+       headers: {
+        "Content-Type": "application/json", // <-- ADD THIS HEADER
+        "Accept": "application/json"        // (Optional but good practice)
+      },
+      body: JSON.stringify({
+          city: "chicago",
+          origin: {
+              lat: 41.88623245009205,
+              lon: -87.79178242221495
+          },
+          destination: {
+              lat: 41.7905674,
+              lon: -87.5831307
+          },
+          map_view_mode: "Custom weights",
+          paths: 5,
+          weather : ["rain", "heat", "wind", "humidity"],
+          weights: [0.37, 0.20, 0.20, 0.20],
+          time: 17,
+          Graph_name: "chicago",
+          output_format: "geojson"
+      }),
+    });
+    
+  
+    const response = await fetch(request);
+    if (!response.ok) {
+      console.error(`Error fetching GeoJSON data: ${response.statusText}`);
+      return null;
+    }
+    const jsonResponse = await response.json(); 
+    return jsonResponse;
+  }
+
+  
+
+
+export async function loadAPIData( path: string,
+): Promise<PhysicalEdge[]> {
+  let geojsonData;
+  try {
+      geojsonData = await fetchGeoJSON(path);
+      console.log("checking algo:", geojsonData);
+  } catch (error) {
+    console.error(`Error loading physical data from ${path}:`, error);
+    return [];
+  }
+
+   let featuresToProcess: GeoJSONFeature[] = [];
+  if(geojsonData) {
+    if (geojsonData.type === "FeatureCollection" && geojsonData.features) {
+      featuresToProcess = geojsonData.features;
+    } else if (geojsonData.type === "Feature") {
+      featuresToProcess = [geojsonData]; // Wrap single Feature in an array
+    } else {
+      console.error(`GeoJSON from ${path} is not a valid FeatureCollection or Feature with geometry. Skipping.`);
+      return [];
+    }
+  } else {
+    console.error(`Error loading physical data from ${path}. Data is undefined.`);
+    return [];
+  }
+
+  const processedEdges: PhysicalEdge[] = [];
+  for (const feature of featuresToProcess) {
+    if (feature.geometry && feature.geometry.type === "LineString" && feature.geometry.coordinates) {
+      
+ 
+      const numericAttributes: Record<string, number> = {};
+      if (feature.properties) {
+        for (const [key, val] of Object.entries(feature.properties)) {
+          if (typeof val === 'number') {
+            numericAttributes[key] = val;
+          }
+        }
+      }
+
+      const coords = feature.geometry.coordinates;
+      if (coords.length >= 2) {
+        for (let i = 0; i < coords.length - 1; i++) {
+          const startCoord = coords[i];
+          const endCoord = coords[i + 1]; 
+
+          const p0: SegmentData = { lat: startCoord[1], lon: startCoord[0] };
+          const p1: SegmentData = { lat: endCoord[1], lon: endCoord[0] };
+
+
+          const turfStart = turf.point(startCoord);
+          const turfEnd = turf.point(endCoord);
+
+
+          const bearing: number = turf.bearing(turfStart, turfEnd);
+
+
+          const segmentLine = turf.lineString([startCoord, endCoord]);
+          const length: number = turf.length(segmentLine, { units: 'meters' });
+
+          const processedEdgeTuple: PhysicalEdge = {
+            point0: p0,
+            point1: p1,
+            bearing: bearing,
+            length: length,
+            attributes: numericAttributes 
+          };
+          processedEdges.push(processedEdgeTuple);
+        }
+      }
+    }
+  }
+
+  return processedEdges;
+}
+
 export async function loadPhysicalData(
   path: string,
 ): Promise<PhysicalEdge[]> {

@@ -81,26 +81,25 @@ export function buildD3Instructions(
     if (unit.squiggle) {
         const { amplitude: squiggleAmplitude, frequency: squiggleFrequency } = getSquiggleParams(unit.squiggle, edge.attributes, processedEdges.attributeStats);
         d = generateSimpleWavyPath(p0, p1, squiggleAmplitude, squiggleFrequency);
-        stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
+        stroke = getDynamicStyleValue(unit.color, edge.attributes, processedEdges.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
         strokeWidth = getAdjustedLineWidth(map, baseWidth)
         strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 
     } else {
         d = `M${p0.x},${p0.y}L${p1.x},${p1.y}`;
-        stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
+        stroke = getDynamicStyleValue(unit.color, edge.attributes, processedEdges.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
         strokeWidth = getAdjustedLineWidth(map, baseWidth)
         strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
         strokeDasharray =  getDashArray(unit.dash, edge.attributes, processedEdges.attributeStats)
-
     }
 
     } else if(unit.method === 'line' && unit.orientation === 'perpendicular') {
       let height: any;
       // console.log("checking aggregation:", aggregationType)
       if(aggregationType === 'sum'){
-        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 2]) as number;
+        height = getDynamicStyleValue(unit.height, edge.attributes, processedEdges.attributeStats, [0, 2]) as number;
       }else{
-        height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 10]) as number;
+        height = getDynamicStyleValue(unit.height, edge.attributes, processedEdges.attributeStats, [0, 10]) as number;
       }
 
       // const height = getDynamicStyleValue(unit.height, edge.attributes, thematicData.attributeStats, [0, 3]) as number;
@@ -148,7 +147,7 @@ export function buildD3Instructions(
     d = `M${midpoint_screen[0]},${midpoint_screen[1]} L${endPoint_x},${endPoint_y}`;
 
     // d = `M${startpoint_screen[0]},${startpoint_screen[1]} L${endPoint_x},${endPoint_y}`;
-    stroke = getDynamicStyleValue(unit.color, edge.attributes, thematicData.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
+    stroke = getDynamicStyleValue(unit.color, edge.attributes, processedEdges.attributeStats, ["#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#b10026"]) as string;
     strokeWidth = getAdjustedLineWidth(map, baseWidth)
     strokeOpacity = getDynamicStyleValue(unit.opacity, edge.attributes, processedEdges.attributeStats, [0, 1]) as number;
 

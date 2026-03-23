@@ -1,40 +1,104 @@
 
-import { loadPhysicalData, loadThematicData } from "./geoHelpers";
+import { loadAPIData, loadPhysicalData, loadThematicData } from "./geoHelpers";
 import { applySpatialAggregation, processEdgesToNodes } from "./aggregation";
 import { PhysicalEdge, ParsedSpec, ThematicPoint, AggregatedEdges } from "streetweave";
 import { getDynamicStyleValue } from "./styleHelpers";
 
 
 export async function loadSegmentData(layerSpec: ParsedSpec) {
-  const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
-  const thematicData = await loadThematicData(
-    layerSpec.data.thematic.path,
-    layerSpec.data.thematic.latColumn,
-    layerSpec.data.thematic.lonColumn
-  );
 
-  let edges = physicalData;
-  let processedEdges: AggregatedEdges = await applySpatialAggregation(edges, thematicData.data, layerSpec);
+  let physicalData, thematicData;
+  let processedEdges: AggregatedEdges;
 
-  if (layerSpec.unit.density != undefined) {
-    processedEdges = await applySpatialAggregation(
-      subdivideEdges(processedEdges, processedEdges.attributeStats, layerSpec.unit.density, layerSpec.unit.method, layerSpec.unit.orientation, layerSpec.unit.chart).edges, 
-      thematicData.data, 
-      layerSpec
-    );
+  console.log("loading data with spec:", layerSpec);
+
+  if(layerSpec.data.api.path) {
+    physicalData = await loadAPIData(layerSpec.data.api.path);
+    const attributeStats: Record<string, { min: number; max: number }> = {};
+    
+    physicalData.forEach((edge: PhysicalEdge) => {
+      if (edge.attributes) {
+        Object.entries(edge.attributes).forEach(([key, value]) => {
+          if (typeof value === 'number') {
+            if (!attributeStats[key]) {
+              attributeStats[key] = { min: value, max: value };
+            }
+            attributeStats[key].min = Math.min(attributeStats[key].min, value);
+            attributeStats[key].max = Math.max(attributeStats[key].max, value);
+          }
+        });
+      }
+    });
+
+    processedEdges = {
+      edges: physicalData,
+      attributeStats
+    };
   }
-  // console.log("checking the edges:", processedEdges)
+  else {
+    physicalData = await loadPhysicalData(layerSpec.data.physical.path);
+    thematicData = await loadThematicData(
+      layerSpec.data.thematic.path,
+      layerSpec.data.thematic.latColumn,
+      layerSpec.data.thematic.lonColumn
+    );
+    processedEdges = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
+    
+  }
+
+  
+
+  // let thematicData: { data: ThematicPoint[]; attributeStats: Record<string, any> } = { data: [], attributeStats: {} };
+
+  // Check if we have a thematic layer define
+  const hasThematic = layerSpec.data.thematic && layerSpec.data.thematic.path;
+
+  // Handle density subdivision if defined in the unit
+  if (layerSpec.unit.density != undefined) {
+    const subdividedEdgesData = subdivideEdges(
+      processedEdges, 
+      processedEdges.attributeStats, 
+      layerSpec.unit.density, 
+      layerSpec.unit.method, 
+      layerSpec.unit.orientation, 
+      layerSpec.unit.chart
+    );
+
+    if (hasThematic) {
+       // If thematic exists, we need to re-aggregate the smaller subdivided segments
+       processedEdges = await applySpatialAggregation(
+         subdividedEdgesData.edges, 
+         thematicData.data, 
+         layerSpec
+       );
+    } else {
+      // If no thematic exists, the subdivision is enough, just pass it through
+      processedEdges = subdividedEdgesData;
+    }
+  }
 
   return { processedEdges, thematicData };
 }
 
 export async function loadNodeData(layerSpec: ParsedSpec) {
-  const physicalData = await loadPhysicalData(layerSpec.data.physical.path);
-  const thematicData = await loadThematicData(
+
+
+  let physicalData, thematicData;
+
+  if (layerSpec.data.physical.path.startsWith('http')) {
+    physicalData = await loadPhysicalData(layerSpec.data.physical.path);
+  } else {
+    physicalData = await loadPhysicalData(layerSpec.data.physical.path);
+    thematicData = await loadThematicData(
     layerSpec.data.thematic.path,
     layerSpec.data.thematic.latColumn,
     layerSpec.data.thematic.lonColumn
   );
+  }
+
+  
+  
+  
 
   const aggregatedEdges: AggregatedEdges = await applySpatialAggregation(physicalData, thematicData.data, layerSpec);
   const nodesList = processEdgesToNodes(aggregatedEdges.edges);

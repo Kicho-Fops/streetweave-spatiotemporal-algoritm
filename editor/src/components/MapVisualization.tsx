@@ -73,13 +73,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
     let mapInstance: L.Map | null = null;
 
     (async () => {
+
+      const dataLayer = parsedSpec[0]?.data?.physical || parsedSpec[0]?.data?.api;
+      if (!dataLayer || !dataLayer.path) return;
+
       const physData = await loadPhysicalData(parsedSpec[0].data.physical.path);
       if (cancelled) return;
 
       mapInstance = initializeMap(
         mapRef.current!,
-        physData[0].point0.lat,
-        physData[0].point0.lon,
+        physData[0].point0.lat || 41.87004,  // Default to Chicago if no data
+        physData[0].point0.lon || -87.6486,  // Default to Chicago if no data
         zoom,
         "light"
       );
@@ -404,13 +408,17 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
 
       function redraw() {
         const dynamicDistance = getOffsetDistance(map) * (layerSpec.unit.alignment === "left" ? alignmentCountersRef.current.left : alignmentCountersRef.current.right);
+
+        // Fallback safely if relation isn't defined
+        const relationType = layerSpec.relation?.type || "none"; 
+
         const instructions = buildD3Instructions(
           processedEdges.edges,
           layerSpec.unit,
           processedEdges,
           thematicData,
           dynamicDistance,
-          layerSpec.relation.type,
+          relationType as any, // Cast to any to appease TS strictness if needed based on your UnitType
           map
         );
         drawSegments(layerSpec.unit.method, svgGroup, instructions);

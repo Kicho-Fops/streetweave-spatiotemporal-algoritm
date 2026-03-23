@@ -104,7 +104,7 @@
       },
       "data": {
         "type": "object",
-        "description": "Paths to physical and thematic data layers.",
+        "description": "Paths to geographic and thematic data layers.",
         "properties": {
           "physical": {
             "type": "object",
@@ -118,29 +118,81 @@
             "required": ["path"],
             "additionalProperties": false
           },
-          "thematic": { 
+          "api": {
             "type": "object",
-            "description": "Configuration for the thematic layer data (e.g., CSV file for points).",
+            "description": "Configuration for the API layer data (e.g., GeoJSON file from an endpoint).",
             "properties": {
               "path": {
                 "type": "string",
-                "description": "Path to the thematic layer data file."
-              },
-              "latColumn": {
-                "type": "string",
-                "description": "Name of the latitude column in the thematic data.",
-                "default": "lat"
-              },
-              "lonColumn": {
-                "type": "string",
-                "description": "Name of the longitude column in the thematic data.",
-                "default": "lon"
+                "description": "Path to the API layer data."
               }
             },
             "required": ["path"],
             "additionalProperties": false
+          },
+          "thematic": {
+            "description": "Configuration for thematic data, either CSV-like tabular input or GeoJSON.",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": ["csv"],
+                    "default": "csv"
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "Path to thematic tabular data file (e.g., CSV)."
+                  },
+                  "latColumn": {
+                    "type": "string",
+                    "default": "lat"
+                  },
+                  "lonColumn": {
+                    "type": "string",
+                    "default": "lon"
+                  }
+                },
+                "required": ["path"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": ["geojson"],
+                    "default": "geojson"
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "Path to a GeoJSON file."
+                  },
+                  "geojson": {
+                    "type": "object",
+                    "description": "Inline GeoJSON object.",
+                    "properties": {
+                      "type": { "type": "string", "enum": ["FeatureCollection"] },
+                      "features": { "type": "array" }
+                    },
+                    "required": ["type", "features"],
+                    "additionalProperties": true
+                  }
+                },
+                "anyOf": [
+                  { "required": ["path"] },
+                  { "required": ["geojson"] }
+                ],
+                "additionalProperties": false
+              }
+            ]
           }
         },
+        "anyOf": [
+          { "required": ["physical"] },
+          { "required": ["api"] }
+        ],
         "additionalProperties": false
       },
       "relation": {
@@ -225,3 +277,4 @@
     "additionalProperties": false
   }
 }
+  
