@@ -12,7 +12,7 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
 
   console.log("loading data with spec:", layerSpec);
 
-  if(layerSpec.data.api.path) {
+  if(layerSpec.data.api?.path) {
     physicalData = await loadAPIData(layerSpec.data.api.path);
     const attributeStats: Record<string, { min: number; max: number }> = {};
     
@@ -35,6 +35,7 @@ export async function loadSegmentData(layerSpec: ParsedSpec) {
       attributeStats
     };
   }
+  
   else {
     physicalData = await loadPhysicalData(layerSpec.data.physical.path);
     thematicData = await loadThematicData(

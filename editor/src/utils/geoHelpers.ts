@@ -241,8 +241,8 @@ export async function fetchGeoJSON(path: string) {
     const request = new Request(path, {
       method: "POST",
        headers: {
-        "Content-Type": "application/json", // <-- ADD THIS HEADER
-        "Accept": "application/json"        // (Optional but good practice)
+        "Content-Type": "application/json",
+        "Accept": "application/json"
       },
       body: JSON.stringify({
           city: "chicago",
@@ -280,6 +280,7 @@ export async function fetchGeoJSON(path: string) {
 export async function loadAPIData( path: string,
 ): Promise<PhysicalEdge[]> {
   let geojsonData;
+  console.log("fetching geojson data from api with path:", path);
   try {
       geojsonData = await fetchGeoJSON(path);
       console.log("checking algo:", geojsonData);

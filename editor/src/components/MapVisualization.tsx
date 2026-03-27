@@ -10,7 +10,7 @@ import * as turf from '@turf/turf';
 import { ParsedSpec } from 'streetweave'
 
 // Import utility functions
-import { loadPhysicalData } from '../utils/geoHelpers';
+import { loadAPIData, loadPhysicalData } from '../utils/geoHelpers';
 import { createPaneIfNeeded, initializeMap, getOffsetDistance, bindMapEvents } from '../utils/mapHelpers';
 import { loadNodeData, loadSegmentData } from '../utils/dataLoader';
 import { buildD3Instructions, drawD3Nodes, drawSegments } from '../utils/d3Helpers';
@@ -23,7 +23,7 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mimicLayerRef = useRef<L.GeoJSON | null>(null);
   const currentLayersRef = useRef<L.Layer[]>([]);
-  // console.log("checking parsedSpec", parsedSpec)
+  console.log("checking parsedSpec", parsedSpec)
 
   const [map, setMap] = useState<L.Map | null>(null)
   const [zoom, setZoom] = useState<number>(
@@ -77,7 +77,16 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       const dataLayer = parsedSpec[0]?.data?.physical || parsedSpec[0]?.data?.api;
       if (!dataLayer || !dataLayer.path) return;
 
-      const physData = await loadPhysicalData(parsedSpec[0].data.physical.path);
+      let physData;
+
+      if (parsedSpec[0].data.api.path) {
+        physData = await loadAPIData(parsedSpec[0].data.api.path);
+      }
+
+      else {
+        physData = await loadPhysicalData(parsedSpec[0].data.physical.path);
+      }
+
       if (cancelled) return;
 
       mapInstance = initializeMap(
@@ -425,8 +434,8 @@ const MapVisualization: React.FC<{ parsedSpec: ParsedSpec[] }> = ({ parsedSpec }
       }
 
     } catch (error) {
-      console.error(`Error rendering segment layer for ${layerSpec.data.physical.path}:`, error);
-    }
+    console.error(`Error rendering node layer for ${layerSpec.data.physical?.path || layerSpec.data.api?.path}:`, error);
+  }
   }
 
   // const renderSegmentLayer = async (
